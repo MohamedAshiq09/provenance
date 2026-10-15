@@ -56,3 +56,7 @@ data/synthetic/raw/
 
 # Bench outputs
 bench/results/
+bin/
+
+# Scratch working notes (per AGENTS.md §8 — deleted when ticket completes)
+docs/
