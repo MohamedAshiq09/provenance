@@ -1,0 +1,315 @@
+[
+  {
+    "id": "q01",
+    "category": "staleness_detection",
+    "question": "What is the current mobile API rate limit?",
+    "ground_truth": {
+      "active_limit": 200,
+      "stale_limit": 50,
+      "superseded_doc": "doc_rate_limit_50",
+      "superseding_doc": "doc_rate_limit_200",
+      "key_fact": "Rate limit was updated from 50 to 200 req/s, making old mobile rate limit decision stale"
+    }
+  },
+  {
+    "id": "q02",
+    "category": "decision_provenance",
+    "question": "Why did we decide to use opaque tokens instead of JWT?",
+    "ground_truth": {
+      "decision_id": "decision_opaque_tokens",
+      "maker": "Priya Sharma",
+      "superseded": "decision_use_jwt",
+      "key_fact": "Superseded JWT due to security revocation latency and token size bloat"
+    }
+  },
+  {
+    "id": "q03",
+    "category": "bus_factor",
+    "question": "What systems are at risk if Priya Sharma leaves?",
+    "ground_truth": {
+      "person_id": "person_priya",
+      "sole_systems": ["AuthService"],
+      "risk_level": "HIGH",
+      "key_fact": "Priya is the sole expert contributor for AuthService"
+    }
+  },
+  {
+    "id": "q04",
+    "category": "bus_factor",
+    "question": "What is the bus factor risk for Sam Rivera?",
+    "ground_truth": {
+      "person_id": "person_sam",
+      "sole_systems": ["RecommendationEngine"],
+      "risk_level": "HIGH",
+      "key_fact": "Sam is the sole expert on RecommendationEngine"
+    }
+  },
+  {
+    "id": "q05",
+    "category": "bus_factor",
+    "question": "What happens if Jordan Kim leaves NovaTech?",
+    "ground_truth": {
+      "person_id": "person_jordan",
+      "sole_systems": ["NotificationService"],
+      "risk_level": "HIGH",
+      "key_fact": "Jordan is the sole expert on NotificationService"
+    }
+  },
+  {
+    "id": "q06",
+    "category": "who_knows",
+    "question": "Who is the primary expert on AuthService?",
+    "ground_truth": {
+      "system": "AuthService",
+      "top_expert": "Priya Sharma",
+      "key_fact": "Priya has highest work centrality and authored primary architectural documents"
+    }
+  },
+  {
+    "id": "q07",
+    "category": "who_knows",
+    "question": "Who has hands-on experience with RecommendationEngine?",
+    "ground_truth": {
+      "system": "RecommendationEngine",
+      "top_expert": "Sam Rivera",
+      "key_fact": "Sam leads ML and is primary contributor"
+    }
+  },
+  {
+    "id": "q08",
+    "category": "who_knows",
+    "question": "Who knows the NotificationService codebase?",
+    "ground_truth": {
+      "system": "NotificationService",
+      "top_expert": "Jordan Kim",
+      "key_fact": "Jordan built and maintained NotificationService"
+    }
+  },
+  {
+    "id": "q09",
+    "category": "buried_origin",
+    "question": "What is the true origin of the HPA autoscaling decision in AuthService?",
+    "ground_truth": {
+      "decision_id": "decision_hpa_auth",
+      "buried_origin": "msg_buried_origin",
+      "origin_person": "Jordan Kim",
+      "hops": 3,
+      "key_fact": "Originates from Jordan's Slack thread, which spawned ticket_auth_migration, which led to ADR"
+    }
+  },
+  {
+    "id": "q10",
+    "category": "as_of_temporal",
+    "question": "What was our active authentication decision as of June 2025?",
+    "ground_truth": {
+      "as_of_date": "2025-06-01",
+      "active_decision": "decision_use_jwt",
+      "key_fact": "In June 2025, JWT was the active decision before being superseded by opaque tokens"
+    }
+  },
+  {
+    "id": "q11",
+    "category": "as_of_temporal",
+    "question": "What was our database decision for BillingSystem as of January 2025?",
+    "ground_truth": {
+      "as_of_date": "2025-01-01",
+      "active_decision": "decision_postgres_billing",
+      "key_fact": "Postgres was the initial choice before migrating to CockroachDB"
+    }
+  },
+  {
+    "id": "q12",
+    "category": "staleness_detection",
+    "question": "Which decisions are affected by doc_rate_limit_200 superseding doc_rate_limit_50?",
+    "ground_truth": {
+      "stale_decision": "decision_rate_limit_mobile",
+      "key_fact": "decision_rate_limit_mobile relied on the 50 req/s limit"
+    }
+  },
+  {
+    "id": "q13",
+    "category": "decision_provenance",
+    "question": "Who made the decision to migrate billing from PostgreSQL to CockroachDB?",
+    "ground_truth": {
+      "decision_id": "decision_cockroach_billing",
+      "maker": "Alex Chen",
+      "key_fact": "Alex Chen made the CockroachDB decision to handle distributed multi-region scaling"
+    }
+  },
+  {
+    "id": "q14",
+    "category": "connection_path",
+    "question": "How is Priya Sharma connected to AuthService?",
+    "ground_truth": {
+      "person": "person_priya",
+      "target": "sys_auth",
+      "relationship": "WORKED_ON",
+      "hops": 1,
+      "key_fact": "Direct WORKED_ON edge"
+    }
+  },
+  {
+    "id": "q15",
+    "category": "staleness_detection",
+    "question": "How many decisions are currently flagged as stale across the company?",
+    "ground_truth": {
+      "min_stale": 1,
+      "key_fact": "Staleness engine detects decisions whose source documents were superseded"
+    }
+  },
+  {
+    "id": "q16",
+    "category": "decision_provenance",
+    "question": "What document was the original JWT decision based upon?",
+    "ground_truth": {
+      "decision_id": "decision_use_jwt",
+      "source_doc": "doc_adr_jwt_original",
+      "key_fact": "ADR-001 for stateless authentication"
+    }
+  },
+  {
+    "id": "q17",
+    "category": "who_knows",
+    "question": "Which team owns the AuthService?",
+    "ground_truth": {
+      "system": "AuthService",
+      "team": "team_platform",
+      "team_name": "Platform Engineering",
+      "key_fact": "Platform Engineering owns AuthService"
+    }
+  },
+  {
+    "id": "q18",
+    "category": "who_knows",
+    "question": "Which team owns the RecommendationEngine?",
+    "ground_truth": {
+      "system": "RecommendationEngine",
+      "team": "team_data",
+      "team_name": "Data & ML",
+      "key_fact": "Data & ML team owns RecommendationEngine"
+    }
+  },
+  {
+    "id": "q19",
+    "category": "bus_factor",
+    "question": "Does Alex Chen have sole ownership over any system?",
+    "ground_truth": {
+      "person_id": "person_alex",
+      "sole_systems": [],
+      "key_fact": "Alex works across multiple shared systems without sole-expert risk"
+    }
+  },
+  {
+    "id": "q20",
+    "category": "staleness_detection",
+    "question": "Why is decision_rate_limit_mobile flagged as stale?",
+    "ground_truth": {
+      "decision_id": "decision_rate_limit_mobile",
+      "reason": "Source document doc_rate_limit_50 was superseded by doc_rate_limit_200",
+      "key_fact": "Backward edge traversal caught the dependency on the superseded document"
+    }
+  },
+  {
+    "id": "q21",
+    "category": "decision_provenance",
+    "question": "What decision superseded decision_postgres_billing?",
+    "ground_truth": {
+      "superseded_id": "decision_postgres_billing",
+      "superseding_id": "decision_cockroach_billing",
+      "key_fact": "Migrated to CockroachDB"
+    }
+  },
+  {
+    "id": "q22",
+    "category": "as_of_temporal",
+    "question": "What was the active decision for PaymentProcessor architecture in early 2025?",
+    "ground_truth": {
+      "as_of_date": "2025-02-01",
+      "topic": "PaymentProcessor",
+      "key_fact": "Temporal filtering shows active decisions on that date"
+    }
+  },
+  {
+    "id": "q23",
+    "category": "buried_origin",
+    "question": "Trace the communication thread that resulted in ticket_auth_migration.",
+    "ground_truth": {
+      "ticket": "ticket_auth_migration",
+      "origin_message": "msg_buried_origin",
+      "channel": "#platform-infra",
+      "key_fact": "Slack thread initiated the migration ticket"
+    }
+  },
+  {
+    "id": "q24",
+    "category": "who_knows",
+    "question": "Who owns PaymentProcessor?",
+    "ground_truth": {
+      "system": "PaymentProcessor",
+      "team": "team_backend",
+      "team_name": "Backend Services",
+      "key_fact": "Backend Services owns PaymentProcessor"
+    }
+  },
+  {
+    "id": "q25",
+    "category": "connection_path",
+    "question": "How is Sam Rivera connected to RecommendationEngine?",
+    "ground_truth": {
+      "from": "person_sam",
+      "to": "sys_ml",
+      "hops": 1,
+      "key_fact": "Direct WORKED_ON edge"
+    }
+  },
+  {
+    "id": "q26",
+    "category": "decision_provenance",
+    "question": "What systems are affected by decision_opaque_tokens?",
+    "ground_truth": {
+      "decision_id": "decision_opaque_tokens",
+      "affected_systems": ["AuthService", "MobileAPI", "PaymentProcessor"],
+      "key_fact": "Opaque token migration affected auth, mobile API, and payments"
+    }
+  },
+  {
+    "id": "q27",
+    "category": "staleness_detection",
+    "question": "Does doc_adr_jwt_reversal contradict doc_adr_jwt_original?",
+    "ground_truth": {
+      "contradiction": true,
+      "key_fact": "Explicit reversal and contradiction relationship"
+    }
+  },
+  {
+    "id": "q28",
+    "category": "bus_factor",
+    "question": "List all systems with a bus factor of 1.",
+    "ground_truth": {
+      "systems": ["AuthService", "RecommendationEngine", "NotificationService"],
+      "key_fact": "Three systems have only a single contributing expert"
+    }
+  },
+  {
+    "id": "q29",
+    "category": "who_knows",
+    "question": "Who knows DataLake infrastructure?",
+    "ground_truth": {
+      "system": "DataLake",
+      "team": "team_data",
+      "key_fact": "Data & ML team owns DataLake"
+    }
+  },
+  {
+    "id": "q30",
+    "category": "decision_provenance",
+    "question": "Can you provide the complete graph path for decision_opaque_tokens?",
+    "ground_truth": {
+      "decision_id": "decision_opaque_tokens",
+      "maker": "person_priya",
+      "supersedes": "decision_use_jwt",
+      "source_doc": "doc_adr_jwt_reversal",
+      "key_fact": "Full 3-way provenance chain verified"
+    }
+  }
+]
