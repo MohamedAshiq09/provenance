@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+pip-log.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Node / UI
+node_modules/
+ui/node_modules/
+ui/dist/
+ui/.next/
+.next/
+dump.rdb
+data/falkor_data/
+*.local
+
+# Env files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Docker volumes
+falkor_data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Data (large files - commit schema only)
+data/synthetic/*.jsonl
+data/synthetic/raw/
+
+# Bench outputs
+bench/results/
