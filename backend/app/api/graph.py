@@ -1,0 +1,50 @@
+"""Graph exploration endpoints"""
+from fastapi import APIRouter
+from app.queries.graph_queries import (
+    trace_decision, who_knows, bus_factor,
+    connection_path, as_of, get_stale_decisions, get_graph_stats,
+)
+
+router = APIRouter()
+
+
+@router.get("/trace/{decision_id}")
+def trace(decision_id: str, graph_name: str = "company_brain"):
+    """Trace full decision provenance chain."""
+    return trace_decision(decision_id, graph_name)
+
+
+@router.get("/who-knows/{system_name}")
+def who_knows_system(system_name: str, graph_name: str = "company_brain"):
+    """Find experts on a system via graph centrality."""
+    return who_knows(system_name, graph_name)
+
+
+@router.get("/bus-factor/{person_id}")
+def bus_factor_person(person_id: str, graph_name: str = "company_brain"):
+    """Analyze knowledge risk if a person leaves."""
+    return bus_factor(person_id, graph_name)
+
+
+@router.get("/path")
+def path(node_a: str, node_b: str, graph_name: str = "company_brain"):
+    """Find shortest connection path between two nodes."""
+    return connection_path(node_a, node_b, graph_name)
+
+
+@router.get("/as-of")
+def as_of_query(date: str, topic: str = None, graph_name: str = "company_brain"):
+    """Time-travel query: what did the company know as of a date."""
+    return as_of(date, topic, graph_name)
+
+
+@router.get("/stale")
+def stale(graph_name: str = "company_brain"):
+    """Get all stale decisions with impact radius."""
+    return {"stale_decisions": get_stale_decisions(graph_name)}
+
+
+@router.get("/stats")
+def stats(graph_name: str = "company_brain"):
+    """Get node/edge counts."""
+    return get_graph_stats(graph_name)
