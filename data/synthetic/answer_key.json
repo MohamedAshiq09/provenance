@@ -1,0 +1,142 @@
+{
+  "scenarios": {
+    "stale_decisions": {
+      "description": "Decisions that should be flagged as stale",
+      "expected": [
+        "decision_rate_limit_mobile"
+      ],
+      "trigger_doc": "doc_rate_limit_200",
+      "explanation": "decision_rate_limit_mobile is based on doc_rate_limit_50 which was superseded by doc_rate_limit_200"
+    },
+    "bus_factor_risks": {
+      "description": "Systems with only one expert",
+      "expected": [
+        {
+          "system": "sys_auth",
+          "sole_expert": "person_priya"
+        },
+        {
+          "system": "sys_ml",
+          "sole_expert": "person_sam"
+        },
+        {
+          "system": "sys_notification",
+          "sole_expert": "person_jordan"
+        }
+      ],
+      "explanation": "Only Priya/Sam/Jordan worked on these systems respectively"
+    },
+    "buried_decision_origin": {
+      "description": "Decision whose origin is 3 hops deep",
+      "decision_id": "decision_hpa_auth",
+      "expected_chain": [
+        "decision_hpa_auth \u2192 BASED_ON \u2192 doc_adr_jwt_reversal",
+        "doc_adr_jwt_reversal \u2190 RESOLVES \u2190 ticket_auth_migration",
+        "ticket_auth_migration \u2190 DISCUSSED_IN \u2190 msg_buried_origin (Jordan's slack message)"
+      ],
+      "explanation": "The real origin of the HPA auth decision is Jordan's Slack message, buried 3 hops away"
+    },
+    "contradicting_docs": {
+      "description": "Document pairs with contradicting information",
+      "expected": [
+        [
+          "doc_rate_limit_50",
+          "doc_rate_limit_200"
+        ],
+        [
+          "doc_adr_jwt_original",
+          "doc_adr_jwt_reversal"
+        ]
+      ]
+    },
+    "reversed_decisions": {
+      "description": "Decisions that were explicitly reversed",
+      "expected": [
+        "decision_use_jwt",
+        "decision_postgres_billing"
+      ],
+      "reversals": {
+        "decision_use_jwt": "decision_opaque_tokens",
+        "decision_postgres_billing": "decision_cockroach_billing"
+      }
+    }
+  },
+  "benchmark_questions": [
+    {
+      "id": "q1",
+      "question": "Why did we switch from JWT to opaque tokens in AuthService?",
+      "expected_decision": "decision_opaque_tokens",
+      "expected_supersedes": "decision_use_jwt",
+      "requires_hops": 2
+    },
+    {
+      "id": "q2",
+      "question": "Who is the sole expert on the AuthService system?",
+      "expected_person": "person_priya",
+      "query_type": "bus_factor"
+    },
+    {
+      "id": "q3",
+      "question": "What decisions are now stale because of the new rate limit policy?",
+      "expected_stale": [
+        "decision_rate_limit_mobile"
+      ],
+      "trigger_doc": "doc_rate_limit_200"
+    },
+    {
+      "id": "q4",
+      "question": "What is the original origin of the decision to redesign AuthService for HPA?",
+      "expected_origin": "msg_buried_origin",
+      "expected_chain_length": 3,
+      "query_type": "decision_trace"
+    },
+    {
+      "id": "q5",
+      "question": "What happens if Priya Sharma leaves the company?",
+      "expected_systems": [
+        "sys_auth"
+      ],
+      "query_type": "bus_factor"
+    },
+    {
+      "id": "q6",
+      "question": "What decisions affected the PaymentProcessor system?",
+      "expected_decisions": [
+        "decision_opaque_tokens",
+        "decision_cockroach_billing"
+      ],
+      "query_type": "impact_analysis"
+    },
+    {
+      "id": "q7",
+      "question": "How is the security incident related to the billing migration?",
+      "query_type": "connection_path",
+      "node_a": "doc_adr_jwt_reversal",
+      "node_b": "decision_cockroach_billing"
+    },
+    {
+      "id": "q8",
+      "question": "What was the company's auth strategy 200 days ago?",
+      "expected_decisions": [
+        "decision_use_jwt"
+      ],
+      "query_type": "as_of",
+      "as_of_date": "2026-03-29"
+    },
+    {
+      "id": "q9",
+      "question": "Who knows the most about the RecommendationEngine?",
+      "expected_person": "person_sam",
+      "query_type": "who_knows"
+    },
+    {
+      "id": "q10",
+      "question": "What documents contradict each other about rate limiting?",
+      "expected_docs": [
+        "doc_rate_limit_50",
+        "doc_rate_limit_200"
+      ],
+      "query_type": "contradiction_detection"
+    }
+  ]
+}
