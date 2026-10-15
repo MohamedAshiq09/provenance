@@ -1,0 +1,78 @@
+"""
+FalkorDB connection module.
+Single FalkorDB client shared across the app.
+Uses the official falkordb-py client.
+"""
+import asyncio
+import threading
+from functools import lru_cache
+from typing import Optional
+
+import falkordb
+from app.core.config import settings
+
+
+# Thread-safe singleton
+_db_client: Optional[falkordb.FalkorDB] = None
+_lock = threading.Lock()
+
+
+def get_client() -> falkordb.FalkorDB:
+    """Return the global FalkorDB client (thread-safe singleton)."""
+    global _db_client
+    if _db_client is None:
+        with _lock:
+            if _db_client is None:
+                _db_client = falkordb.FalkorDB(
+                    host=settings.FALKORDB_HOST,
+                    port=settings.FALKORDB_PORT,
+                )
+    return _db_client
+
+
+def get_graph(graph_name: str = None) -> falkordb.Graph:
+    """Return a Graph object for the given graph name."""
+    name = graph_name or settings.FALKORDB_GRAPH_NAME
+    return get_client().select_graph(name)
+
+
+async def init_db():
+    """Create indexes and constraints on startup."""
+    graph = get_graph()
+
+    # Indexes for fast lookup — FalkorDB uses CREATE INDEX FOR
+    index_queries = [
+        "CREATE INDEX FOR (p:Person) ON (p.id)",
+        "CREATE INDEX FOR (p:Person) ON (p.name)",
+        "CREATE INDEX FOR (t:Team) ON (t.id)",
+        "CREATE INDEX FOR (s:System) ON (s.id)",
+        "CREATE INDEX FOR (s:System) ON (s.name)",
+        "CREATE INDEX FOR (d:Document) ON (d.id)",
+        "CREATE INDEX FOR (d:Document) ON (d.valid_from)",
+        "CREATE INDEX FOR (d:Document) ON (d.valid_to)",
+        "CREATE INDEX FOR (dc:Decision) ON (dc.id)",
+        "CREATE INDEX FOR (dc:Decision) ON (dc.status)",
+        "CREATE INDEX FOR (dc:Decision) ON (dc.valid_from)",
+        "CREATE INDEX FOR (tk:Ticket) ON (tk.id)",
+        "CREATE INDEX FOR (m:Message) ON (m.id)",
+        "CREATE INDEX FOR (pr:Project) ON (pr.id)",
+    ]
+
+    for q in index_queries:
+        try:
+            graph.query(q)
+        except Exception as e:
+            # Index may already exist — that's fine
+            if "already indexed" not in str(e).lower() and "equivalent index" not in str(e).lower():
+                print(f"  [warn] Index creation: {e}")
+
+    print("✅ FalkorDB indexes initialized")
+
+
+def ping() -> bool:
+    """Check if FalkorDB is reachable."""
+    try:
+        get_client().connection.ping()
+        return True
+    except Exception:
+        return False
