@@ -1,0 +1,388 @@
+{
+  "summary": {
+    "total_questions": 30,
+    "graph_accuracy_pct": 100.0,
+    "vector_rag_accuracy_pct": 6.7,
+    "accuracy_delta_pct": 93.3,
+    "graph_avg_latency_ms": 4.8,
+    "rag_avg_latency_ms": 8.2,
+    "graph_path_explainability_pct": 100.0,
+    "rag_path_explainability_pct": 0.0
+  },
+  "by_category": {
+    "as_of_temporal": {
+      "total": 3,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 0.0,
+      "graph_advantage": 100.0
+    },
+    "buried_origin": {
+      "total": 2,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 0.0,
+      "graph_advantage": 100.0
+    },
+    "bus_factor": {
+      "total": 5,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 0.0,
+      "graph_advantage": 100.0
+    },
+    "connection_path": {
+      "total": 2,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 0.0,
+      "graph_advantage": 100.0
+    },
+    "decision_provenance": {
+      "total": 6,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 16.7,
+      "graph_advantage": 83.3
+    },
+    "staleness_detection": {
+      "total": 5,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 0.0,
+      "graph_advantage": 100.0
+    },
+    "who_knows": {
+      "total": 7,
+      "graph_accuracy": 100.0,
+      "rag_accuracy": 14.3,
+      "graph_advantage": 85.7
+    }
+  },
+  "detailed_results": [
+    {
+      "id": "q01",
+      "category": "staleness_detection",
+      "question": "What is the current mobile API rate limit?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 4.680770999584638,
+      "rag_latency_ms": 9.933493000062299,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q02",
+      "category": "decision_provenance",
+      "question": "Why did we decide to use opaque tokens instead of JWT?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 7.216455999696336,
+      "rag_latency_ms": 10.159311000279558,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q03",
+      "category": "bus_factor",
+      "question": "What systems are at risk if Priya Sharma leaves?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 6.869660000120348,
+      "rag_latency_ms": 9.907214000122622,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q04",
+      "category": "bus_factor",
+      "question": "What is the bus factor risk for Sam Rivera?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 6.92367200008448,
+      "rag_latency_ms": 9.867718999885255,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q05",
+      "category": "bus_factor",
+      "question": "What happens if Jordan Kim leaves NovaTech?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 6.792313999540056,
+      "rag_latency_ms": 9.391218000018853,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q06",
+      "category": "who_knows",
+      "question": "Who is the primary expert on AuthService?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 5.438582999886421,
+      "rag_latency_ms": 9.555839000313426,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q07",
+      "category": "who_knows",
+      "question": "Who has hands-on experience with RecommendationEngine?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.650353000011819,
+      "rag_latency_ms": 9.447946000364027,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q08",
+      "category": "who_knows",
+      "question": "Who knows the NotificationService codebase?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 4.642780000722269,
+      "rag_latency_ms": 7.554043999334681,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q09",
+      "category": "buried_origin",
+      "question": "What is the true origin of the HPA autoscaling decision in AuthService?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.166066999256145,
+      "rag_latency_ms": 7.621431999723427,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q10",
+      "category": "as_of_temporal",
+      "question": "What was our active authentication decision as of June 2025?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 8.426704999692447,
+      "rag_latency_ms": 10.004267000113032,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q11",
+      "category": "as_of_temporal",
+      "question": "What was our database decision for BillingSystem as of January 2025?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 9.096139999201114,
+      "rag_latency_ms": 9.94764999995823,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q12",
+      "category": "staleness_detection",
+      "question": "Which decisions are affected by doc_rate_limit_200 superseding doc_rate_limit_50?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 5.563731000620464,
+      "rag_latency_ms": 8.839273999910802,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q13",
+      "category": "decision_provenance",
+      "question": "Who made the decision to migrate billing from PostgreSQL to CockroachDB?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.138865000437363,
+      "rag_latency_ms": 9.417908000614261,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q14",
+      "category": "connection_path",
+      "question": "How is Priya Sharma connected to AuthService?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.750000999389158,
+      "rag_latency_ms": 6.846316000519437,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q15",
+      "category": "staleness_detection",
+      "question": "How many decisions are currently flagged as stale across the company?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.1619080000382382,
+      "rag_latency_ms": 6.381827999575762,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q16",
+      "category": "decision_provenance",
+      "question": "What document was the original JWT decision based upon?",
+      "graph_correct": true,
+      "rag_correct": true,
+      "graph_latency_ms": 2.940889999990759,
+      "rag_latency_ms": 6.076461000702693,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q17",
+      "category": "who_knows",
+      "question": "Which team owns the AuthService?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.362969000590965,
+      "rag_latency_ms": 5.5748410004525795,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q18",
+      "category": "who_knows",
+      "question": "Which team owns the RecommendationEngine?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.776640999603842,
+      "rag_latency_ms": 8.866805999787175,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q19",
+      "category": "bus_factor",
+      "question": "Does Alex Chen have sole ownership over any system?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 7.414441000037186,
+      "rag_latency_ms": 9.952138000699051,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q20",
+      "category": "staleness_detection",
+      "question": "Why is decision_rate_limit_mobile flagged as stale?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.5672650001288275,
+      "rag_latency_ms": 9.7426419997646,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q21",
+      "category": "decision_provenance",
+      "question": "What decision superseded decision_postgres_billing?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.613572999711323,
+      "rag_latency_ms": 9.476709999944433,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q22",
+      "category": "as_of_temporal",
+      "question": "What was the active decision for PaymentProcessor architecture in early 2025?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 8.159269000316272,
+      "rag_latency_ms": 10.014485999818135,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q23",
+      "category": "buried_origin",
+      "question": "Trace the communication thread that resulted in ticket_auth_migration.",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 4.341840000051889,
+      "rag_latency_ms": 9.726261000650993,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q24",
+      "category": "who_knows",
+      "question": "Who owns PaymentProcessor?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 5.176528999982111,
+      "rag_latency_ms": 9.360780999486451,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q25",
+      "category": "connection_path",
+      "question": "How is Sam Rivera connected to RecommendationEngine?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.355243999976665,
+      "rag_latency_ms": 5.75325900081225,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q26",
+      "category": "decision_provenance",
+      "question": "What systems are affected by decision_opaque_tokens?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 2.964635000353155,
+      "rag_latency_ms": 5.730816000323102,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q27",
+      "category": "staleness_detection",
+      "question": "Does doc_adr_jwt_reversal contradict doc_adr_jwt_original?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 3.0018570005267975,
+      "rag_latency_ms": 5.521840999790584,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q28",
+      "category": "bus_factor",
+      "question": "List all systems with a bus factor of 1.",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 4.039659000227402,
+      "rag_latency_ms": 5.687154000042938,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q29",
+      "category": "who_knows",
+      "question": "Who knows DataLake infrastructure?",
+      "graph_correct": true,
+      "rag_correct": true,
+      "graph_latency_ms": 3.8210450002225116,
+      "rag_latency_ms": 5.387096999584173,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    },
+    {
+      "id": "q30",
+      "category": "decision_provenance",
+      "question": "Can you provide the complete graph path for decision_opaque_tokens?",
+      "graph_correct": true,
+      "rag_correct": false,
+      "graph_latency_ms": 2.920601999903738,
+      "rag_latency_ms": 5.662768000547658,
+      "graph_explainable_path": true,
+      "rag_explainable_path": false
+    }
+  ]
+}
