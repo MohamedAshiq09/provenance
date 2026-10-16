@@ -25,13 +25,17 @@
 
 ## (c) In progress right now
 
-- (none) — audit + live verification done 2026-10-16 (see last bullet in (b)). Awaiting owner discussion: improvements + real MCP.
+- (none) — MCP v1 tickets raised 2026-10-16, awaiting build go from owner.
 
-## (d) Next task
+## (d) Next task (MCP v1 — owner decisions 2026-10-16: production rewire, Inspector-only demo, no Claude mentions, local-first, 8 tools)
 
-1. DISCUSS with owner: improvements + real MCP server (see durable fact on MCP gap). Do not code until agreed.
-2. After agreement: first real build ticket goes to mcp-agent per routing in `AGENTS.md` §4.
-3. Install `uv` on this machine (used `pip` venv at `/tmp/prov-venv` instead — volatile, gone on reboot).
+1. T1 mcp-agent: real `MCPServer("provenance-company-brain")` in `backend/app/tools/` — 8 typed `@mcp.tool()` funcs delegating to existing `run_tool`/query layer; typed hints are the schema; sync OK. Verify: in-memory `Client(mcp)` calls each tool.
+2. T2 mcp-agent: mount Streamable HTTP at `/mcp` in `backend/main.py` (`streamable_http_app()` + `Mount`, lifespan enters `mcp.session_manager.run()`); move REST shim to `/api/mcp/*`. Verify: Inspector `--cli` tools/list + tools/call; full pytest green.
+3. T3 ui-agent: rewire `ui/src/components/McpPanel.jsx` to real MCP via `@modelcontextprotocol/sdk` TS client; fix `ui/next.config.mjs` rewrites (bare `/mcp` included); backend CORS allow/expose `Mcp-*` headers; valid generic client config in copy button. Verify: `bun run build` + live Execute click.
+4. T4 eval-infra-agent: `backend/tests/test_mcp.py` — in-memory `Client` tests for all 8 tools + unknown-tool error path; document Inspector CLI check. Verify: pytest green.
+5. T5 mcp-agent + ui-agent: Claude-mention sweep — `README.md` (5 spots incl. Desktop config → Inspector commands), `backend/app/api/mcp_router.py` docstring, `.opencode/agents/mcp-agent.md`, `CLAUDE.md:72`, panel text (in T3). Keep: `ANTHROPIC_MODEL` value in `backend/app/core/config.py` (model id, not integration), `AI_USAGE.md:7` (history). Verify: `grep -ri claude` clean except those two.
+6. T6 eval-infra-agent: Inspector demo runbook (web + `--cli` commands) + full rehearsal against live backend. Verify: every command run, output observed.
+- PARKED (explicitly out of v1): Ollama local agent, deploy/Render + `TransportSecurity`, MCP resources/prompts v2.
 
 ## (e) Durable facts (each with owning file)
 
