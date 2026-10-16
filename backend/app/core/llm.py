@@ -46,9 +46,10 @@ def generate_answer(question: str, graph_context: dict, sources: list) -> str:
     context_str = json.dumps(graph_context, indent=2, default=str)
     sources_str = "\n".join([f"- [{s.get('id','?')}] {s.get('title','?')} ({s.get('url','')})" for s in sources])
 
-    prompt = f"""You are a Company Brain assistant that answers questions about an organization.
+    prompt = f"""You are Provenance, a Company Brain assistant that answers engineering questions.
 Answer the following question based ONLY on the provided graph traversal results.
-Do not invent facts. Cite your sources using [source_id] notation.
+Do not invent or extrapolate facts. 
+CRITICAL RULE: If the question asks about something not present in the graph context (e.g. personal gossip, pets, unrelated topics, or unrecorded decisions), explicitly state: "I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation." Do NOT guess.
 
 QUESTION: {question}
 
@@ -58,7 +59,7 @@ GRAPH CONTEXT (from FalkorDB traversal):
 SOURCES:
 {sources_str}
 
-Answer concisely and factually. End with a "Sources:" section listing the IDs used."""
+Format your answer with clean headings and bullet points. Never display raw internal database IDs to users (use real names). End with a cited sources list."""
     return get_llm_response(prompt, temperature=0.2)
 
 
