@@ -81,6 +81,12 @@ def decision_timeline(decision_id: str) -> dict:
     return run_tool("decision_timeline", {"decision_id": decision_id}, GRAPH_NAME)
 
 
+@mcp.tool()
+def knowledge_gaps() -> dict:
+    """Find what the company does NOT know — orphan systems, evidenceless decisions, authorless docs, unremediated stale. USE FOR: 'gaps', 'what do we not know', 'missing', 'undocumented', 'orphan'. Graph capability: missing-edge (orphan) detection."""
+    return run_tool("knowledge_gaps", {}, GRAPH_NAME)
+
+
 # Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
 # (see main.py). Built at module level so `mcp.session_manager` exists before
 # the host lifespan enters `session_manager.run()`.
