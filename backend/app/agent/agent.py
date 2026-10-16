@@ -15,6 +15,7 @@ from app.queries.graph_queries import (
     search_and_expand,
     get_stale_decisions,
     impact_of,
+    decision_timeline,
 )
 
 
@@ -54,6 +55,10 @@ AVAILABLE_TOOLS = {
     "impact_of": {
         "description": "Simulate the blast radius of changing a node — downstream impacts plus what would need re-review. USE FOR: 'what breaks if', 'what if we change', 'impact of', 'blast radius'",
         "params": ["node_id"],
+    },
+    "decision_timeline": {
+        "description": "Show how a decision evolved over time — the ordered SUPERSEDES lineage with maker and evidence at each step. USE FOR: 'timeline', 'evolved', 'history of', 'how did X change over time'",
+        "params": ["decision_id"],
     },
 }
 
@@ -138,6 +143,21 @@ def _deterministic_select_tool(question: str) -> dict:
             "tool": "as_of",
             "params": {"date_str": date_str, "topic": None},
             "reasoning": f"Identified temporal time-travel query as of {date_str}",
+        }
+    elif any(k in q for k in ["timeline", "evolv", "history of", "over time", "changed our mind", "flip-flop", "flip flop"]):
+        decision_id = "decision_opaque_tokens"
+        if "cockroach" in q or ("billing" in q and "postgres" not in q):
+            decision_id = "decision_cockroach_billing"
+        elif "postgres" in q and "billing" in q:
+            decision_id = "decision_postgres_billing"
+        elif "jwt" in q and "opaque" not in q:
+            decision_id = "decision_use_jwt"
+        elif "hpa" in q or "autoscal" in q:
+            decision_id = "decision_hpa_auth"
+        return {
+            "tool": "decision_timeline",
+            "params": {"decision_id": decision_id},
+            "reasoning": f"Identified decision-evolution timeline for {decision_id}",
         }
     elif any(k in q for k in ["why did", "why do", "how did we decide", "decision", "jwt", "tokens", "postgres", "cockroach"]):
         decision_id = "decision_use_jwt"
@@ -286,6 +306,15 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
                 lines.append(f"- **{r.get('title', r.get('name', r.get('id')))}** (`{r.get('id')}`, edge: {r.get('review_edge')})")
         if not downstream and not review:
             lines.append("No downstream impacts or review candidates found within 3 hops.")
+    elif tool_name == "decision_timeline":
+        entries = result.get("timeline", [])
+        lines.append(f"### Decision Evolution Timeline (`{result.get('anchor_id')}` — {len(entries)} eras)")
+        for e in entries:
+            maker = (e.get("made_by") or {}).get("name", "unknown")
+            ev = ", ".join(s.get("title", s.get("id")) for s in e.get("based_on", [])[:2])
+            lines.append(f"- **{e.get('valid_from', e.get('made_at', '?'))}**: *{e.get('title')}* (`{e.get('id')}`, {e.get('status')}) — by **{maker}**" + (f" — evidence: {ev}" if ev else ""))
+        if not entries:
+            lines.append("No lineage found for this decision.")
     else:
         lines.append(f"Found {len(result) if isinstance(result, list) else 1} relevant graph records.")
 
@@ -418,6 +447,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "connection_path": lambda p: connection_path(p.get("node_a_id", "person_priya"), p.get("node_b_id", "sys_auth"), graph_name),
         "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), graph_name),
         "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), graph_name),
+        "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), graph_name),
         "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
         "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
     }
@@ -517,6 +547,13 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
         path = [{"node": i.get("node", {}), "type": "Impacted", "edge": "+".join(i.get("via", []))} for i in result.get("downstream", [])[:8]]
         path += [{"node": r, "type": "Review", "edge": r.get("review_edge", "")} for r in result.get("needs_review", [])[:8]]
         return path
+    elif tool_name == "decision_timeline":
+        chain = result.get("timeline", [])
+        out = []
+        for i, e in enumerate(chain):
+            edge = "SUPERSEDED_BY" if i < len(chain) - 1 else "CURRENT"
+            out.append({"node": e, "type": "Decision", "edge": edge})
+        return out
     return []
 
 
@@ -533,5 +570,6 @@ def _get_query_for_tool(tool_name: str) -> str:
         "search_and_expand": graph_queries.SEARCH_AND_EXPAND_QUERY,
         "get_stale_decisions": graph_queries.STALE_DECISIONS_QUERY,
         "impact_of": graph_queries.IMPACT_DOWNSTREAM_QUERY,
+        "decision_timeline": graph_queries.TIMELINE_QUERY,
     }
     return query_map.get(tool_name, "")
