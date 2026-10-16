@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     # FalkorDB
     FALKORDB_HOST: str = "localhost"
     FALKORDB_PORT: int = 6379
+    FALKORDB_PASSWORD: str = ""
+    FALKORDB_USERNAME: str = ""
+    FALKORDB_SSL: bool = False
+    FALKORDB_URL: str = ""
     FALKORDB_GRAPH_NAME: str = "company_brain"
 
     # LLM

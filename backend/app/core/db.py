@@ -23,10 +23,20 @@ def get_client() -> falkordb.FalkorDB:
     if _db_client is None:
         with _lock:
             if _db_client is None:
-                _db_client = falkordb.FalkorDB(
-                    host=settings.FALKORDB_HOST,
-                    port=settings.FALKORDB_PORT,
-                )
+                if settings.FALKORDB_URL:
+                    _db_client = falkordb.FalkorDB.from_url(settings.FALKORDB_URL)
+                else:
+                    kwargs = {
+                        "host": settings.FALKORDB_HOST,
+                        "port": settings.FALKORDB_PORT,
+                    }
+                    if settings.FALKORDB_PASSWORD:
+                        kwargs["password"] = settings.FALKORDB_PASSWORD
+                    if settings.FALKORDB_USERNAME:
+                        kwargs["username"] = settings.FALKORDB_USERNAME
+                    if settings.FALKORDB_SSL:
+                        kwargs["ssl"] = True
+                    _db_client = falkordb.FalkorDB(**kwargs)
     return _db_client
 
 
