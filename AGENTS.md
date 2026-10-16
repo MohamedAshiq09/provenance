@@ -104,6 +104,7 @@ a. Skill registry — invoke skills ONLY by these exact names (all verified to e
 | prove changed code runs (pytest/benchmark/server/curl) | `verify-run` |
 | review a diff against the non-negotiables before commit | `review-gate` |
 | write/touch Cypher or graph edges the temporal-graph way | `cypher-rules` |
+| plan v2 / take the product to production-grade (audit → research → report → tickets) | `improve-product` |
 
 b. No forward references: never write "will do X" anywhere without either doing it now or filing it under Next task in `ANCHOR.md`.
 
