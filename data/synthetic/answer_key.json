@@ -121,7 +121,7 @@
         "decision_use_jwt"
       ],
       "query_type": "as_of",
-      "as_of_date": "2026-03-29"
+      "as_of_date": "2026-03-30"
     },
     {
       "id": "q9",

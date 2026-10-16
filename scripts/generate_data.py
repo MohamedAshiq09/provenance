@@ -107,10 +107,10 @@ def generate_documents() -> list:
     # Doc A2: Reversal — "Migrate from JWT to opaque tokens"
     docs.append({
         "id": "doc_adr_jwt_reversal",
-        "title": "ADR-014: Migrate from JWT to opaque tokens (security incident response)",
+        "title": "ADR-002: Migrate from JWT to opaque session tokens (reversal of ADR-001)",
         "content": "Following the JWT secret key exposure incident in Q3 2025, we are migrating AuthService from JWT to opaque session tokens with Redis backing. This supersedes ADR-001. All downstream services using JWT validation must update.",
         "doc_type": "adr",
-        "url": "https://docs.novatech.io/adr/014",
+        "url": "https://docs.novatech.io/adr/002",
         "valid_from": date_str(ago(60)),
         "valid_to": None,
         "source_id": "doc_adr_jwt_reversal",
@@ -120,7 +120,7 @@ def generate_documents() -> list:
     docs.append({
         "id": "doc_adr_postgres_billing",
         "title": "ADR-003: PostgreSQL as primary store for BillingSystem",
-        "content": "BillingSystem will use PostgreSQL as its primary datastore. ACID compliance is critical for financial data. Schema attached.",
+        "content": "BillingSystem will use PostgreSQL as its primary datastore. ACID compliance is critical for financial transactions. Schema attached.",
         "doc_type": "adr",
         "url": "https://docs.novatech.io/adr/003",
         "valid_from": date_str(ago(480)),
@@ -131,10 +131,10 @@ def generate_documents() -> list:
     # Doc B2: Reversal — "Migrate billing to CockroachDB"
     docs.append({
         "id": "doc_adr_cockroach_billing",
-        "title": "ADR-016: Migrate BillingSystem to CockroachDB for global scale",
+        "title": "ADR-004: Migrate BillingSystem to CockroachDB for global scale (supersedes ADR-003)",
         "content": "As NovaTech expands to EU and APAC, BillingSystem requires multi-region ACID compliance. We are migrating from single-region PostgreSQL to CockroachDB. This supersedes ADR-003.",
         "doc_type": "adr",
-        "url": "https://docs.novatech.io/adr/016",
+        "url": "https://docs.novatech.io/adr/004",
         "valid_from": date_str(ago(90)),
         "valid_to": None,
         "source_id": "doc_adr_cockroach_billing",
@@ -143,7 +143,7 @@ def generate_documents() -> list:
     # Scenario (c): 2 pairs of contradicting documents
     docs.append({
         "id": "doc_rate_limit_50",
-        "title": "Rate Limiting Policy v1 — 50 req/s per user",
+        "title": "POL-005: Mobile API rate limiting policy — 50 req/s per user",
         "content": "Per the security review, API rate limiting is set to 50 requests per second per authenticated user. This applies to all endpoints.",
         "doc_type": "policy",
         "url": "https://docs.novatech.io/policy/rate-limit-v1",
@@ -153,7 +153,7 @@ def generate_documents() -> list:
     })
     docs.append({
         "id": "doc_rate_limit_200",
-        "title": "Rate Limiting Policy v2 — 200 req/s per user",
+        "title": "POL-006: Mobile API rate limiting policy v2 — 200 req/s per user (supersedes POL-005)",
         "content": "Updated rate limit policy: API rate limiting is now 200 requests per second per authenticated user, as the 50 req/s limit was causing issues for enterprise customers. MobileAPI team requested this change.",
         "doc_type": "policy",
         "url": "https://docs.novatech.io/policy/rate-limit-v2",
@@ -162,16 +162,40 @@ def generate_documents() -> list:
         "source_id": "doc_rate_limit_200",
     })
 
-    # Additional docs
+    # Realistic engineering documents pool
+    real_doc_titles = [
+        ("ADR-007: Adopt gRPC Protocol Buffers for Low-Latency Inter-Service RPCs", "adr", "Evaluation of REST JSON vs gRPC Protobuf for inter-service communication. Benchmarking demonstrates 40% latency reduction."),
+        ("RFC-018: TensorRT GPU Accelerated Inference Architecture for RecommendationEngine", "rfc", "Proposing migration of model serving to Triton Inference Server with TensorRT-LLM runtimes for sub-20ms inference."),
+        ("SPEC-025: Redis Cluster Topology, Sharding, and Automated Failover Policy", "spec", "Architecture specification detailing 6-node Redis cluster deployment with automated replica promotion."),
+        ("POL-012: Idempotency Key Specification for Financial API Mutations", "policy", "All mutating payment and billing API requests must submit an Idempotency-Key HTTP header conforming to UUIDv4."),
+        ("RUN-033: Kafka Consumer Group Rebalance and Lag Recovery Playbook", "runbook", "Operational runbook for diagnosing consumer partition stalls and scaling out consumer worker replicas."),
+        ("SEC-015: TLS 1.3 Minimum and Mutual TLS (mTLS) Implementation Guide", "policy", "Zero-trust service mesh policy requiring mTLS between all Kubernetes pods via Linkerd sidecars."),
+        ("ADR-019: Apache Iceberg Catalog Integration for Analytics DataLake", "adr", "Migrating raw S3 Parquet tables to Apache Iceberg metadata catalog for ACID transactions and partition evolution."),
+        ("POSTMORTEM-042: SearchEngine Elasticsearch Outage Postmortem Analysis", "postmortem", "Root-cause analysis of the 2-hour search indexing outage caused by shard unbalance during unannounced node drain."),
+        ("SPEC-031: Kubernetes Horizontal Pod Autoscaler (HPA) Tuning Guidelines", "spec", "Standardizing target CPU and custom request latency metrics for auto-scaling platform microservices."),
+        ("ADR-023: Standardize on Golang for High-Throughput Auth Services", "adr", "Decision to rewrite legacy Python authentication endpoints in Go 1.22 to eliminate runtime GIL contention."),
+        ("POL-029: Cross-Region Database Backup and Point-in-Time Recovery SLO", "policy", "Defining maximum allowable Recovery Point Objective (RPO) of 5 minutes and Recovery Time Objective (RTO) of 1 hour."),
+        ("RUN-047: Circuit Breaker Reset and Fallback Procedure for Payment Gateways", "runbook", "Runbook for manually overriding Hystrix circuit breaker states during third-party banking downtime."),
+        ("SPEC-054: OAuth2 Authorization Code Flow with PKCE for MobileAPI", "spec", "Security spec mandating SHA-256 code challenge verification for iOS and Android OAuth handshakes."),
+        ("RFC-062: Transition NotificationService from RabbitMQ to AWS SQS Dead Letter Queues", "rfc", "Deprecating self-hosted RabbitMQ cluster in favor of fully managed AWS SQS FIFO queues with exponential backoff."),
+        ("POL-038: SOC2 Type II Audit Logging Standards for Sensitive Data Mutations", "policy", "Mandatory policy requiring non-repudiable audit logs for all access permission modifications and billing adjustments."),
+        ("ADR-028: Standardize API Versioning using Accept Headers over URI Path Prefixes", "adr", "Adopting content negotiation headers for API evolution to prevent URL route fragmentation."),
+        ("SPEC-067: OpenTelemetry Tracing Instrumentation Standard for Distributed Services", "spec", "Specification for W3C Trace Context propagation headers and baggage attributes across Go and Python services."),
+        ("RUN-059: Database Connection Pool Scaling with PgBouncer under 20k Concurrent Connections", "runbook", "Configuration guide for tuning transaction-level PgBouncer pooling parameters on RDS PostgreSQL."),
+        ("ADR-032: Enforce Distroless Minimal Container Base Images across Production", "adr", "Security architectural decision eliminating package managers, shells, and curl from production container images."),
+        ("RFC-075: Vector Search Indexing with FAISS for Semantic Product Recommendations", "rfc", "Augmenting collaborative filtering with deep semantic embedding indexes running on Elasticsearch 8.x."),
+    ]
+
     for i in range(140):
-        doc_types = ["adr", "runbook", "spec", "policy", "postmortem", "rfc"]
+        t_info = real_doc_titles[i % len(real_doc_titles)]
         created = ago(random.randint(30, 540))
+        suffix = f" (Part {i//len(real_doc_titles) + 1})" if i >= len(real_doc_titles) else ""
         docs.append({
             "id": uid("doc"),
-            "title": fake.sentence(nb_words=6).rstrip("."),
-            "content": fake.paragraph(nb_sentences=8),
-            "doc_type": random.choice(doc_types),
-            "url": f"https://docs.novatech.io/{fake.slug()}",
+            "title": f"{t_info[0]}{suffix}",
+            "content": f"{t_info[2]} Documented and reviewed by the architecture working group. Approved for production implementation.",
+            "doc_type": t_info[1],
+            "url": f"https://docs.novatech.io/docs/{uid('ref')}",
             "valid_from": date_str(created),
             "valid_to": None,
             "source_id": uid("doc"),
@@ -230,12 +254,31 @@ def generate_tickets() -> list:
         "resolved_at": date_str(ago(75)),
     })
 
+    real_ticket_titles = [
+        "INFRA-104: Upgrade Linkerd service mesh to v2.14 in staging",
+        "SEC-202: Remediate JWT secret key exposure reported in audit",
+        "PERF-305: Profile p99 query latency on PostgreSQL billing schema",
+        "DATA-142: Backfill missing Parquet partitions in analytics DataLake",
+        "AUTH-409: Implement Redis cluster failover automated retry logic",
+        "MOBILE-512: Fix rate limit 429 backoff handling in iOS GraphQL client",
+        "SEARCH-218: Rebalance Elasticsearch primary shards across hot data nodes",
+        "PAY-331: Investigate sporadic 3% transaction failure on legacy Stripe webhook",
+        "ML-404: Benchmark TensorRT GPU container startup latency on AWS EKS",
+        "INFRA-209: Configure Kubernetes HPA custom metric adapters for Datadog",
+        "SEC-310: Audit role-based access control (RBAC) grants on production RDS",
+        "BILL-118: Validate multi-region ACID isolation levels on CockroachDB cluster",
+        "NOTIF-202: Drain and migrate RabbitMQ unacknowledged queue dead letters",
+        "API-503: Implement HTTP ETag caching for static product catalog endpoints",
+        "INFRA-315: Automate zero-downtime blue/green rollouts via Argo CD",
+    ]
+
     for i in range(60):
         created = ago(random.randint(30, 400))
         resolved = created + timedelta(days=random.randint(1, 14)) if random.random() > 0.3 else None
+        title_base = real_ticket_titles[i % len(real_ticket_titles)]
         tickets.append({
             "id": uid("ticket"),
-            "title": fake.sentence(nb_words=5).rstrip("."),
+            "title": f"{title_base} (Batch {i//len(real_ticket_titles) + 1})" if i >= len(real_ticket_titles) else title_base,
             "status": random.choice(["open", "in_progress", "resolved", "closed"]),
             "priority": random.choice(["low", "medium", "high", "critical"]),
             "created_at": date_str(created),
@@ -347,20 +390,69 @@ def generate_decisions(people: list, documents: list) -> list:
     system_ids = [s["id"] for s in SYSTEMS]
     doc_ids = [d["id"] for d in documents if not d["id"].startswith("doc_adr")]
 
+    # Realistic engineering decisions pool
+    REAL_DECISIONS_POOL = [
+        ("Adopt gRPC for internal service communications", "Low latency binary protocol with HTTP/2 multiplexing reduces p99 RPC overhead by 40% compared to REST JSON.", ["sys_auth", "sys_payments"]),
+        ("Migrate RecommendationEngine from PyTorch CPU to TensorRT GPU serving", "Reduces inference latency from 180ms to 18ms under 5k RPS peak load. Requires NVIDIA T4 inference instances.", ["sys_ml"]),
+        ("Deploy Redis Cluster for shared session caching in MobileAPI", "Distributed in-memory store with automatic sharding and replication to eliminate single-point-of-failure in session lookup.", ["sys_mobile_api"]),
+        ("Adopt OpenTelemetry distributed tracing across all microservices", "Standardizes trace context propagation across Go, Python, and Node.js services with export to Jaeger/Datadog.", ["sys_auth", "sys_payments", "sys_billing"]),
+        ("Enforce TLS 1.3 and mutual TLS (mTLS) in service mesh", "Zero-trust network architecture requirement. Eliminates unencrypted intra-cluster VPC traffic.", ["sys_auth", "sys_payments"]),
+        ("Transition PaymentProcessor pipeline to Kafka event-driven architecture", "Decouples synchronous checkout flow from downstream invoice and accounting ledger generation.", ["sys_payments", "sys_billing"]),
+        ("Migrate DataLake storage format from raw S3 Parquet to Apache Iceberg", "Provides ACID transactions, hidden partitioning, and time-travel table snapshotting for analytics queries.", ["sys_data_lake"]),
+        ("Standardize on PostgreSQL 16 read-replicas for SearchEngine index feeder", "Reduces replication lag to under 50ms and prevents analytical ETL queries from impacting transactional database.", ["sys_search", "sys_billing"]),
+        ("Implement OAuth2 PKCE authorization flow for Mobile clients", "Mitigates authorization code interception attacks on public mobile clients without embedding client secrets.", ["sys_mobile_api", "sys_auth"]),
+        ("Deprecate legacy REST v1 endpoints in favor of unified GraphQL schema", "Eliminates over-fetching on mobile networks and provides typed contract schema for frontend clients.", ["sys_mobile_api"]),
+        ("Standardize Prometheus alerting on p99 service latency exceeding 250ms", "Establishes unified SLO thresholds across all customer-facing microservices.", ["sys_auth", "sys_mobile_api", "sys_payments"]),
+        ("Enforce SOC2 compliance audit logging across all auth credential mutations", "Mandatory regulatory compliance requirement. All password resets, token grants, and role changes must emit immutable audit events.", ["sys_auth"]),
+        ("Deploy Cloudflare Argo Smart Routing for edge API caching", "Optimizes routing over tier-1 internet backbone, reducing transatlantic latency by 32%.", ["sys_mobile_api"]),
+        ("Transition database backups to continuous WAL archiving with point-in-time recovery", "Reduces RPO to under 5 minutes and enables exact timestamp database restoration during data corruption incidents.", ["sys_billing", "sys_auth"]),
+        ("Implement circuit breaker pattern on downstream payment gateway integrations", "Prevents cascading thread pool exhaustion when third-party card processors experience degraded response times.", ["sys_payments"]),
+        ("Standardize on Golang for high-throughput authentication microservices", "Eliminates Python GIL bottlenecks and provides predictable memory footprint under 20k concurrent WebSocket connections.", ["sys_auth"]),
+        ("Adopt Apache Spark on Kubernetes for distributed ML feature engineering", "Replaces single-node Pandas batch jobs with horizontally scalable distributed dataframe compute.", ["sys_data_lake", "sys_ml"]),
+        ("Enforce Strict Content Security Policy (CSP) and HSTS headers on all web origins", "Protects against cross-site scripting (XSS) and SSL stripping attacks.", ["sys_auth", "sys_mobile_api"]),
+        ("Implement zero-downtime blue/green deployments via Kubernetes Argo Rollouts", "Automates canary analysis with automated rollback on error rate spikes exceeding 0.5%.", ["sys_auth", "sys_payments", "sys_billing"]),
+        ("Migrate background worker queue from RabbitMQ to AWS SQS with Dead Letter Queues", "Managed queue service reduces operational maintenance overhead and provides automatic exponential retry backoff.", ["sys_notification"]),
+        ("Standardize API versioning using Accept headers instead of URI path prefixes", "Follows RESTful resource identification best practices and avoids URL route fragmentation.", ["sys_mobile_api"]),
+        ("Adopt Terraform and GitOps pipeline for cloud infrastructure management", "Eliminates manual AWS console changes and ensures all VPC, RDS, and EKS resources are declared in version control.", ["sys_auth", "sys_data_lake"]),
+        ("Implement distributed rate limiting with Redis sliding-window algorithm", "Prevents boundary burst exploitation common in fixed-window rate limiters.", ["sys_mobile_api", "sys_auth"]),
+        ("Transition notification dispatch to async batching with priority queues", "Ensures transactional 2FA SMS and password reset emails are not delayed by bulk marketing email broadcasts.", ["sys_notification"]),
+        ("Adopt Elasticsearch synonym filters and BM25 scoring for search relevance", "Improves product catalog search recall by 28% for multi-word queries.", ["sys_search"]),
+        ("Implement database connection pooling with PgBouncer for high-concurrency microservices", "Maintains stable database server CPU utilization by capping active PostgreSQL backend server connections at 100.", ["sys_auth", "sys_billing"]),
+        ("Enforce immutable Docker container images with distroless base layers", "Minimizes container attack surface and eliminates OS package manager vulnerabilities.", ["sys_auth", "sys_payments", "sys_mobile_api"]),
+        ("Adopt Vector embeddings with FAISS for semantic recommendation candidate filtering", "Augments collaborative filtering with deep semantic embedding similarity search.", ["sys_ml", "sys_search"]),
+        ("Standardize on UUIDv7 for database primary keys to preserve B-tree insertion locality", "Time-ordered UUIDs prevent B-tree fragmentation while maintaining distributed unique key generation.", ["sys_billing", "sys_payments"]),
+        ("Implement automated chaos engineering drills with Chaos Mesh in staging", "Validates pod anti-affinity and zone redundancy against spontaneous node termination.", ["sys_auth", "sys_payments"]),
+        ("Transition cron job scheduler to Kubernetes CronJobs with concurrency policy Forbid", "Prevents overlapping batch job executions during long-running billing reconciliation runs.", ["sys_billing"]),
+        ("Enforce encrypted Amazon EBS volumes with customer-managed KMS keys", "Ensures cryptographic data-at-rest protection conforming to ISO 27001 standards.", ["sys_data_lake", "sys_billing"]),
+        ("Adopt WebAuthn and FIDO2 passkeys for enterprise single sign-on", "Eliminates credential phishing risks through public-key cryptography hardware tokens.", ["sys_auth"]),
+        ("Implement client-side response caching with ETag HTTP validation headers", "Reduces ingress bandwidth usage and database read queries for unchanged catalog resources.", ["sys_search", "sys_mobile_api"]),
+        ("Migrate metric collection from StatsD to Prometheus pull-based scraping", "Provides multi-dimensional metric labels and dynamic Kubernetes service discovery.", ["sys_auth", "sys_payments", "sys_ml"]),
+        ("Standardize error response schema adhering to RFC 7807 Problem Details", "Unifies machine-readable error codes and human-readable error descriptions across all services.", ["sys_auth", "sys_mobile_api", "sys_payments"]),
+        ("Adopt AWS KMS envelope encryption for sensitive payment card tokenization", "Ensures plaintext decryption keys never persist in application runtime memory or persistent storage.", ["sys_payments"]),
+        ("Implement automated dead-letter queue replay tool with replay verification checks", "Enables safe re-processing of failed payment webhook deliveries following downstream outages.", ["sys_payments"]),
+        ("Transition SearchEngine from self-hosted cluster to managed AWS OpenSearch Service", "Offloads cluster maintenance, storage auto-expansion, and version upgrades to AWS managed infrastructure.", ["sys_search"]),
+        ("Deploy automated vulnerability scanning with Trivy in CI/CD container build pipeline", "Blocks pull request merging on any high or critical CVE detections in application dependencies.", ["sys_auth", "sys_payments", "sys_mobile_api"]),
+        ("Standardize structured JSON logging with correlation IDs across all microservices", "Enables seamless end-to-end request tracing across distributed service boundaries in Datadog.", ["sys_auth", "sys_payments", "sys_billing", "sys_notification"]),
+        ("Implement automated database schema migrations with Flyway in deployment pipelines", "Guarantees deterministic, version-controlled database DDL schema evolutions.", ["sys_billing", "sys_auth"]),
+        ("Enforce API contract testing with Pact between MobileAPI and backend microservices", "Catches breaking API schema changes before staging environment deployments.", ["sys_mobile_api", "sys_payments"]),
+        ("Adopt Apache Kafka compacted topics for service configuration broadcast", "Enables real-time dynamic configuration updates without requiring application pod restarts.", ["sys_auth", "sys_payments"]),
+    ]
+
     for i in range(44):
+        item = REAL_DECISIONS_POOL[i % len(REAL_DECISIONS_POOL)]
         made = ago(random.randint(30, 480))
         decisions.append({
             "id": uid("decision"),
-            "title": fake.sentence(nb_words=7).rstrip("."),
-            "rationale": fake.paragraph(nb_sentences=3),
-            "status": random.choice(["active", "active", "active", "superseded", "draft"]),
+            "title": item[0],
+            "rationale": item[1],
+            "status": "active" if i < 35 else random.choice(["superseded", "draft"]),
             "made_at": date_str(made),
             "valid_from": date_str(made),
             "valid_to": None,
             "source_id": random.choice(doc_ids) if doc_ids else uid("doc"),
             "made_by": random.choice(person_ids),
             "based_on": random.sample(doc_ids, min(2, len(doc_ids))) if doc_ids else [],
-            "affects": random.sample(system_ids, random.randint(1, 2)),
+            "affects": item[2],
         })
 
     return decisions
