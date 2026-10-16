@@ -7,13 +7,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import health, graph, agent, ingest, mcp_router
 from app.core.config import settings
 from app.core.db import init_db
+from app.tools.mcp_server import mcp, mcp_http_app
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    print(f"🧠 Provenance backend started — FalkorDB @ {settings.FALKORDB_HOST}:{settings.FALKORDB_PORT}")
-    yield
+    # MCP session manager MUST run inside the host lifespan — a mounted
+    # sub-app's own lifespan never executes (official SDK mounting contract).
+    async with mcp.session_manager.run():
+        print(f"🧠 Provenance backend started — FalkorDB @ {settings.FALKORDB_HOST}:{settings.FALKORDB_PORT}")
+        print("🔌 Real MCP (Streamable HTTP) mounted at /mcp; legacy shim at /api/mcp")
+        yield
 
 
 app = FastAPI(
@@ -31,6 +36,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Streamable HTTP returns the session id in this header; browsers hide
+    # response headers from JS unless CORS exposes them (needed by T3 panel).
+    expose_headers=["Mcp-Session-Id"],
 )
 
 # Routers
@@ -38,4 +46,8 @@ app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(graph.router, prefix="/api/graph", tags=["graph"])
 app.include_router(agent.router, prefix="/api/agent", tags=["agent"])
 app.include_router(ingest.router, prefix="/api/ingest", tags=["ingest"])
-app.include_router(mcp_router.router, prefix="/mcp", tags=["mcp"])
+# Legacy REST shim (kept for transition; real MCP lives at /mcp below)
+app.include_router(mcp_router.router, prefix="/api/mcp", tags=["mcp-shim"])
+
+# Real MCP over Streamable HTTP. Mounted LAST so /api/* and docs routes win.
+app.mount("/", mcp_http_app)

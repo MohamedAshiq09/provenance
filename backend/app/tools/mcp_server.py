@@ -67,3 +67,9 @@ def search_and_expand(keyword: str) -> list:
 def get_stale_decisions() -> list:
     """Get all currently stale decisions with their impact radius. USE FOR: 'what is stale', 'stale decisions dashboard', 'what needs review'. Graph capability: stale-flag aggregation + AFFECTS impact traversal."""
     return run_tool("get_stale_decisions", {}, GRAPH_NAME)
+
+
+# Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
+# (see main.py). Built at module level so `mcp.session_manager` exists before
+# the host lifespan enters `session_manager.run()`.
+mcp_http_app = mcp.streamable_http_app()
