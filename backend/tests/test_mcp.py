@@ -20,6 +20,7 @@ EXPECTED_TOOLS = sorted([
     "search_and_expand",
     "get_stale_decisions",
     "impact_of",
+    "decision_timeline",
 ])
 
 
@@ -92,6 +93,11 @@ def test_mcp_get_stale_decisions():
 def test_mcp_impact_of():
     blob = _run(_call("impact_of", {"node_id": "sys_auth"}))
     assert "decision_hpa_auth" in blob
+
+
+def test_mcp_decision_timeline():
+    blob = _run(_call("decision_timeline", {"decision_id": "decision_opaque_tokens"}))
+    assert "decision_use_jwt" in blob and "decision_opaque_tokens" in blob
 
 
 def test_mcp_unknown_tool_errors():

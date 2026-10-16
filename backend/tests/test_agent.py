@@ -42,3 +42,11 @@ def test_agent_impact_simulation():
     assert res["tool_used"] == "impact_of"
     assert "decision_hpa_auth" in res["answer"]
     assert len(res["graph_path"]) >= 1
+
+
+def test_agent_decision_timeline():
+    """Verify agent shows evolution timeline for history questions."""
+    res = answer("Show me the timeline of how our token decision evolved")
+    assert res["tool_used"] == "decision_timeline"
+    assert "decision_use_jwt" in res["answer"]
+    assert "decision_opaque_tokens" in res["answer"]

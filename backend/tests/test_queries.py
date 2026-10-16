@@ -14,6 +14,7 @@ from app.queries.graph_queries import (
     get_stale_decisions,
     get_graph_stats,
     impact_of,
+    decision_timeline,
 )
 
 
@@ -102,4 +103,24 @@ def test_impact_decision_downstream():
 def test_impact_unknown_node():
     """Unknown node ids return an error, not an empty blast radius."""
     res = impact_of("node_that_does_not_exist")
+    assert "error" in res
+
+
+def test_timeline_opaque_tokens_chain():
+    """Opaque-tokens timeline must show JWT era first, opaque era current."""
+    res = decision_timeline("decision_opaque_tokens")
+    ids = [e.get("id") for e in res["timeline"]]
+    assert ids == ["decision_use_jwt", "decision_opaque_tokens"]
+    assert res["current"].get("id") == "decision_opaque_tokens"
+
+
+def test_timeline_from_old_end():
+    """Same lineage reachable from the superseded end (bidirectional)."""
+    res = decision_timeline("decision_use_jwt")
+    ids = [e.get("id") for e in res["timeline"]]
+    assert ids == ["decision_use_jwt", "decision_opaque_tokens"]
+
+
+def test_timeline_unknown_decision():
+    res = decision_timeline("decision_that_does_not_exist")
     assert "error" in res
