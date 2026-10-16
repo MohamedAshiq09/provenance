@@ -8,8 +8,9 @@ const nextConfig = {
         destination: `${backendUrl}/api/:path*`,
       },
       {
-        source: '/mcp/:path*',
-        destination: `${backendUrl}/mcp/:path*`,
+        // Real MCP over Streamable HTTP (bare /mcp; :path* does not match it).
+        source: '/mcp',
+        destination: `${backendUrl}/mcp`,
       },
     ];
   },

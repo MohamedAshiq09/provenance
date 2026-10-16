@@ -1,63 +1,102 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  Terminal, 
-  Play, 
-  Code2, 
-  Check, 
-  Copy, 
-  ExternalLink,
+import React, { useState, useEffect, useRef } from 'react';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import {
+  Terminal,
+  Play,
+  Check,
+  Copy,
   Shield,
-  Layers,
-  Sparkles
 } from 'lucide-react';
 
+// Sample params per known tool (used to prefill the textarea; the tool list
+// itself always comes live from the MCP server via tools/list).
+const SAMPLE_PARAMS = {
+  who_knows: '{\n  "system_name": "AuthService"\n}',
+  trace_decision: '{\n  "decision_id": "decision_use_jwt"\n}',
+  bus_factor: '{\n  "person_id": "person_priya"\n}',
+  detect_staleness: '{\n  "new_doc_id": "doc_rate_limit_200"\n}',
+  connection_path: '{\n  "node_a_id": "person_priya",\n  "node_b_id": "sys_auth"\n}',
+  as_of: '{\n  "date_str": "2025-06-01",\n  "topic": "JWT"\n}',
+  search_and_expand: '{\n  "keyword": "auth"\n}',
+  get_stale_decisions: '{}',
+};
+
 export default function McpPanel() {
+  const [tools, setTools] = useState([]);
   const [selectedTool, setSelectedTool] = useState('who_knows');
-  const [paramsInput, setParamsInput] = useState('{\n  "system_name": "AuthService"\n}');
+  const [paramsInput, setParamsInput] = useState(SAMPLE_PARAMS.who_knows);
   const [mcpOutput, setMcpOutput] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [connError, setConnError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const clientRef = useRef(null);
 
-  const tools = [
-    { name: 'who_knows', desc: 'Find who has real expertise on a system via graph centrality', sample: '{\n  "system_name": "AuthService"\n}' },
-    { name: 'trace_decision', desc: 'Trace the full provenance chain of a decision', sample: '{\n  "decision_id": "decision_use_jwt"\n}' },
-    { name: 'bus_factor', desc: 'Analyze single point of failure risk if a person leaves', sample: '{\n  "person_id": "person_priya"\n}' },
-    { name: 'detect_staleness', desc: 'Traverse backward dependencies to find decisions made stale by new doc', sample: '{\n  "new_doc_id": "doc_rate_limit_200"\n}' },
-    { name: 'connection_path', desc: 'Find shortest path connection between any two nodes', sample: '{\n  "node_a_id": "person_priya",\n  "node_b_id": "sys_auth"\n}' },
-    { name: 'as_of', desc: 'Temporal time-travel query filtering valid_from/valid_to', sample: '{\n  "date_str": "2025-06-01",\n  "topic": "JWT"\n}' },
-    { name: 'get_stale_decisions', desc: 'Get all stale decisions with impact radius', sample: '{}' },
-  ];
+  // Connect once: real MCP client over Streamable HTTP (same-origin /mcp,
+  // proxied to the backend by next.config.mjs). No REST shim involved.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const client = new Client({ name: 'provenance-ui', version: '1.0.0' });
+        const transport = new StreamableHTTPClientTransport(
+          new URL('/mcp', window.location.origin)
+        );
+        await client.connect(transport);
+        if (cancelled) {
+          await transport.terminateSession();
+          return;
+        }
+        clientRef.current = { client, transport };
+        const { tools: liveTools } = await client.listTools();
+        if (cancelled) return;
+        setTools(liveTools);
+        if (liveTools.length > 0 && !liveTools.some((t) => t.name === selectedTool)) {
+          setSelectedTool(liveTools[0].name);
+          setParamsInput(SAMPLE_PARAMS[liveTools[0].name] || '{}');
+        }
+      } catch (err) {
+        if (!cancelled) setConnError(err.message);
+      } finally {
+        if (!cancelled) setIsConnecting(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (clientRef.current) {
+        clientRef.current.transport.terminateSession().catch(() => {});
+        clientRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelectTool = (t) => {
     setSelectedTool(t.name);
-    setParamsInput(t.sample);
+    setParamsInput(SAMPLE_PARAMS[t.name] || '{}');
     setMcpOutput(null);
   };
 
   const handleRunMcp = async () => {
+    if (!clientRef.current) return;
     setIsRunning(true);
     try {
       let parsed = {};
       try {
         parsed = JSON.parse(paramsInput);
       } catch (e) {
-        alert("Invalid JSON parameters");
+        alert('Invalid JSON parameters');
         setIsRunning(false);
         return;
       }
-
-      const res = await fetch('/mcp/call', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tool: selectedTool,
-          params: parsed,
-          graph_name: 'company_brain',
-        }),
+      // Genuine MCP tools/call over Streamable HTTP (JSON-RPC under the hood).
+      const data = await clientRef.current.client.callTool({
+        name: selectedTool,
+        arguments: parsed,
       });
-      const data = await res.json();
       setMcpOutput(data);
     } catch (err) {
       setMcpOutput({ error: err.message });
@@ -67,13 +106,13 @@ export default function McpPanel() {
   };
 
   const copyConfig = () => {
+    // Generic Streamable-HTTP MCP client config (works with any MCP host).
     const config = JSON.stringify({
       mcpServers: {
         provenance: {
-          url: "http://localhost:8000/mcp",
-          tools: ["who_knows", "trace_decision", "bus_factor", "detect_staleness", "as_of"]
-        }
-      }
+          url: 'http://localhost:8000/mcp',
+        },
+      },
     }, null, 2);
     navigator.clipboard.writeText(config);
     setCopied(true);
@@ -111,7 +150,8 @@ export default function McpPanel() {
               Model Context Protocol (MCP) Server
             </h2>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Any external agent (Claude, Cursor, Gemini) can plug directly into the Provenance Company Brain via MCP.
+              This panel is a real MCP client: tools/list + tools/call over Streamable HTTP against the Provenance Company Brain.
+              {connError ? '' : ` ${tools.length} live tools connected.`}
             </p>
           </div>
         </div>
@@ -133,16 +173,28 @@ export default function McpPanel() {
           }}
         >
           {copied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-          <span>{copied ? 'Copied Config!' : 'Copy Claude MCP Config'}</span>
+          <span>{copied ? 'Copied Config!' : 'Copy MCP Config'}</span>
         </button>
       </div>
 
+      {isConnecting && (
+        <div className="glass-panel" style={{ padding: '1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+          Connecting to MCP server at /mcp (Streamable HTTP)…
+        </div>
+      )}
+      {connError && (
+        <div className="glass-panel" style={{ padding: '1rem', fontSize: '0.8rem', color: '#f87171', border: '1px solid rgba(248,113,113,0.4)' }}>
+          <Shield size={14} style={{ verticalAlign: '-2px', marginRight: '0.4rem' }} />
+          MCP connection failed: {connError}. Is the backend running on :8000?
+        </div>
+      )}
+
       {/* Two Column Layout: Tool Selection & Tester */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.25rem' }}>
-        {/* Tool List */}
+        {/* Tool List (live from server) */}
         <div className="glass-panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <h3 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff', marginBottom: '0.5rem' }}>
-            Available FalkorDB MCP Tools
+            Live FalkorDB MCP Tools (via tools/list)
           </h3>
           {tools.map((t) => (
             <div
@@ -160,10 +212,10 @@ export default function McpPanel() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <code style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: '700' }}>{t.name}()</code>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Cypher Tool</span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>MCP Tool</span>
               </div>
               <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '0.3rem', lineHeight: '1.3' }}>
-                {t.desc}
+                {(t.description || '').split('. USE FOR:')[0]}
               </p>
             </div>
           ))}
@@ -178,7 +230,7 @@ export default function McpPanel() {
             <button
               id="run-mcp-btn"
               onClick={handleRunMcp}
-              disabled={isRunning}
+              disabled={isRunning || !clientRef.current}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -195,7 +247,7 @@ export default function McpPanel() {
               }}
             >
               <Play size={13} />
-              <span>{isRunning ? 'Executing Cypher...' : 'Execute Tool'}</span>
+              <span>{isRunning ? 'Executing via MCP…' : 'Execute Tool'}</span>
             </button>
           </div>
 
@@ -225,7 +277,7 @@ export default function McpPanel() {
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-              FalkorDB MCP Response (Real-Time JSON)
+              MCP tools/call Response (Real-Time JSON)
             </label>
             <pre style={{
               flex: 1,
@@ -240,7 +292,7 @@ export default function McpPanel() {
               fontSize: '0.74rem',
               lineHeight: '1.4',
             }}>
-              {mcpOutput ? JSON.stringify(mcpOutput, null, 2) : '// Click "Execute Tool" to invoke this MCP endpoint against FalkorDB...'}
+              {mcpOutput ? JSON.stringify(mcpOutput, null, 2) : '// Click "Execute Tool" to invoke tools/call against FalkorDB via real MCP...'}
             </pre>
           </div>
         </div>
