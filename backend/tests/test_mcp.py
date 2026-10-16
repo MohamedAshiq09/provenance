@@ -21,6 +21,7 @@ EXPECTED_TOOLS = sorted([
     "get_stale_decisions",
     "impact_of",
     "decision_timeline",
+    "knowledge_gaps",
 ])
 
 
@@ -98,6 +99,11 @@ def test_mcp_impact_of():
 def test_mcp_decision_timeline():
     blob = _run(_call("decision_timeline", {"decision_id": "decision_opaque_tokens"}))
     assert "decision_use_jwt" in blob and "decision_opaque_tokens" in blob
+
+
+def test_mcp_knowledge_gaps():
+    blob = _run(_call("knowledge_gaps", {}))
+    assert "authorless_docs_total" in blob
 
 
 def test_mcp_unknown_tool_errors():

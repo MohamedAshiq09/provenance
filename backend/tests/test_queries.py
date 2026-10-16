@@ -15,6 +15,7 @@ from app.queries.graph_queries import (
     get_graph_stats,
     impact_of,
     decision_timeline,
+    knowledge_gaps,
 )
 
 
@@ -124,3 +125,21 @@ def test_timeline_from_old_end():
 def test_timeline_unknown_decision():
     res = decision_timeline("decision_that_does_not_exist")
     assert "error" in res
+
+
+def test_knowledge_gaps_structure():
+    """Gap report must carry all four categories with consistent totals."""
+    res = knowledge_gaps()
+    for key in ["docless_systems", "evidenceless_decisions", "authorless_docs", "unremediated_stale"]:
+        assert key in res and f"{key}_total" in res
+    assert res["total_gaps"] == (
+        res["docless_systems_total"] + res["evidenceless_decisions_total"]
+        + res["authorless_docs_total"] + res["unremediated_stale_total"]
+    )
+
+
+def test_knowledge_gaps_authorless_docs():
+    """Seed data leaves most synthetic docs authorless (31 AUTHORED edges / 146 docs)."""
+    res = knowledge_gaps()
+    assert res["authorless_docs_total"] >= 100
+    assert len(res["authorless_docs"]) <= 20  # capped sample

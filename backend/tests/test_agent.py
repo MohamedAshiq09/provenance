@@ -50,3 +50,10 @@ def test_agent_decision_timeline():
     assert res["tool_used"] == "decision_timeline"
     assert "decision_use_jwt" in res["answer"]
     assert "decision_opaque_tokens" in res["answer"]
+
+
+def test_agent_knowledge_gaps():
+    """Verify agent audits gaps for what-we-don't-know questions."""
+    res = answer("What documentation is missing? What do we not know?")
+    assert res["tool_used"] == "knowledge_gaps"
+    assert "authorless" in res["answer"].lower() or "gaps" in res["answer"].lower()
