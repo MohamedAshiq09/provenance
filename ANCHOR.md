@@ -17,17 +17,21 @@
   - 00a7314 `agents: add verify-run, review-gate, cypher-rules skills` — `.opencode/skills/` (3 skills).
 - 6899060 `feat: add UI components including Header, McpPanel, StaleDecisionsPanel, and TimeTravelSlider` — `ui/` panels (proves ui-agent seam exists).
 - d4065f8 and earlier: UI component + Next.js init commits — `ui/` (see `git log --oneline -10`).
-- (unverified beyond log): backend agent/api/graph/tools, bench, scripts per `README.md` claims; not re-read this session.
+- 2026-10-16 11:30 UTC: Full audit + live verification (all observed, Docker `provenance-falkordb` + uvicorn :8000 left RUNNING):
+  - `backend/` core complete: 8 queries + remediate + stats in `backend/app/queries/graph_queries.py` (561 lines); agent loop with LLM router + deterministic fallback + param normalization in `backend/app/agent/agent.py` (495 lines); REST `/api/agent|graph|ingest|health` + `/mcp` shim in `backend/main.py`.
+  - `MCP GAP: backend/app/api/mcp_router.py` (57 lines) is a custom REST shim (`GET /tools`, `POST /call`, `/manifest`), NOT the MCP Python SDK (`mcp` dep installed but unused); `backend/app/tools/__init__.py` EMPTY.
+  - Live proof: 18/18 pytest pass; 30/30 benchmark 100.0% vs 6.7% (avg 3.3ms); `/api/agent/ask` bus-factor, `/api/agent/stale`, `/mcp/call` who_knows all return real graph data; `ui/` (`bun run build`) green — 7 panels incl. McpPanel, StaleDecisionsPanel, TimeTravelSlider.
+  - Env notes: `bin/` is Linux ELF (dead on this mac); Docker had to be launched manually; python deps live in volatile `/tmp/prov-venv`; no `uv` on this machine.
 
 ## (c) In progress right now
 
-- (none) — scaffolding session ends after Phase 4 e2e commit.
+- (none) — audit + live verification done 2026-10-16 (see last bullet in (b)). Awaiting owner discussion: improvements + real MCP.
 
 ## (d) Next task
 
-1. Decide first real build ticket (suggested: get `uv run --directory backend pytest -v` green — `uv` was missing on 2026-10-15, needs install) and assign to eval-infra-agent → graph-agent per routing in `AGENTS.md` §4.
-2. Verify FalkorDB boots (`./scripts/start_falkordb.sh` or `docker compose up -d`) and synthetic ingest runs; record observed output here.
-3. Run 30-question benchmark; record score vs README's 100%-vs-6.7% claim.
+1. DISCUSS with owner: improvements + real MCP server (see durable fact on MCP gap). Do not code until agreed.
+2. After agreement: first real build ticket goes to mcp-agent per routing in `AGENTS.md` §4.
+3. Install `uv` on this machine (used `pip` venv at `/tmp/prov-venv` instead — volatile, gone on reboot).
 
 ## (e) Durable facts (each with owning file)
 
