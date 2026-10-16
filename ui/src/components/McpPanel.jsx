@@ -107,10 +107,13 @@ export default function McpPanel() {
 
   const copyConfig = () => {
     // Generic Streamable-HTTP MCP client config (works with any MCP host).
+    const mcpUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/mcp`
+      : 'https://provenance-api-klos.onrender.com/mcp';
     const config = JSON.stringify({
       mcpServers: {
         provenance: {
-          url: 'http://localhost:8000/mcp',
+          url: mcpUrl,
         },
       },
     }, null, 2);
