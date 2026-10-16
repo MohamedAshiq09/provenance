@@ -40,6 +40,13 @@ def get_client() -> falkordb.FalkorDB:
     return _db_client
 
 
+def reset_client():
+    """Reset the global client on connection drops."""
+    global _db_client
+    with _lock:
+        _db_client = None
+
+
 def get_graph(graph_name: str = None) -> falkordb.Graph:
     """Return a Graph object for the given graph name."""
     name = graph_name or settings.FALKORDB_GRAPH_NAME

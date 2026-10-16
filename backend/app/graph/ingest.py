@@ -5,11 +5,33 @@ Every edge carries: valid_from, valid_to, ingested_at, source_id.
 """
 from datetime import datetime, date, timezone
 from typing import Optional, Any
-from app.core.db import get_graph
+import time
+from app.core.db import get_graph, reset_client
+
+
+class _RetryingGraph:
+    def __init__(self, graph_name: str = None):
+        self.graph_name = graph_name
+
+    def query(self, q: str, params: dict = None):
+        last_err = None
+        for attempt in range(4):
+            try:
+                g = get_graph(self.graph_name)
+                return g.query(q, params or {})
+            except Exception as e:
+                last_err = e
+                err_str = str(e).lower()
+                if any(k in err_str for k in ["connection", "closed", "reset", "broken", "timeout", "pipe"]):
+                    reset_client()
+                    time.sleep(0.5 * (attempt + 1))
+                else:
+                    raise
+        raise last_err
 
 
 def _graph(graph_name: str = None):
-    return get_graph(graph_name)
+    return _RetryingGraph(graph_name)
 
 
 def _now() -> str:
