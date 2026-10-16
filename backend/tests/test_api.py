@@ -48,7 +48,7 @@ def test_agent_ask_endpoint():
 
 
 def test_mcp_tools_endpoint():
-    res = client.get("/mcp/tools")
+    res = client.get("/api/mcp/tools")
     assert res.status_code == 200
     data = res.json()
     assert "tools" in data
