@@ -32,13 +32,13 @@
 
 ## (c) In progress right now
 
-- (none) — S3 closed 2026-10-16. Next: S6 knowledge gaps on owner go.
+- (none) — S6 closed 2026-10-16. Next: S2 contradiction candidates (guarded) on owner go.
 
 ## (d) Next task (solution v2 — owner approved senior call 2026-10-16: F1,F3,F6,F2-guarded first, F4/F5 after; F7-push + F8 dropped)
 
 1. S1 DONE 2026-10-16 — 2757c22 graph + e6c6e25 agent + a8975bb mcp + a2001d2 api + 08ee4aa test. Gate (BEFORE commit, local FalkorDB): 33/33 pytest; benchmark 30/30 100%-vs-6.7% no regression; impact_of 2–11 ms; REST + Inspector + /ask routing live-verified. impact_of(sys_auth) review=11 (matches 11 AFFECTS edges), downstream=0 honest (no USES/DEPENDS_ON edges in synthetic data).
 2. S3 DONE 2026-10-16 — c96cd50 graph + 0fe463d agent + 70d2066 mcp + c659f13 api + b748ce5 test. Gate (BEFORE commit, local): 38/38 pytest; benchmark 30/30 no regression; timeline 10.2 ms, exact order [use_jwt → opaque_tokens] both directions; REST + Inspector (cockroach chain live) + /ask routing verified.
-3. S6 graph-agent: `knowledge_gaps()` — orphan queries: systems with zero incoming AFFECTS, decisions with no BASED_ON, docs with no AUTHORED, unreviewed-stale count. Wire: tool + MCP + REST `GET /api/graph/gaps`. Verify: pytest structure (keys present) + Inspector.
+3. S6 DONE 2026-10-16 — dcfa2e8 graph + 1d0d755 agent + 6b835a6 mcp + 5cc1253 api + 6e0c4f4 test. Gate (BEFORE commit, local): 42/42 pytest; benchmark 30/30 no regression; gaps 13.1 ms, totals 118 = 0+0+116+2 matching hand counts; REST + Inspector + /ask verified. Incident: S3-era line-158 indent corruption found at gate, fixed, suite green.
 4. S2 graph-agent+api-agent (GUARDED): contradiction candidates on ingest — in `POST /api/ingest/document|raw-text`, find overlap candidates via search_and_expand on title keywords; LLM verdict (keys present) or `unverified` (no keys); NO auto-edge. New `GET /api/graph/contradictions` review list + `POST /api/graph/contradictions/confirm` creating CONTRADICTS edge with claim props → existing staleness flow fires. Demo arc: ingest → candidates → confirm → radar. Verify: pytest with temp docs (DETACH DELETE cleanup) + live demo arc.
 5. S4 api-agent: `ramp_plan(system_name)` composer in graph_queries (multi-query, still deterministic): who_knows + key decisions via AFFECTS + related docs. Wire: tool + MCP + REST. Verify: pytest non-empty experts+decisions + Inspector.
 6. S5 graph-agent: `team_risk()` — per team: members, sole-expert systems, active/stale decisions. Wire: tool + MCP + REST `GET /api/graph/team-risk`. Verify: pytest team_platform fields + Inspector.
