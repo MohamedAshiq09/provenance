@@ -640,6 +640,66 @@ def decision_timeline(decision_id: str, graph_name: str = None) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# QUERY 13: Knowledge Gaps ("what does the company NOT know?")
+# WHY GRAPH: Orphans are defined by ABSENT relationships — systems no
+# decision affects, decisions with no evidence, documents with no author,
+# stale decisions with no remediation. Absence of an edge is only queryable
+# where edges are first-class: the graph. A document store cannot ask
+# "what points at nothing".
+# ─────────────────────────────────────────────────────────────────────────────
+GAPS_QUERY = """
+// Systems no decision affects
+MATCH (s:System) WHERE NOT ()-[:AFFECTS]->(s) RETURN s
+"""
+GAPS_DECISIONS_QUERY = """
+// Decisions with no evidence behind them
+MATCH (d:Decision) WHERE NOT (d)-[:BASED_ON]->() RETURN d
+"""
+GAPS_DOCS_QUERY = """
+// Documents with no known author
+MATCH (doc:Document) WHERE NOT ()-[:AUTHORED]->(doc) RETURN doc
+"""
+GAPS_STALE_QUERY = """
+// Stale decisions nobody is remediating
+MATCH (d:Decision) WHERE d.stale = true AND NOT ()-[:REMEDIATES]->(d) RETURN d
+"""
+
+_GAP_CAP = 20
+
+
+def knowledge_gaps(graph_name: str = None) -> dict:
+    """
+    Find what the company doesn't know: orphan systems, evidenceless
+    decisions, authorless documents, and stale decisions with no remediation.
+
+    GRAPH NECESSITY: Every gap is a missing edge. Only the graph can
+    observe its own incompleteness.
+    """
+    g = _graph(graph_name)
+
+    def _collect(query):
+        res = g.query(query)
+        return [_node_to_dict(row[0]) for row in res.result_set if row[0]]
+
+    docless = _collect(GAPS_QUERY)
+    evidenceless = _collect(GAPS_DECISIONS_QUERY)
+    authorless = _collect(GAPS_DOCS_QUERY)
+    unremediated = _collect(GAPS_STALE_QUERY)
+
+    return {
+        "docless_systems": docless[:_GAP_CAP],
+        "docless_systems_total": len(docless),
+        "evidenceless_decisions": evidenceless[:_GAP_CAP],
+        "evidenceless_decisions_total": len(evidenceless),
+        "authorless_docs": authorless[:_GAP_CAP],
+        "authorless_docs_total": len(authorless),
+        "unremediated_stale": unremediated[:_GAP_CAP],
+        "unremediated_stale_total": len(unremediated),
+        "total_gaps": len(docless) + len(evidenceless) + len(authorless) + len(unremediated),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
 STATS_QUERY = """
