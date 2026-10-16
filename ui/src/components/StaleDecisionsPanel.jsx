@@ -184,6 +184,54 @@ export default function StaleDecisionsPanel({
                   </div>
                 </div>
               )}
+
+              {/* Action Workflow Button (Track 3: Get Work Done) */}
+              <div style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
+                <button
+                  id={`remediate-btn-${idx}`}
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/agent/remediate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ decision_id: item.id })
+                      });
+                      const data = await res.json();
+                      alert(data.message || `Remediation action ticket created in graph and assigned!`);
+                      if (onRefresh) onRefresh();
+                    } catch (e) {
+                      alert(`Action failed: ${e.message}`);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '0.45rem',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'rgba(99, 102, 241, 0.15)',
+                    border: '1px solid rgba(99, 102, 241, 0.4)',
+                    color: '#818cf8',
+                    fontSize: '0.75rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.3)';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
+                    e.currentTarget.style.color = '#818cf8';
+                  }}
+                >
+                  <FileText size={13} />
+                  <span>Act: Generate Remediation Ticket & Assign Owner</span>
+                </button>
+              </div>
             </div>
           ))
         ) : (
