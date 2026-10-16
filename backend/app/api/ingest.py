@@ -55,24 +55,108 @@ async def ingest_document(req: IngestDocumentRequest, background_tasks: Backgrou
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/load-synthetic")
-async def load_synthetic(graph_name: str = "company_brain"):
-    """Load the full synthetic company dataset into FalkorDB."""
-    data_path = Path(__file__).parent.parent.parent.parent / "data" / "synthetic" / "company.json"
-    if not data_path.exists():
-        raise HTTPException(status_code=404, detail="Synthetic data not found. Run: uv run python scripts/generate_data.py")
+class IngestRawTextRequest(BaseModel):
+    text: str
+    doc_id: Optional[str] = None
+    author: Optional[str] = None
+    graph_name: str = "company_brain"
+
+
+@router.post("/raw-text")
+async def ingest_raw_text(req: IngestRawTextRequest):
+    """
+    Ingest unstructured raw text (ADR, ticket, PR description, meeting notes).
+    Uses Gemini (or structured extraction) to parse decisions, systems, authors,
+    and creates nodes + edges with automatic staleness check.
+    """
+    import uuid
+    from datetime import datetime, timezone
+    from app.core.config import settings
+    from app.graph.ingest import upsert_document, upsert_decision, upsert_edge
     
-    with open(data_path) as f:
-        company = json.load(f)
+    doc_id = req.doc_id or f"doc_raw_{uuid.uuid4().hex[:6]}"
+    now = datetime.now(timezone.utc).isoformat()
     
-    ingest_company_data(company, graph_name)
-    return {
-        "status": "loaded",
-        "graph": graph_name,
-        "counts": {
-            "people": len(company.get("people", [])),
-            "decisions": len(company.get("decisions", [])),
-            "documents": len(company.get("documents", [])),
-            "edges": len(company.get("edges", [])),
-        }
+    extraction = {
+        "title": "Unstructured Document",
+        "doc_type": "document",
+        "decisions": [],
+        "systems": [],
+        "supersedes": []
     }
+    
+    # Try Gemini extraction if API key configured
+    if settings.GEMINI_API_KEY or settings.OPENAI_API_KEY:
+        try:
+            from app.core.llm import extract_json
+            schema = {
+                "title": "string",
+                "doc_type": "adr | spec | ticket | meeting_notes",
+                "decisions": [
+                    {"id": "string", "title": "string", "rationale": "string", "affects": ["system_name"]}
+                ],
+                "supersedes_docs": ["doc_id"],
+                "affected_systems": ["system_name"]
+            }
+            extraction = extract_json(req.text, schema)
+        except Exception as e:
+            print(f"  [ingest] LLM extraction fallback: {e}")
+
+    # Fallback heuristic extraction
+    lines = req.text.strip().split("\n")
+    title = extraction.get("title") or (lines[0].lstrip("#").strip() if lines else "Document")
+    
+    doc_data = {
+        "id": doc_id,
+        "title": title,
+        "content": req.text,
+        "doc_type": extraction.get("doc_type", "document"),
+        "valid_from": now[:10],
+        "source_id": doc_id,
+    }
+    upsert_document(doc_data, req.graph_name)
+    
+    # Upsert extracted decisions
+    decisions_created = []
+    for d in extraction.get("decisions", []):
+        dec_id = d.get("id") or f"decision_extracted_{uuid.uuid4().hex[:6]}"
+        upsert_decision({
+            "id": dec_id,
+            "title": d.get("title", "Extracted Decision"),
+            "rationale": d.get("rationale", req.text[:200]),
+            "status": "active",
+            "made_at": now[:10],
+            "valid_from": now[:10],
+            "source_id": doc_id
+        }, req.graph_name)
+        
+        # Connect Decision -> BASED_ON -> Document
+        upsert_edge(
+            from_id=dec_id, from_label="Decision",
+            to_id=doc_id, to_label="Document",
+            rel_type="BASED_ON",
+            source_id=doc_id,
+            graph_name=req.graph_name
+        )
+        decisions_created.append(dec_id)
+        
+    # Check staleness if document supersedes older docs
+    stale_res = {}
+    for sup_id in extraction.get("supersedes_docs", []):
+        upsert_edge(
+            from_id=doc_id, from_label="Document",
+            to_id=sup_id, to_label="Document",
+            rel_type="SUPERSEDES",
+            source_id=doc_id,
+            graph_name=req.graph_name
+        )
+        stale_res = detect_staleness(doc_id, req.graph_name)
+        
+    return {
+        "status": "extracted_and_ingested",
+        "doc_id": doc_id,
+        "title": title,
+        "decisions_created": decisions_created,
+        "staleness_radar": stale_res
+    }
+
