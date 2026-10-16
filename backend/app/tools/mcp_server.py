@@ -75,6 +75,12 @@ def impact_of(node_id: str) -> dict:
     return run_tool("impact_of", {"node_id": node_id}, GRAPH_NAME)
 
 
+@mcp.tool()
+def decision_timeline(decision_id: str) -> dict:
+    """Show how a decision evolved over time — the ordered SUPERSEDES lineage with maker and evidence at each step. USE FOR: 'timeline', 'evolved', 'history of', 'how did X change over time'. Graph capability: bidirectional SUPERSEDES traversal, time-ordered."""
+    return run_tool("decision_timeline", {"decision_id": decision_id}, GRAPH_NAME)
+
+
 # Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
 # (see main.py). Built at module level so `mcp.session_manager` exists before
 # the host lifespan enters `session_manager.run()`.
