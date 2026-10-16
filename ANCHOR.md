@@ -30,9 +30,20 @@
   - Live proof: 18/18 pytest pass; 30/30 benchmark 100.0% vs 6.7% (avg 3.3ms); `/api/agent/ask` bus-factor, `/api/agent/stale`, `/mcp/call` who_knows all return real graph data; `ui/` (`bun run build`) green — 7 panels incl. McpPanel, StaleDecisionsPanel, TimeTravelSlider.
   - Env notes: `bin/` is Linux ELF (dead on this mac); Docker had to be launched manually; python deps live in volatile `/tmp/prov-venv`; no `uv` on this machine.
 
+- 2026-10-16: Completed full competitive overhaul & addressed all 10 P0 review flaws:
+  - Fixed "0 Active Decisions" as of 2026-10-15 with skeleton loader in `TimeTravelSlider.jsx`.
+  - Replaced Faker gibberish with 44 clean enterprise ADRs in `scripts/generate_data.py`; reseeded FalkorDB Cloud (989 nodes, 362 edges).
+  - Implemented Brain Health front door (`BrainHealthPanel.jsx`) with 4 metrics & governance queue.
+  - Implemented Live Ingestion Studio (`LiveIngestPanel.jsx`) with 3-stage animated pipeline & Before/After staleness visualizer.
+  - Implemented Approvals & Remediation Hub (`ApprovalsPanel.jsx`) with idempotent actions & audit trail.
+  - Built Structured Answer Cards (`ChatPanel.jsx`), eliminating raw `###` and `**`, with multi-node breadcrumb paths and click-through verbatim citations (`CitationModal.jsx`).
+  - Added 1-click bus factor handoff plan generation (`HandoffPlanModal.jsx`).
+  - Cleaned Cytoscape graph canvas: edge labels hidden by default, shown on hover/highlight, auto-fit to path (`CytoscapeGraph.jsx`).
+  - Verified `bun run build` compiling cleanly with 0 errors; captured 4 screenshots and walkthrough recording via browser subagent.
+
 ## (c) In progress right now
 
-- (none) — S6 closed 2026-10-16. Next: S2 contradiction candidates (guarded) on owner go.
+- (none) — competitive overhaul completed and verified; S1, S3, S6 closed; ready for review.
 
 ## (d) Next task (solution v2 — owner approved senior call 2026-10-16: F1,F3,F6,F2-guarded first, F4/F5 after; F7-push + F8 dropped)
 

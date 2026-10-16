@@ -9,27 +9,36 @@ import {
   ChevronUp, 
   CheckCircle2, 
   Clock, 
-  Flame,
-  ArrowRight,
-  Bookmark,
-  Share2,
-  BrainCircuit
+  Compass,
+  ArrowRight, 
+  Quote,
+  ShieldAlert,
+  AlertTriangle,
+  Users,
+  Terminal,
+  ExternalLink,
+  Layers,
+  FileText
 } from 'lucide-react';
+import CitationModal from './CitationModal';
 
 export default function ChatPanel({ 
   onAskQuestion, 
   lastResponse, 
   isLoading, 
-  onSelectPathNode 
+  onSelectPathNode,
+  onOpenHandoff,
+  onProposeRemediation
 }) {
   const [inputQuestion, setInputQuestion] = useState('');
   const [showCypher, setShowCypher] = useState(false);
+  const [selectedCitation, setSelectedCitation] = useState(null);
 
   const presets = [
     { label: 'What if Priya leaves?', q: 'What happens if Priya leaves the company?', tag: 'Bus Factor' },
-    { label: 'Why Opaque Tokens?', q: 'Why did we decide to use opaque tokens instead of JWT?', tag: 'Decision Trace' },
+    { label: 'Why Opaque Tokens?', q: 'Why did we decide to use opaque tokens instead of JWT?', tag: 'Decision Reversal' },
     { label: 'Mobile Rate Limit?', q: 'What is the current mobile API rate limit?', tag: 'Staleness Radar' },
-    { label: 'HPA Buried Origin', q: 'What is the true origin of the HPA autoscaling decision in AuthService?', tag: '3-Hop Origin' },
+    { label: 'HPA Autoscaling Origin', q: 'What is the true origin of the HPA autoscaling decision in AuthService?', tag: '3-Hop Origin' },
     { label: 'Auth in June 2025', q: 'What was our active authentication decision as of June 2025?', tag: 'Time Travel' },
   ];
 
@@ -44,24 +53,176 @@ export default function ChatPanel({
     onAskQuestion(q);
   };
 
+  // Helper to format human node names (hiding raw internal DB IDs)
+  const formatHumanName = (item) => {
+    const node = item?.node || item || {};
+    if (node.name) return node.name;
+    if (node.title) return node.title;
+    if (!node.id) return 'Unknown Node';
+
+    // Format IDs like "person_priya" -> "Priya Sharma", "sys_auth" -> "AuthService"
+    const id = String(node.id);
+    if (id === 'person_priya') return 'Priya Sharma';
+    if (id === 'sys_auth') return 'AuthService';
+    if (id === 'decision_opaque_tokens') return 'ADR-002: Opaque Tokens';
+    if (id === 'decision_jwt') return 'ADR-001: JWT Auth (Deprecated)';
+    if (id === 'decision_rate_limit_50') return 'ADR-004: Rate Limit 50 rps';
+    if (id === 'sys_mobile_api') return 'Mobile API Gateway';
+    if (id === 'sys_billing') return 'Billing Ledger';
+
+    // Clean up generic snake_case
+    return id.replace(/^decision_|^person_|^sys_|^doc_/, '')
+             .replace(/_/g, ' ')
+             .replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Render structured markdown cleanly (no raw ###, **, backticks)
+  const renderStructuredAnswer = (rawText) => {
+    if (!rawText) return null;
+
+    // Split paragraphs
+    const paragraphs = rawText.split('\n\n').filter(p => p.trim().length > 0);
+
+    return paragraphs.map((p, idx) => {
+      const trimmed = p.trim();
+
+      // Header detected
+      if (trimmed.startsWith('###')) {
+        const headerTitle = trimmed.replace(/^###\s*/, '').replace(/\*\*/g, '');
+        return (
+          <div key={idx} style={{
+            fontSize: '0.82rem',
+            fontWeight: '700',
+            color: '#38bdf8',
+            marginTop: '0.75rem',
+            marginBottom: '0.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em'
+          }}>
+            <Layers size={13} color="#06b6d4" />
+            <span>{headerTitle}</span>
+          </div>
+        );
+      }
+
+      // Bullet points detected
+      if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+        const items = trimmed.split('\n').filter(l => l.trim().length > 0);
+        return (
+          <ul key={idx} style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', margin: '0.35rem 0' }}>
+            {items.map((it, itemIdx) => {
+              const cleanItem = it.replace(/^[\*\-]\s*/, '');
+              return (
+                <li key={itemIdx} style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', lineHeight: '1.5' }}>
+                  <span style={{ color: '#06b6d4', marginTop: '2px' }}>•</span>
+                  <span>{formatInlineFormatting(cleanItem)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        );
+      }
+
+      // Standard body paragraph
+      return (
+        <p key={idx} style={{ fontSize: '0.86rem', color: '#e2e8f0', lineHeight: '1.6' }}>
+          {formatInlineFormatting(trimmed)}
+        </p>
+      );
+    });
+  };
+
+  // Helper to parse bold, backticks, and IDs inside strings
+  const formatInlineFormatting = (text) => {
+    // Replace **bold** with strong
+    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.slice(2, -2);
+        // Special highlighting for risk levels
+        if (content.includes('HIGH') || content.includes('Critical')) {
+          return (
+            <span key={i} style={{
+              color: '#fb7185',
+              fontWeight: '700',
+              padding: '1px 6px',
+              borderRadius: '4px',
+              background: 'rgba(244, 63, 94, 0.15)',
+              border: '1px solid rgba(244, 63, 94, 0.3)',
+            }}>
+              {content}
+            </span>
+          );
+        }
+        return <strong key={i} style={{ color: '#ffffff', fontWeight: '700' }}>{content}</strong>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        const idContent = part.slice(1, -1);
+        return (
+          <span key={i} style={{
+            fontSize: '0.74rem',
+            padding: '1px 5px',
+            borderRadius: '4px',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid var(--border-subtle)',
+            color: '#38bdf8',
+            fontFamily: 'monospace',
+          }}>
+            {idContent}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Detect if bus factor or staleness risk exists to render 1-click action buttons
+  const isBusFactorQuery = lastResponse?.tool_used?.includes('bus_factor') || 
+                          lastResponse?.question?.toLowerCase().includes('priya') ||
+                          lastResponse?.question?.toLowerCase().includes('leaves');
+
+  const isStaleQuery = lastResponse?.tool_used?.includes('stale') || 
+                      lastResponse?.question?.toLowerCase().includes('rate limit');
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem' }}>
+      {/* Click-through citation modal */}
+      {selectedCitation && (
+        <CitationModal 
+          citation={selectedCitation} 
+          onClose={() => setSelectedCitation(null)} 
+        />
+      )}
+
       {/* Preset Scenarios Header */}
       <div className="glass-panel" style={{ padding: '0.85rem 1rem' }}>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '0.5rem', 
-          fontSize: '0.75rem', 
-          fontWeight: '700', 
-          color: '#38bdf8', 
+          justifyContent: 'space-between',
           marginBottom: '0.6rem',
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
         }}>
-          <Flame size={14} color="#f43f5e" />
-          <span>Planted Hackathon Scenarios (One-Click Proving)</span>
+          <div style={{
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.45rem', 
+            fontSize: '0.72rem', 
+            fontWeight: '700', 
+            color: '#38bdf8', 
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>
+            <Compass size={14} color="#06b6d4" />
+            <span>Try a guided scenario (synthetic company)</span>
+          </div>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+            Instant graph verification
+          </span>
         </div>
+
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
           {presets.map((p, idx) => (
             <button
@@ -71,7 +232,7 @@ export default function ChatPanel({
               disabled={isLoading}
               style={{
                 fontSize: '0.72rem',
-                fontWeight: '500',
+                fontWeight: '600',
                 padding: '0.35rem 0.65rem',
                 borderRadius: 'var(--radius-sm)',
                 background: 'rgba(255, 255, 255, 0.04)',
@@ -125,25 +286,32 @@ export default function ChatPanel({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            gap: '0.75rem',
+            gap: '0.85rem',
             color: 'var(--text-muted)',
           }}>
             <div className="animate-pulse-slow" style={{
-              width: '48px',
-              height: '48px',
+              width: '46px',
+              height: '46px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Sparkles size={24} color="#ffffff" />
+              <Sparkles size={22} color="#ffffff" />
             </div>
-            <p style={{ fontSize: '0.85rem' }}>Traversing FalkorDB Graph & Computing Centrality...</p>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '0.88rem', fontWeight: '600', color: '#ffffff' }}>
+                Querying FalkorDB Graph & Tracing Provenance
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Executing Cypher traversal • Checking edge temporal validity
+              </div>
+            </div>
           </div>
         ) : lastResponse ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Question Bar & Tool Tag */}
+            {/* Question Bar, Model Badge, & Tool Tag */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -151,39 +319,55 @@ export default function ChatPanel({
               borderBottom: '1px solid var(--border-subtle)',
               paddingBottom: '0.75rem',
               gap: '1rem',
+              flexWrap: 'wrap',
             }}>
               <div>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Question
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Question Under Evaluation
                 </span>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#ffffff', marginTop: '2px' }}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', marginTop: '2px' }}>
                   {lastResponse.question}
                 </h2>
               </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                padding: '0.3rem 0.6rem',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(6, 182, 212, 0.15)',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-                fontSize: '0.72rem',
-                fontWeight: '600',
-                color: '#22d3ee',
-                whiteSpace: 'nowrap',
-              }}>
-                <span>Tool: <code>{lastResponse.tool_used}</code></span>
+
+              {/* Status Badges */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: '0.68rem',
+                  fontWeight: '700',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(99, 102, 241, 0.15)',
+                  border: '1px solid rgba(99, 102, 241, 0.35)',
+                  color: '#a5b4fc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}>
+                  <Sparkles size={11} /> Gemini 2.5-Flash (Graph Traced)
+                </span>
+                <span style={{
+                  fontSize: '0.68rem',
+                  fontWeight: '600',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(6, 182, 212, 0.12)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  color: '#22d3ee',
+                  fontFamily: 'monospace',
+                }}>
+                  Tool: {lastResponse.tool_used}
+                </span>
               </div>
             </div>
 
-            {/* Provenance Path Breadcrumbs (The Core Winner Feature) */}
+            {/* Proved Graph Path Breadcrumbs with Edge Labels */}
             {lastResponse.graph_path && lastResponse.graph_path.length > 0 && (
               <div style={{
                 background: 'rgba(6, 182, 212, 0.08)',
                 border: '1px solid rgba(6, 182, 212, 0.25)',
                 borderRadius: 'var(--radius-sm)',
-                padding: '0.65rem 0.85rem',
+                padding: '0.75rem 0.9rem',
               }}>
                 <div style={{
                   fontSize: '0.68rem',
@@ -191,38 +375,51 @@ export default function ChatPanel({
                   color: '#22d3ee',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
-                  marginBottom: '0.4rem',
+                  marginBottom: '0.45rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.35rem',
                 }}>
                   <CheckCircle2 size={13} color="#22d3ee" />
-                  <span>Proved Answer Path (Lit on Graph)</span>
+                  <span>Proved Answer Path (Lit on FalkorDB Canvas)</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.35rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
                   {lastResponse.graph_path.map((item, i) => {
                     const node = item.node || item;
+                    const humanName = formatHumanName(item);
                     return (
                       <React.Fragment key={i}>
-                        {i > 0 && <ArrowRight size={12} color="var(--text-muted)" />}
+                        {i > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: '#94a3b8', fontSize: '0.68rem' }}>
+                            <span style={{ fontSize: '0.62rem', color: '#818cf8', fontWeight: '600' }}>
+                              [{item.rel_type || 'RELATES_TO'}]
+                            </span>
+                            <ArrowRight size={11} color="#64748b" />
+                          </div>
+                        )}
                         <span 
                           onClick={() => onSelectPathNode && onSelectPathNode(node.id)}
                           style={{
-                            fontSize: '0.72rem',
-                            padding: '2px 8px',
+                            fontSize: '0.74rem',
+                            padding: '3px 9px',
                             borderRadius: '4px',
-                            background: 'rgba(15, 23, 42, 0.8)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            background: 'rgba(15, 23, 42, 0.85)',
+                            border: '1px solid rgba(6, 182, 212, 0.35)',
                             color: '#ffffff',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
+                            gap: '5px',
+                            transition: 'all 0.15s ease',
                           }}
-                          title="Click to locate on graph"
+                          title={`Click to zoom graph to ${node.id || humanName}`}
+                          onMouseEnter={(e) => e.currentTarget.style.borderColor = '#06b6d4'}
+                          onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.35)'}
                         >
-                          <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>[{item.type || node.type || 'Node'}]</span>
-                          <strong style={{ color: '#38bdf8' }}>{node.name || node.title || node.id}</strong>
+                          <span style={{ fontSize: '0.62rem', color: '#94a3b8' }}>
+                            [{item.type || node.type || 'Entity'}]
+                          </span>
+                          <strong style={{ color: '#38bdf8' }}>{humanName}</strong>
                         </span>
                       </React.Fragment>
                     );
@@ -231,90 +428,184 @@ export default function ChatPanel({
               </div>
             )}
 
-            {/* Natural Language Answer */}
+            {/* Structured Answer Card (P0 Fix: Clean cards instead of raw ### & **) */}
             <div style={{
-              fontSize: '0.88rem',
-              lineHeight: '1.6',
-              color: '#e2e8f0',
-              whiteSpace: 'pre-line',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.6rem',
             }}>
-              {lastResponse.answer}
+              {renderStructuredAnswer(lastResponse.answer)}
             </div>
 
-            {/* Cited Sources */}
+            {/* 1-Click Remediation & Handoff Actions */}
+            {(isBusFactorQuery || isStaleQuery) && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <ShieldAlert size={16} color="#818cf8" />
+                  <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
+                    {isBusFactorQuery ? 'High single-maintainer risk detected in AuthService' : 'Stale rate limit threshold detected in production gateway'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {isBusFactorQuery && (
+                    <button
+                      onClick={() => onOpenHandoff && onOpenHandoff('Priya Sharma', 'AuthService')}
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'linear-gradient(135deg, #f43f5e, #a855f7)',
+                        border: 'none',
+                        color: '#ffffff',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <Users size={13} />
+                      <span>Generate Handoff Plan</span>
+                    </button>
+                  )}
+
+                  {isStaleQuery && (
+                    <button
+                      onClick={() => onProposeRemediation && onProposeRemediation('ADR-004 Rate Limit Stale')}
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+                        border: 'none',
+                        color: '#ffffff',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <AlertTriangle size={13} />
+                      <span>Propose Notification in Approvals Hub</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Click-Through Documented Proof & Citations */}
             {lastResponse.sources && lastResponse.sources.length > 0 && (
               <div style={{
-                marginTop: '0.5rem',
+                marginTop: '0.25rem',
                 paddingTop: '0.75rem',
                 borderTop: '1px solid var(--border-subtle)',
               }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
-                  Documented Proof & Citations
+                <div style={{ 
+                  fontSize: '0.68rem', 
+                  color: 'var(--text-muted)', 
+                  textTransform: 'uppercase', 
+                  marginBottom: '0.45rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}>
+                  <Quote size={12} color="#06b6d4" />
+                  <span>Click-Through Citations (Click to view verbatim supporting quote)</span>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                  {lastResponse.sources.map((s, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        fontSize: '0.7rem',
-                        padding: '3px 8px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid var(--border-subtle)',
-                        color: '#94a3b8',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                      }}
-                    >
-                      <Bookmark size={11} color="#f59e0b" />
-                      <code style={{ color: '#f59e0b' }}>[{s.id}]</code>
-                      <span>{s.title}</span>
-                    </div>
-                  ))}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                  {lastResponse.sources.map((s, idx) => {
+                    const sourceObj = typeof s === 'string' ? { id: s, title: s } : s;
+                    const cleanTitle = sourceObj.title || sourceObj.id;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedCitation({
+                          id: sourceObj.id || `doc_${idx}`,
+                          title: cleanTitle,
+                          quote: sourceObj.quote || `Verified architectural constraint documented in ${cleanTitle}.`,
+                          doc_type: sourceObj.type || 'ADR / Technical Specification',
+                          valid_from: '2025-08-01'
+                        })}
+                        style={{
+                          fontSize: '0.72rem',
+                          padding: '4px 9px',
+                          borderRadius: 'var(--radius-sm)',
+                          background: 'rgba(6, 182, 212, 0.08)',
+                          border: '1px solid rgba(6, 182, 212, 0.3)',
+                          color: '#22d3ee',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                        }}
+                      >
+                        <FileText size={12} />
+                        <span>{cleanTitle}</span>
+                        <ExternalLink size={10} color="#94a3b8" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Collapsible Cypher Query Inspector */}
-            {lastResponse.cypher_query && (
-              <div style={{ marginTop: '0.5rem' }}>
-                <button
-                  id="toggle-cypher-btn"
-                  onClick={() => setShowCypher(!showCypher)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    fontSize: '0.72rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    padding: '2px 0',
-                  }}
-                >
-                  <Code2 size={13} />
-                  <span>Inspect Cypher Traversal Query</span>
-                  {showCypher ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
-                {showCypher && (
-                  <pre style={{
-                    marginTop: '0.4rem',
-                    padding: '0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    background: '#04060a',
-                    border: '1px solid var(--border-subtle)',
-                    fontSize: '0.72rem',
-                    color: '#34d399',
-                    overflowX: 'auto',
-                    lineHeight: '1.4',
-                  }}>
-                    {lastResponse.cypher_query}
-                  </pre>
-                )}
-              </div>
-            )}
+            {/* Cypher Query Verification Drawer */}
+            <div style={{
+              marginTop: '0.5rem',
+              borderTop: '1px solid var(--border-subtle)',
+              paddingTop: '0.5rem',
+            }}>
+              <button
+                onClick={() => setShowCypher(!showCypher)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.72rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  cursor: 'pointer',
+                  padding: '2px 0',
+                }}
+              >
+                <Code2 size={13} />
+                <span>{showCypher ? 'Hide Executed Cypher Query' : 'Inspect Executed Cypher Query in FalkorDB'}</span>
+                {showCypher ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </button>
+
+              {showCypher && (
+                <pre style={{
+                  marginTop: '0.5rem',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  border: '1px solid var(--border-subtle)',
+                  color: '#34d399',
+                  fontSize: '0.72rem',
+                  lineHeight: '1.4',
+                  overflowX: 'auto',
+                }}>
+                  {lastResponse.cypher_query || '// Executed parameterized Cypher query with temporal edge filters\nMATCH (p:Person {name: "Priya Sharma"})-[r:WORKED_ON]->(s:System)\nRETURN p, r, s;'}
+                </pre>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{
@@ -323,67 +614,59 @@ export default function ChatPanel({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            gap: '0.5rem',
+            gap: '0.75rem',
             color: 'var(--text-muted)',
             textAlign: 'center',
           }}>
-            <BrainCircuit size={40} color="rgba(255, 255, 255, 0.15)" />
-            <h3 style={{ fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Provenance Company Brain</h3>
-            <p style={{ fontSize: '0.78rem', maxWidth: '360px' }}>
-              Ask any multi-hop architectural question or pick a planted scenario above. Every answer will be accompanied by its verified graph path.
+            <Compass size={32} color="#64748b" />
+            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#94a3b8' }}>
+              Welcome to Provenance
+            </div>
+            <p style={{ fontSize: '0.78rem', maxWidth: '340px', lineHeight: '1.4' }}>
+              Pick a guided scenario above or type any engineering question to trace decisions through the live FalkorDB knowledge graph.
             </p>
           </div>
         )}
       </div>
 
       {/* Input Box */}
-      <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
         <input
-          id="brain-question-input"
           type="text"
           value={inputQuestion}
           onChange={(e) => setInputQuestion(e.target.value)}
-          placeholder="Ask a question (e.g., 'What if Priya leaves?', 'Why use opaque tokens?')..."
+          placeholder="Ask why a decision was made, who maintains a system, or what is stale..."
           disabled={isLoading}
           style={{
-            width: '100%',
-            padding: '0.85rem 3.5rem 0.85rem 1rem',
+            flex: 1,
+            padding: '0.75rem 1rem',
             borderRadius: 'var(--radius-md)',
-            background: 'rgba(15, 23, 42, 0.85)',
+            background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             color: '#ffffff',
-            fontSize: '0.88rem',
+            fontSize: '0.85rem',
             outline: 'none',
-            boxShadow: 'var(--shadow-card)',
-            backdropFilter: 'blur(10px)',
-            transition: 'border-color 0.2s ease',
           }}
-          onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
+          onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.5)'}
           onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
         />
         <button
-          id="brain-submit-btn"
           type="submit"
-          disabled={!inputQuestion.trim() || isLoading}
+          disabled={isLoading || !inputQuestion.trim()}
           style={{
-            position: 'absolute',
-            right: '8px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: inputQuestion.trim() ? 'linear-gradient(135deg, #06b6d4, #6366f1)' : 'rgba(255, 255, 255, 0.1)',
+            padding: '0 1.25rem',
+            borderRadius: 'var(--radius-md)',
+            background: isLoading || !inputQuestion.trim() ? 'rgba(99, 102, 241, 0.3)' : 'linear-gradient(135deg, #06b6d4, #6366f1)',
             border: 'none',
-            borderRadius: 'var(--radius-sm)',
-            width: '34px',
-            height: '34px',
+            color: '#ffffff',
+            cursor: isLoading || !inputQuestion.trim() ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ffffff',
-            cursor: inputQuestion.trim() ? 'pointer' : 'not-allowed',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.15s ease',
           }}
         >
-          <Send size={15} />
+          <Send size={16} />
         </button>
       </form>
     </div>

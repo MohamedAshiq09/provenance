@@ -10,3 +10,4 @@ In compliance with the FalkorDB Graph Hacks Hackathon rules (Rules 7, 12, 13), a
 - **Deterministic Cypher**: All 8 Cypher queries used by the company brain were designed deterministically by the engineering team (no dynamic hallucinations).
 - **Graph Algorithms**: BFS/DFS backward traversal for staleness, degree centrality for expertise, and FalkorDB native `shortestPath` were implemented directly in Cypher.
 - **Verification**: 18 unit tests in pytest and a 30-question ground-truth benchmark verify all query outputs against known answer keys.
+- **Competitive UX & Front Door Overhaul (2026-10-16)**: Re-architected UI layout (Brain Health front door, live ingest visualizer, idempotent approvals, and structured card answer parsing) with Antigravity pair programming.
