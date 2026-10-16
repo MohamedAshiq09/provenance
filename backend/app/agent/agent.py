@@ -14,6 +14,7 @@ from app.queries.graph_queries import (
     as_of,
     search_and_expand,
     get_stale_decisions,
+    impact_of,
 )
 
 
@@ -50,6 +51,10 @@ AVAILABLE_TOOLS = {
         "description": "Get all currently stale decisions with their impact radius. USE FOR: 'what is stale', 'stale decisions dashboard', 'what needs review'",
         "params": [],
     },
+    "impact_of": {
+        "description": "Simulate the blast radius of changing a node — downstream impacts plus what would need re-review. USE FOR: 'what breaks if', 'what if we change', 'impact of', 'blast radius'",
+        "params": ["node_id"],
+    },
 }
 
 
@@ -67,6 +72,19 @@ def _deterministic_select_tool(question: str) -> dict:
             "tool": "trace_decision",
             "params": {"decision_id": "decision_hpa_auth"},
             "reasoning": "Identified buried multi-hop provenance query for HPA autoscaling",
+        }
+    elif any(k in q for k in ["what breaks", "blast radius", "impact of", "what if we change", "what happens if we change", "deprecat"]):
+        node_id = "sys_auth"
+        for token, nid in [("auth", "sys_auth"), ("payment", "sys_payments"), ("bill", "sys_billing"),
+                           ("jwt", "decision_use_jwt"), ("hpa", "decision_hpa_auth"),
+                           ("rate limit", "doc_rate_limit_200")]:
+            if token in q:
+                node_id = nid
+                break
+        return {
+            "tool": "impact_of",
+            "params": {"node_id": node_id},
+            "reasoning": f"Identified impact-simulation question for {node_id}",
         }
     elif any(k in q for k in ["bus factor", "leaves", "left", "quit", "sole expert", "what if", "sole ownership"]):
         person_id = "person_priya"
@@ -250,6 +268,24 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             lines.append(" → ".join(f"**{n.get('name', n.get('title', n.get('id', '?')))}**" for n in nodes))
         else:
             lines.append("No direct path found within 10 hops.")
+    elif tool_name == "impact_of":
+        node_id = result.get("node_id", "")
+        downstream = result.get("downstream", [])
+        review = result.get("needs_review", [])
+        lines.append(f"### Blast-Radius Simulation: changing `{node_id}`")
+        lines.append(f"**Downstream impacts**: {len(downstream)} | **Needs re-review**: {len(review)}")
+        if downstream:
+            lines.append("\n**Downstream Impacts (by depth)**:")
+            for item in downstream[:8]:
+                n = item.get("node", {})
+                via = " → ".join(item.get("via", []))
+                lines.append(f"- **{n.get('name', n.get('title', n.get('id')))}** (`{n.get('id')}`, depth {item.get('depth')}, via {via})")
+        if review:
+            lines.append("\n**Would Need Re-review**:")
+            for r in review[:8]:
+                lines.append(f"- **{r.get('title', r.get('name', r.get('id')))}** (`{r.get('id')}`, edge: {r.get('review_edge')})")
+        if not downstream and not review:
+            lines.append("No downstream impacts or review candidates found within 3 hops.")
     else:
         lines.append(f"Found {len(result) if isinstance(result, list) else 1} relevant graph records.")
 
@@ -381,6 +417,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "bus_factor": lambda p: bus_factor(p.get("person_id", "person_priya"), graph_name),
         "connection_path": lambda p: connection_path(p.get("node_a_id", "person_priya"), p.get("node_b_id", "sys_auth"), graph_name),
         "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), graph_name),
+        "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), graph_name),
         "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
         "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
     }
@@ -476,6 +513,10 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
         return [{"node": e, "type": "Person", "edge": "WORKED_ON"} for e in result.get("experts", [])[:5]]
     elif tool_name == "bus_factor":
         return [{"node": s, "type": "System", "edge": "SOLE_EXPERT"} for s in result.get("sole_expert_systems", [])]
+    elif tool_name == "impact_of":
+        path = [{"node": i.get("node", {}), "type": "Impacted", "edge": "+".join(i.get("via", []))} for i in result.get("downstream", [])[:8]]
+        path += [{"node": r, "type": "Review", "edge": r.get("review_edge", "")} for r in result.get("needs_review", [])[:8]]
+        return path
     return []
 
 
@@ -491,5 +532,6 @@ def _get_query_for_tool(tool_name: str) -> str:
         "as_of": graph_queries.AS_OF_DECISIONS_QUERY,
         "search_and_expand": graph_queries.SEARCH_AND_EXPAND_QUERY,
         "get_stale_decisions": graph_queries.STALE_DECISIONS_QUERY,
+        "impact_of": graph_queries.IMPACT_DOWNSTREAM_QUERY,
     }
     return query_map.get(tool_name, "")
