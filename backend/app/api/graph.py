@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.queries.graph_queries import (
     trace_decision, who_knows, bus_factor,
     connection_path, as_of, get_stale_decisions, get_graph_stats,
-    impact_of, decision_timeline,
+    impact_of, decision_timeline, knowledge_gaps,
 )
 
 router = APIRouter()
@@ -61,3 +61,9 @@ def impact(node_id: str, graph_name: str = "company_brain"):
 def timeline(decision_id: str, graph_name: str = "company_brain"):
     """Show how a decision evolved over time."""
     return decision_timeline(decision_id, graph_name)
+
+
+@router.get("/gaps")
+def gaps(graph_name: str = "company_brain"):
+    """Find what the company does NOT know (orphans)."""
+    return knowledge_gaps(graph_name)
