@@ -589,6 +589,57 @@ def impact_of(node_id: str, graph_name: str = None) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# QUERY 12: Decision Lifecycle Timeline ("how did our thinking evolve?")
+# WHY GRAPH: A decision's evolution is the SUPERSEDES chain walked in BOTH
+# directions and ordered by time — predecessors (what it replaced) and
+# successors (what replaced it), each with maker and evidence. A flat store
+# holds snapshots; only the graph holds the lineage in queryable form.
+# ─────────────────────────────────────────────────────────────────────────────
+TIMELINE_QUERY = """
+// Full lifecycle of a decision: what it replaced, what replaced it, ordered by time
+MATCH (d:Decision {id: $decision_id})
+OPTIONAL MATCH (d)-[:SUPERSEDES*0..5]->(older:Decision)
+OPTIONAL MATCH (newer:Decision)-[:SUPERSEDES*1..5]->(d)
+WITH d, collect(DISTINCT older) + collect(DISTINCT newer) AS chain
+UNWIND chain AS c
+OPTIONAL MATCH (c)-[:MADE_BY]->(p:Person)
+OPTIONAL MATCH (c)-[:BASED_ON]->(src)
+RETURN c, p, collect(DISTINCT src) as sources
+ORDER BY coalesce(c.valid_from, c.made_at, '')
+"""
+
+def decision_timeline(decision_id: str, graph_name: str = None) -> dict:
+    """
+    Show how a decision evolved: the ordered SUPERSEDES lineage with
+    maker and evidence at each step.
+
+    GRAPH NECESSITY: Bidirectional variable-length traversal over
+    SUPERSEDES, time-ordered. Snapshots in a document store cannot
+    reconstruct lineage — the chain exists only as graph edges.
+    """
+    g = _graph(graph_name)
+    result = g.query(TIMELINE_QUERY, {"decision_id": decision_id})
+    if not result.result_set:
+        return {"error": f"Decision '{decision_id}' not found"}
+
+    timeline = []
+    for row in result.result_set:
+        c = _node_to_dict(row[0])
+        if not c.get("id"):
+            continue
+        c["made_by"] = _node_to_dict(row[1]) if row[1] else None
+        c["based_on"] = [_node_to_dict(s) for s in (row[2] or []) if s]
+        timeline.append(c)
+
+    return {
+        "anchor_id": decision_id,
+        "timeline": timeline,
+        "count": len(timeline),
+        "current": timeline[-1] if timeline else {},
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
 STATS_QUERY = """
