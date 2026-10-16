@@ -17,6 +17,7 @@
   - 00a7314 `agents: add verify-run, review-gate, cypher-rules skills` — `.opencode/skills/` (3 skills).
 - 6899060 `feat: add UI components including Header, McpPanel, StaleDecisionsPanel, and TimeTravelSlider` — `ui/` panels (proves ui-agent seam exists).
 - d4065f8 and earlier: UI component + Next.js init commits — `ui/` (see `git log --oneline -10`).
+- 2026-10-16: Ran `improve-product` + codebase-architecture review — report at `/tmp/product-review-20261016-190545.html` (8 dimension verdicts, 8 product cards P1–P8 with badges + prior-art URLs, 4 arch cards A1–A4, Top recommendation). Research: GraphRAG papers (2404.16130, 2501.00309, 2507.03226, 2603.14828), WikiMonitor-Onto staleness, Glean connectors+MCP, MCP auth (MongoDB/AWS/RedHat/spec), KB staleness (Atlan, tianpan, auditors).
 - 2026-10-16: T5 done — 97acbb8 `docs: drop Claude references, document Inspector over real MCP` (README mermaid + MCP section → Inspector commands + generic config, router docstring, mcp-agent file, CLAUDE.md:72; 28/28 pytest). Kept: `ANTHROPIC_MODEL` id, `AI_USAGE.md:7` history.
 - 2026-10-16: T6 done — rehearsed README Inspector commands verbatim (tools/list → 8 tools; tools/call who_knows → Priya/Platform Engineering). Judge path works copy-paste.
 - 2026-10-16: T4 done — aa11da7 `test: cover all 8 MCP tools via in-memory client` (`backend/tests/test_mcp.py`, 10 tests). Suite now 28/28.
@@ -31,7 +32,7 @@
 
 ## (c) In progress right now
 
-- (none) — MCP v1 T1–T6 all closed 2026-10-16. Next: owner picks follow-up (Ollama agent / deploy / v2 resources-prompts are parked).
+- (none) — product+architecture review delivered 2026-10-16; awaiting owner picks for ticketizing.
 
 ## (d) Next task (MCP v1 — owner decisions 2026-10-16: production rewire, Inspector-only demo, no Claude mentions, local-first, 8 tools)
 
