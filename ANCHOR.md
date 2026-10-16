@@ -34,15 +34,16 @@
 
 - (none) — product+architecture review delivered 2026-10-16; awaiting owner picks for ticketizing.
 
-## (d) Next task (MCP v1 — owner decisions 2026-10-16: production rewire, Inspector-only demo, no Claude mentions, local-first, 8 tools)
+## (d) Next task (solution v2 — owner approved senior call 2026-10-16: F1,F3,F6,F2-guarded first, F4/F5 after; F7-push + F8 dropped)
 
-1. T1 mcp-agent: real `MCPServer("provenance-company-brain")` in `backend/app/tools/` — 8 typed `@mcp.tool()` funcs delegating to existing `run_tool`/query layer; typed hints are the schema; sync OK. Verify: in-memory `Client(mcp)` calls each tool.
-2. T2 mcp-agent: mount Streamable HTTP at `/mcp` in `backend/main.py` (`streamable_http_app()` + `Mount`, lifespan enters `mcp.session_manager.run()`); move REST shim to `/api/mcp/*`. Verify: Inspector `--cli` tools/list + tools/call; full pytest green.
-3. T3 ui-agent: rewire `ui/src/components/McpPanel.jsx` to real MCP via `@modelcontextprotocol/sdk` TS client; fix `ui/next.config.mjs` rewrites (bare `/mcp` included); backend CORS allow/expose `Mcp-*` headers; valid generic client config in copy button. Verify: `bun run build` + live Execute click.
-4. T4 eval-infra-agent: `backend/tests/test_mcp.py` — in-memory `Client` tests for all 8 tools + unknown-tool error path; document Inspector CLI check. Verify: pytest green.
-5. T5 mcp-agent + ui-agent: Claude-mention sweep — `README.md` (5 spots incl. Desktop config → Inspector commands), `backend/app/api/mcp_router.py` docstring, `.opencode/agents/mcp-agent.md`, `CLAUDE.md:72`, panel text (in T3). Keep: `ANTHROPIC_MODEL` value in `backend/app/core/config.py` (model id, not integration), `AI_USAGE.md:7` (history). Verify: `grep -ri claude` clean except those two.
-6. T6 eval-infra-agent: Inspector demo runbook (web + `--cli` commands) + full rehearsal against live backend. Verify: every command run, output observed.
-- PARKED (explicitly out of v1): Ollama local agent, deploy/Render + `TransportSecurity`, MCP resources/prompts v2.
+1. S1 graph-agent+api-agent: impact simulation `impact_of(node_id)` — new IMPACT_QUERY in `backend/app/queries/graph_queries.py`: from any node id, forward-traverse `AFFECTS|DEPENDS_ON|USES` up to 3 hops, return impacted nodes + depth + via-path. Wire: AVAILABLE_TOOLS + run_tool + `@mcp.tool` + router keywords (impact/blast/what-if-we-change) + REST `GET /api/graph/impact/{node_id}`. Verify: pytest (impact of sys_auth non-empty, known downstream present) + Inspector tools/call.
+2. S3 graph-agent+ui-agent: decision timeline `decision_timeline(decision_id)` — new TIMELINE_QUERY: SUPERSEDES chain both directions ordered by valid_from/made_at with MADE_BY + BASED_ON titles. Wire: tool + MCP + REST `GET /api/graph/timeline/{id}` + deterministic synthesis + path extraction (chat renders ordered list; no new panel). Router keywords (evolv/timeline/history-of-decision). Verify: pytest ordered non-empty + Inspector.
+3. S6 graph-agent: `knowledge_gaps()` — orphan queries: systems with zero incoming AFFECTS, decisions with no BASED_ON, docs with no AUTHORED, unreviewed-stale count. Wire: tool + MCP + REST `GET /api/graph/gaps`. Verify: pytest structure (keys present) + Inspector.
+4. S2 graph-agent+api-agent (GUARDED): contradiction candidates on ingest — in `POST /api/ingest/document|raw-text`, find overlap candidates via search_and_expand on title keywords; LLM verdict (keys present) or `unverified` (no keys); NO auto-edge. New `GET /api/graph/contradictions` review list + `POST /api/graph/contradictions/confirm` creating CONTRADICTS edge with claim props → existing staleness flow fires. Demo arc: ingest → candidates → confirm → radar. Verify: pytest with temp docs (DETACH DELETE cleanup) + live demo arc.
+5. S4 api-agent: `ramp_plan(system_name)` composer in graph_queries (multi-query, still deterministic): who_knows + key decisions via AFFECTS + related docs. Wire: tool + MCP + REST. Verify: pytest non-empty experts+decisions + Inspector.
+6. S5 graph-agent: `team_risk()` — per team: members, sole-expert systems, active/stale decisions. Wire: tool + MCP + REST `GET /api/graph/team-risk`. Verify: pytest team_platform fields + Inspector.
+- NON-GOALS (explicit): F7 push digest, F8 reviewer routing, A4 envelopes, Ollama agent, MCP OAuth, P7 connectors. Future runs must not re-suggest silently.
+- PARKED earlier still parked: deploy/Render + TransportSecurity, v2 resources/prompts.
 
 ## (e) Durable facts (each with owning file)
 
