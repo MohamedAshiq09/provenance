@@ -32,12 +32,12 @@
 
 ## (c) In progress right now
 
-- (none) — S1 closed 2026-10-16. Next: S3 decision timeline on owner go.
+- (none) — S3 closed 2026-10-16. Next: S6 knowledge gaps on owner go.
 
 ## (d) Next task (solution v2 — owner approved senior call 2026-10-16: F1,F3,F6,F2-guarded first, F4/F5 after; F7-push + F8 dropped)
 
 1. S1 DONE 2026-10-16 — 2757c22 graph + e6c6e25 agent + a8975bb mcp + a2001d2 api + 08ee4aa test. Gate (BEFORE commit, local FalkorDB): 33/33 pytest; benchmark 30/30 100%-vs-6.7% no regression; impact_of 2–11 ms; REST + Inspector + /ask routing live-verified. impact_of(sys_auth) review=11 (matches 11 AFFECTS edges), downstream=0 honest (no USES/DEPENDS_ON edges in synthetic data).
-2. S3 graph-agent+ui-agent: decision timeline `decision_timeline(decision_id)` — new TIMELINE_QUERY: SUPERSEDES chain both directions ordered by valid_from/made_at with MADE_BY + BASED_ON titles. Wire: tool + MCP + REST `GET /api/graph/timeline/{id}` + deterministic synthesis + path extraction (chat renders ordered list; no new panel). Router keywords (evolv/timeline/history-of-decision). Verify: pytest ordered non-empty + Inspector.
+2. S3 DONE 2026-10-16 — c96cd50 graph + 0fe463d agent + 70d2066 mcp + c659f13 api + b748ce5 test. Gate (BEFORE commit, local): 38/38 pytest; benchmark 30/30 no regression; timeline 10.2 ms, exact order [use_jwt → opaque_tokens] both directions; REST + Inspector (cockroach chain live) + /ask routing verified.
 3. S6 graph-agent: `knowledge_gaps()` — orphan queries: systems with zero incoming AFFECTS, decisions with no BASED_ON, docs with no AUTHORED, unreviewed-stale count. Wire: tool + MCP + REST `GET /api/graph/gaps`. Verify: pytest structure (keys present) + Inspector.
 4. S2 graph-agent+api-agent (GUARDED): contradiction candidates on ingest — in `POST /api/ingest/document|raw-text`, find overlap candidates via search_and_expand on title keywords; LLM verdict (keys present) or `unverified` (no keys); NO auto-edge. New `GET /api/graph/contradictions` review list + `POST /api/graph/contradictions/confirm` creating CONTRADICTS edge with claim props → existing staleness flow fires. Demo arc: ingest → candidates → confirm → radar. Verify: pytest with temp docs (DETACH DELETE cleanup) + live demo arc.
 5. S4 api-agent: `ramp_plan(system_name)` composer in graph_queries (multi-query, still deterministic): who_knows + key decisions via AFFECTS + related docs. Wire: tool + MCP + REST. Verify: pytest non-empty experts+decisions + Inspector.
@@ -53,7 +53,7 @@
 - Temporal edges carry `valid_from`, `valid_to`, `ingested_at`, `source_id` — `CLAUDE.md`, `AGENTS.md` §5.
 - Synthetic/public data only; fixtures in `data/synthetic/` — `CLAUDE.md`.
 - Git: repo root IS `provenance/` (parent `falkordb/` is not a repo); remote `origin https://github.com/MohamedAshiq09/provenance`; commits use `<scope>: <what changed>`, small + pushed — `AGENTS.md` §8.
-- Env rule (2026-10-16): owner keeps cloud creds in `backend/.env` (never touched by agents). While it points at cloud, local runs MUST override in-shell: `FALKORDB_HOST=127.0.0.1 FALKORDB_PORT=6379 FALKORDB_USERNAME= FALKORDB_PASSWORD= FALKORDB_SSL=false FALKORDB_GRAPH_NAME=company_brain` (shell env beats `.env`). Cloud creds currently FAIL auth (observed `AuthenticationError`) — owner to check password/SSL/rotation; agents never debug secret values.
+- Env rule (2026-10-16): owner keeps cloud creds in `backend/.env` (never touched by agents). Cloud ping True; graph `FalkorDB Instance` holds 72P/94Dec/286Doc (looks double-loaded vs local — flagged, untouched). While `.env` points at cloud, local runs MUST override in-shell: `FALKORDB_HOST=127.0.0.1 FALKORDB_PORT=6379 FALKORDB_USERNAME= FALKORDB_PASSWORD= FALKORDB_SSL=false FALKORDB_GRAPH_NAME=company_brain` (shell env beats `.env`). Cloud creds currently FAIL auth (observed `AuthenticationError`) — owner to check password/SSL/rotation; agents never debug secret values.
 - Never touch `env*` files; never leave `provenance/` — `AGENTS.md` §3.
 - Pre-existing uncommitted change (not mine, 2026-10-15): `bin/` line appended to `.gitignore` — see `git diff .gitignore`. Decide: commit separately or revert.
 
