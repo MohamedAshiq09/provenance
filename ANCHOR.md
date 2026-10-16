@@ -17,6 +17,12 @@
   - 00a7314 `agents: add verify-run, review-gate, cypher-rules skills` — `.opencode/skills/` (3 skills).
 - 6899060 `feat: add UI components including Header, McpPanel, StaleDecisionsPanel, and TimeTravelSlider` — `ui/` panels (proves ui-agent seam exists).
 - d4065f8 and earlier: UI component + Next.js init commits — `ui/` (see `git log --oneline -10`).
+- 2026-10-16: T5 done — 97acbb8 `docs: drop Claude references, document Inspector over real MCP` (README mermaid + MCP section → Inspector commands + generic config, router docstring, mcp-agent file, CLAUDE.md:72; 28/28 pytest). Kept: `ANTHROPIC_MODEL` id, `AI_USAGE.md:7` history.
+- 2026-10-16: T6 done — rehearsed README Inspector commands verbatim (tools/list → 8 tools; tools/call who_knows → Priya/Platform Engineering). Judge path works copy-paste.
+- 2026-10-16: T4 done — aa11da7 `test: cover all 8 MCP tools via in-memory client` (`backend/tests/test_mcp.py`, 10 tests). Suite now 28/28.
+- 2026-10-16: T3 done — 68112c1 `ui: rewire McpPanel to real MCP client` (live tools/list drives list, callTool executes, same-origin `/mcp` rewrite, generic config copy, Claude text gone) + ceb8cbb SDK dep. Verified: `bun run build` green; MCP initialize handshake through Next proxy `:3000/mcp` returns real `mcp-session-id`.
+- 2026-10-16: T2 done — 0b29d9f `mcp: mount Streamable HTTP at /mcp, move shim to /api/mcp` (`backend/main.py` minimal declared touch on api-agent turf: lifespan `session_manager.run()`, mount LAST, CORS `expose_headers Mcp-Session-Id`), 247b614 test fix. Verified: Inspector `--cli` tools/list + tools/call who_knows over HTTP return real graph JSON; shim alive at `/api/mcp/tools`; 18/18 pytest. Note: UI panel temporarily broken (posts to old `/mcp/call`) — fixed in T3.
+- 2026-10-16: T1 done — ca1457a `mcp: add MCPServer with 8 typed graph tools` (`backend/app/tools/mcp_server.py`, `__init__.py`). All 8 tools verified via in-memory `Client(mcp)` against live graph (trace/who-knows/staleness/bus-factor needles found).
 - 2026-10-16 11:30 UTC: Full audit + live verification (all observed, Docker `provenance-falkordb` + uvicorn :8000 left RUNNING):
   - `backend/` core complete: 8 queries + remediate + stats in `backend/app/queries/graph_queries.py` (561 lines); agent loop with LLM router + deterministic fallback + param normalization in `backend/app/agent/agent.py` (495 lines); REST `/api/agent|graph|ingest|health` + `/mcp` shim in `backend/main.py`.
   - `MCP GAP: backend/app/api/mcp_router.py` (57 lines) is a custom REST shim (`GET /tools`, `POST /call`, `/manifest`), NOT the MCP Python SDK (`mcp` dep installed but unused); `backend/app/tools/__init__.py` EMPTY.
@@ -25,7 +31,7 @@
 
 ## (c) In progress right now
 
-- (none) — MCP v1 tickets raised 2026-10-16, awaiting build go from owner.
+- (none) — MCP v1 T1–T6 all closed 2026-10-16. Next: owner picks follow-up (Ollama agent / deploy / v2 resources-prompts are parked).
 
 ## (d) Next task (MCP v1 — owner decisions 2026-10-16: production rewire, Inspector-only demo, no Claude mentions, local-first, 8 tools)
 
