@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.queries.graph_queries import (
     trace_decision, who_knows, bus_factor,
     connection_path, as_of, get_stale_decisions, get_graph_stats,
+    impact_of,
 )
 
 router = APIRouter()
@@ -48,3 +49,9 @@ def stale(graph_name: str = "company_brain"):
 def stats(graph_name: str = "company_brain"):
     """Get node/edge counts."""
     return get_graph_stats(graph_name)
+
+
+@router.get("/impact/{node_id}")
+def impact(node_id: str, graph_name: str = "company_brain"):
+    """Simulate the blast radius of changing a node."""
+    return impact_of(node_id, graph_name)
