@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.queries.graph_queries import (
     trace_decision, who_knows, bus_factor,
     connection_path, as_of, get_stale_decisions, get_graph_stats,
-    impact_of,
+    impact_of, decision_timeline,
 )
 
 router = APIRouter()
@@ -55,3 +55,9 @@ def stats(graph_name: str = "company_brain"):
 def impact(node_id: str, graph_name: str = "company_brain"):
     """Simulate the blast radius of changing a node."""
     return impact_of(node_id, graph_name)
+
+
+@router.get("/timeline/{decision_id}")
+def timeline(decision_id: str, graph_name: str = "company_brain"):
+    """Show how a decision evolved over time."""
+    return decision_timeline(decision_id, graph_name)
