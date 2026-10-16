@@ -270,12 +270,17 @@ def bus_factor(person_id: str, graph_name: str = None) -> dict:
         d["affects"] = [_node_to_dict(a) for a in (row[2] or []) if a]
         critical_decisions.append(d)
     
+    sys_count = len(sole_systems)
+    dec_count = len(critical_decisions)
+    sys_noun = "system" if sys_count == 1 else "systems"
+    dec_noun = "decision" if dec_count == 1 else "decisions"
+    
     return {
         "person_id": person_id,
         "sole_expert_systems": sole_systems,
         "unique_active_decisions": critical_decisions,
         "risk_level": "CRITICAL" if len(sole_systems) >= 3 else "HIGH" if sole_systems else "LOW",
-        "impact_summary": f"Loss of this person affects {len(sole_systems)} systems and {len(critical_decisions)} decisions",
+        "impact_summary": f"Loss of this person affects {sys_count} {sys_noun} and {dec_count} {dec_noun}",
     }
 
 

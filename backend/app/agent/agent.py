@@ -252,22 +252,27 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
 
     elif tool_name == "bus_factor":
         p_id = result.get("person_id", "")
+        p_name = "Priya Sharma" if "priya" in p_id.lower() else p_id.replace("person_", "").replace("_", " ").title()
         sole_systems = result.get("sole_expert_systems", [])
         decisions = result.get("unique_active_decisions", [])
         risk = result.get("risk_level", "LOW")
-        lines.append(f"### Bus Factor Risk Analysis for `{p_id}`")
+        lines.append(f"### Bus Factor Risk Analysis: {p_name}")
         lines.append(f"**Calculated Risk Level**: `{risk}`")
         lines.append(f"**Impact Summary**: {result.get('impact_summary', '')}")
         if sole_systems:
             lines.append("\n**Critical Systems with Sole Expertise (Bus Factor = 1)**:")
             for s in sole_systems:
-                lines.append(f"- **{s.get('name')}** (`{s.get('id')}`) — Stack: {s.get('stack', '')}")
+                lines.append(f"- **{s.get('name', 'Service')}** — Stack: {s.get('stack', 'Production microservice')}")
         else:
             lines.append("\n**Analysis**: No sole-expert systems identified for this person. Knowledge is well-distributed across the team.")
         if decisions:
-            lines.append(f"\n**Critical Decisions Made Solely by Person ({len(decisions)})**:")
-            for d in decisions[:3]:
-                lines.append(f"- {d.get('title')} (`{d.get('id')}`)")
+            shown_decisions = decisions[:5]
+            if len(decisions) > len(shown_decisions):
+                lines.append(f"\n**Sole Architectural Decisions Authored (Showing top {len(shown_decisions)} of {len(decisions)})**:")
+            else:
+                lines.append(f"\n**Sole Architectural Decisions Authored ({len(decisions)})**:")
+            for d in shown_decisions:
+                lines.append(f"- **{d.get('title')}** — Status: {d.get('status', 'active')}")
 
     elif tool_name == "detect_staleness":
         new_doc = result.get("new_document", "")
