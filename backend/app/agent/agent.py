@@ -289,9 +289,90 @@ Return ONLY the JSON, no markdown."""
     return _deterministic_select_tool(question)
 
 
+def _normalize_params(tool_name: str, params: dict) -> dict:
+    """Normalize informal entity names and missing IDs to exact graph node IDs."""
+    p = {k: v for k, v in params.items() if v is not None}
+
+    # Person normalization
+    if "person_id" in p and p["person_id"]:
+        val = str(p["person_id"]).lower().strip()
+        if not val.startswith("person_"):
+            for name in ["priya", "sam", "jordan", "alex", "marcus", "elena"]:
+                if name in val:
+                    p["person_id"] = f"person_{name}"
+                    break
+            else:
+                p["person_id"] = f"person_{val.split()[0]}"
+
+    # Node A / Node B normalization
+    for key in ["node_a_id", "node_b_id"]:
+        if key in p and p[key]:
+            val = str(p[key]).lower().strip()
+            if not val.startswith("person_") and not val.startswith("sys_") and not val.startswith("doc_"):
+                if "priya" in val: p[key] = "person_priya"
+                elif "sam" in val: p[key] = "person_sam"
+                elif "jordan" in val: p[key] = "person_jordan"
+                elif "alex" in val: p[key] = "person_alex"
+                elif "auth" in val: p[key] = "sys_auth"
+                elif "ml" in val or "rec" in val: p[key] = "sys_ml"
+                elif "payment" in val: p[key] = "sys_payments"
+                elif "bill" in val: p[key] = "sys_billing"
+
+    # System normalization
+    if "system_name" in p and p["system_name"]:
+        val = str(p["system_name"]).lower().strip()
+        sys_map = {
+            "auth": "AuthService",
+            "bill": "BillingSystem",
+            "payment": "PaymentProcessor",
+            "notification": "NotificationService",
+            "lake": "DataLake",
+            "recommend": "RecommendationEngine",
+            "ml": "RecommendationEngine",
+            "search": "SearchEngine",
+            "mobile": "MobileAPI",
+        }
+        for k, target in sys_map.items():
+            if k in val:
+                p["system_name"] = target
+                break
+
+    # Decision normalization
+    if "decision_id" in p:
+        val = str(p.get("decision_id") or "").lower().strip()
+        if not val or val == "none":
+            p["decision_id"] = "decision_use_jwt"
+        elif not val.startswith("decision_"):
+            if "opaque" in val or "token" in val:
+                p["decision_id"] = "decision_opaque_tokens"
+            elif "jwt" in val:
+                p["decision_id"] = "decision_use_jwt"
+            elif "hpa" in val or "scale" in val:
+                p["decision_id"] = "decision_hpa_auth"
+            elif "cockroach" in val:
+                p["decision_id"] = "decision_cockroach_billing"
+            elif "postgres" in val or "billing" in val:
+                p["decision_id"] = "decision_postgres_billing"
+            elif "redis" in val:
+                p["decision_id"] = "decision_redis_cluster"
+
+    # Document normalization
+    if "new_doc_id" in p:
+        val = str(p.get("new_doc_id") or "").lower().strip()
+        if not val or val == "none":
+            p["new_doc_id"] = "doc_rate_limit_200"
+        elif not val.startswith("doc_"):
+            if "rate" in val or "limit" in val:
+                p["new_doc_id"] = "doc_rate_limit_200"
+            elif "jwt" in val or "reversal" in val:
+                p["new_doc_id"] = "doc_adr_jwt_reversal"
+
+    return p
+
+
 def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
     """Execute the selected tool with parameters."""
-    params = {k: v for k, v in params.items() if v is not None}
+    params = _normalize_params(tool_name, params)
 
     tool_map = {
         "trace_decision": lambda p: trace_decision(p.get("decision_id", "decision_use_jwt"), graph_name),
