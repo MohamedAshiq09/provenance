@@ -34,3 +34,11 @@ def test_agent_stale_dashboard():
     res = answer("What decisions are currently stale or outdated?")
     assert res["tool_used"] == "get_stale_decisions"
     assert "Stale" in res["answer"]
+
+
+def test_agent_impact_simulation():
+    """Verify agent simulates blast radius for change questions."""
+    res = answer("What breaks if we change AuthService?")
+    assert res["tool_used"] == "impact_of"
+    assert "decision_hpa_auth" in res["answer"]
+    assert len(res["graph_path"]) >= 1

@@ -13,6 +13,7 @@ from app.queries.graph_queries import (
     search_and_expand,
     get_stale_decisions,
     get_graph_stats,
+    impact_of,
 )
 
 
@@ -79,3 +80,26 @@ def test_connection_path():
     res = connection_path("person_priya", "sys_auth")
     assert res["found"] is True
     assert len(res["paths"]) > 0
+
+
+def test_impact_system_review_set():
+    """Changing AuthService must flag the 11 decisions affecting it for re-review."""
+    res = impact_of("sys_auth")
+    assert res["needs_review_count"] >= 10
+    ids = [r.get("id") for r in res["needs_review"]]
+    assert "decision_hpa_auth" in ids
+    assert "decision_use_jwt" in ids
+
+
+def test_impact_decision_downstream():
+    """Changing the HPA decision must list AuthService as downstream impact."""
+    res = impact_of("decision_hpa_auth")
+    ids = [i["node"].get("id") for i in res["downstream"]]
+    assert "sys_auth" in ids
+    assert res["downstream_count"] >= 1
+
+
+def test_impact_unknown_node():
+    """Unknown node ids return an error, not an empty blast radius."""
+    res = impact_of("node_that_does_not_exist")
+    assert "error" in res

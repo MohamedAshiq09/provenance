@@ -19,6 +19,7 @@ EXPECTED_TOOLS = sorted([
     "as_of",
     "search_and_expand",
     "get_stale_decisions",
+    "impact_of",
 ])
 
 
@@ -86,6 +87,11 @@ def test_mcp_search_and_expand():
 def test_mcp_get_stale_decisions():
     blob = _run(_call("get_stale_decisions", {}))
     assert "stale" in blob.lower() or "decision" in blob.lower()
+
+
+def test_mcp_impact_of():
+    blob = _run(_call("impact_of", {"node_id": "sys_auth"}))
+    assert "decision_hpa_auth" in blob
 
 
 def test_mcp_unknown_tool_errors():
