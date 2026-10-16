@@ -510,6 +510,85 @@ def remediate_stale_decision(decision_id: str, action_note: str = None, graph_na
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# QUERY 11: Impact Simulation ("what breaks if we change X?")
+# WHY GRAPH: Blast-radius analysis is forward/backward traversal over typed
+# edges. Downstream: what the node impacts (AFFECTS/USES out, DEPENDS_ON
+# dependents). Review set: what would need re-review if the node changes
+# (decisions AFFECTing a system, decisions BASED_ON a document). A flat
+# store cannot walk these chains; each hop changes the answer set.
+# ─────────────────────────────────────────────────────────────────────────────
+IMPACT_DOWNSTREAM_QUERY = """
+// Things this node impacts: systems/projects it affects or is used by,
+// plus decisions that depend on it (transitively)
+MATCH (n) WHERE n.id = $node_id
+OPTIONAL MATCH p1 = (n)-[:AFFECTS|USES*1..3]->(m1)
+OPTIONAL MATCH p2 = (n)<-[:DEPENDS_ON*1..3]-(m2)
+RETURN collect(DISTINCT [m1, length(p1), [r IN relationships(p1) | type(r)], [x IN nodes(p1) | x.id]]) as downstream,
+       collect(DISTINCT [m2, length(p2), [r IN relationships(p2) | type(r)], [x IN nodes(p2) | x.id]]) as dependents
+"""
+
+IMPACT_REVIEW_QUERY = """
+// Things that would need re-review if this node changes: decisions
+// affecting it, decisions based on it (documents)
+MATCH (n) WHERE n.id = $node_id
+OPTIONAL MATCH (m)-[r:AFFECTS|BASED_ON]->(n)
+RETURN collect(DISTINCT [m, type(r)]) as review_candidates
+"""
+
+def impact_of(node_id: str, graph_name: str = None) -> dict:
+    """
+    Simulate the blast radius of changing a node: downstream impacts plus
+    the review set (decisions/docs that assumed the current state).
+
+    GRAPH NECESSITY: Direction-aware multi-hop traversal. Downstream walks
+    AFFECTS/USES out and DEPENDS_ON backwards; the review set walks AFFECTS/
+    BASED_ON in reverse. Depth and via-path are computed per impacted node.
+    """
+    g = _graph(graph_name)
+    exists = g.query("MATCH (n) WHERE n.id = $node_id RETURN n LIMIT 1", {"node_id": node_id})
+    if not exists.result_set:
+        return {"error": f"Node '{node_id}' not found"}
+
+    down_result = g.query(IMPACT_DOWNSTREAM_QUERY, {"node_id": node_id})
+    review_result = g.query(IMPACT_REVIEW_QUERY, {"node_id": node_id})
+
+    # Merge downstream by node id, keeping minimum depth (shortest impact path)
+    merged = {}
+    for row in down_result.result_set:
+        for entry in (row[0] or []) + (row[1] or []):
+            node, depth, via, path = entry[0], entry[1], entry[2], entry[3]
+            if node is None:
+                continue
+            d = _node_to_dict(node)
+            nid = d.get("id")
+            if nid is None or nid == node_id:
+                continue
+            if nid not in merged or (depth is not None and depth < merged[nid]["depth"]):
+                merged[nid] = {"node": d, "depth": depth, "via": via or [], "path": path or []}
+
+    downstream = sorted(merged.values(), key=lambda i: (i["depth"] if i["depth"] is not None else 99))
+
+    review = []
+    for row in review_result.result_set:
+        for node, rel in (row[0] or []):
+            if node is None:
+                continue
+            d = _node_to_dict(node)
+            if d.get("id") == node_id:
+                continue
+            d["review_edge"] = rel
+            review.append(d)
+
+    return {
+        "node_id": node_id,
+        "downstream": downstream,
+        "downstream_count": len(downstream),
+        "needs_review": review,
+        "needs_review_count": len(review),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
 STATS_QUERY = """
