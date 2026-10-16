@@ -16,6 +16,7 @@ from app.queries.graph_queries import (
     get_stale_decisions,
     impact_of,
     decision_timeline,
+    knowledge_gaps,
 )
 
 
@@ -59,6 +60,10 @@ AVAILABLE_TOOLS = {
     "decision_timeline": {
         "description": "Show how a decision evolved over time — the ordered SUPERSEDES lineage with maker and evidence at each step. USE FOR: 'timeline', 'evolved', 'history of', 'how did X change over time'",
         "params": ["decision_id"],
+    },
+    "knowledge_gaps": {
+        "description": "Find what the company does NOT know — orphan systems, evidenceless decisions, authorless docs, unremediated stale. USE FOR: 'gaps', 'what do we not know', 'missing', 'undocumented', 'orphan'",
+        "params": [],
     },
 }
 
@@ -143,6 +148,12 @@ def _deterministic_select_tool(question: str) -> dict:
             "tool": "as_of",
             "params": {"date_str": date_str, "topic": None},
             "reasoning": f"Identified temporal time-travel query as of {date_str}",
+        }
+    elif any(k in q for k in ["knowledge gap", "what don't we know", "what do we not know", "missing docs", "missing documentation", "undocumented", "orphan", "no evidence", "without evidence"]):
+        return {
+            "tool": "knowledge_gaps",
+            "params": {},
+            "reasoning": "Identified knowledge-gap audit question",
         }
     elif any(k in q for k in ["timeline", "evolv", "history of", "over time", "changed our mind", "flip-flop", "flip flop"]):
         decision_id = "decision_opaque_tokens"
@@ -315,6 +326,18 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             lines.append(f"- **{e.get('valid_from', e.get('made_at', '?'))}**: *{e.get('title')}* (`{e.get('id')}`, {e.get('status')}) — by **{maker}**" + (f" — evidence: {ev}" if ev else ""))
         if not entries:
             lines.append("No lineage found for this decision.")
+    elif tool_name == "knowledge_gaps":
+        total = result.get("total_gaps", 0)
+        lines.append(f"### Knowledge Gaps: what the company does NOT know ({total} total)")
+        lines.append(f"- **Systems with no affecting decision**: {result.get('docless_systems_total', 0)}")
+        lines.append(f"- **Decisions with no evidence**: {result.get('evidenceless_decisions_total', 0)}")
+        lines.append(f"- **Documents with no author**: {result.get('authorless_docs_total', 0)}")
+        lines.append(f"- **Stale decisions with no remediation**: {result.get('unremediated_stale_total', 0)}")
+        sample = (result.get("authorless_docs", [])[:3] + result.get("unremediated_stale", [])[:2])
+        if sample:
+            lines.append("\n**Sample gaps**:")
+            for s in sample:
+                lines.append(f"- **{s.get('title', s.get('id'))}** (`{s.get('id')}`)")
     else:
         lines.append(f"Found {len(result) if isinstance(result, list) else 1} relevant graph records.")
 
@@ -448,6 +471,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), graph_name),
         "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), graph_name),
         "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), graph_name),
+        "knowledge_gaps": lambda p: knowledge_gaps(graph_name),
         "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
         "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
     }
@@ -554,6 +578,8 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
             edge = "SUPERSEDED_BY" if i < len(chain) - 1 else "CURRENT"
             out.append({"node": e, "type": "Decision", "edge": edge})
         return out
+    elif tool_name == "knowledge_gaps":
+        return [{"node": s, "type": "Gap", "edge": "NO_AUTHOR"} for s in result.get("authorless_docs", [])[:5]]
     return []
 
 
@@ -571,5 +597,6 @@ def _get_query_for_tool(tool_name: str) -> str:
         "get_stale_decisions": graph_queries.STALE_DECISIONS_QUERY,
         "impact_of": graph_queries.IMPACT_DOWNSTREAM_QUERY,
         "decision_timeline": graph_queries.TIMELINE_QUERY,
+        "knowledge_gaps": graph_queries.GAPS_QUERY,
     }
     return query_map.get(tool_name, "")
