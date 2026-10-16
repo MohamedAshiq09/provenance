@@ -69,6 +69,12 @@ def get_stale_decisions() -> list:
     return run_tool("get_stale_decisions", {}, GRAPH_NAME)
 
 
+@mcp.tool()
+def impact_of(node_id: str) -> dict:
+    """Simulate the blast radius of changing a node — downstream impacts plus what would need re-review. USE FOR: 'what breaks if', 'what if we change', 'impact of', 'blast radius'. Graph capability: direction-aware AFFECTS/USES/DEPENDS_ON traversal with depth and via-path."""
+    return run_tool("impact_of", {"node_id": node_id}, GRAPH_NAME)
+
+
 # Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
 # (see main.py). Built at module level so `mcp.session_manager` exists before
 # the host lifespan enters `session_manager.run()`.
