@@ -1,6 +1,7 @@
 """
-MCP (Model Context Protocol) server for Provenance Company Brain.
-Exposes all graph tools as MCP tools so any MCP client (Claude, etc.) can query.
+Legacy REST shim for the Provenance Company Brain (transition aid).
+The real MCP server lives in app.tools.mcp_server and is mounted at /mcp.
+This shim stays at /api/mcp for any client still on plain REST.
 """
 from fastapi import APIRouter
 from pydantic import BaseModel

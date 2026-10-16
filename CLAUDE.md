@@ -69,7 +69,7 @@
 
 - **Staleness alerts with proof paths** — shows exactly WHY a decision is now suspect (edge path)
 - **Time-aware graph** — `as_of(date, question)` queries use `valid_from`/`valid_to` edge filters
-- **MCP server** — any agent (Claude, etc.) can query the Company Brain
+- **MCP server** — any MCP-compatible host or agent can query the Company Brain
 - **Benchmark** — 30 multi-hop Q&A scored against plain vector-RAG baseline
 - **No hallucination** — every fact is a node; every claim has a source_id
 

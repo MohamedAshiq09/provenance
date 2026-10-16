@@ -34,7 +34,7 @@ This fails in real organizations for two reasons:
 flowchart TD
     subgraph Client ["Client Layer"]
         UI["Next.js 16 Web UI (App Router)"]
-        Claude["Claude Desktop / Cursor / External Agents"]
+        ExtAgents["External MCP Hosts / Agents"]
     end
 
     subgraph Backend ["Provenance Engine (FastAPI)"]
@@ -51,7 +51,7 @@ flowchart TD
     end
 
     UI -->|REST / Proxy| Backend
-    Claude -->|MCP Tool Calls| MCP
+    ExtAgents -->|MCP Tool Calls| MCP
     MCP --> Agent
     Agent -->|Deterministic Cypher| GraphBLAS
     StalenessEngine -->|Backward BFS/DFS| GraphBLAS
@@ -186,22 +186,25 @@ ORDER BY d.valid_from DESC
 
 ## 🔌 Model Context Protocol (MCP) Integration
 
-Provenance exposes all graph tools as native MCP tools. Any external AI assistant (Claude, Cursor, Gemini) can query the Company Brain directly:
+Provenance exposes all graph tools as native MCP tools over Streamable HTTP at `/mcp`. Any MCP-compatible host or agent can query the Company Brain directly. Inspect it free with the MCP Inspector (no account, no model needed):
 
-### Claude Desktop Configuration (`claude_desktop_config.json`)
+```bash
+# Full graphical inspector in the browser
+npx @modelcontextprotocol/inspector --server-url http://localhost:8000/mcp --transport http
+
+# Scriptable check: list tools, then call one
+npx @modelcontextprotocol/inspector --cli http://localhost:8000/mcp --transport http --method tools/list
+npx @modelcontextprotocol/inspector --cli http://localhost:8000/mcp --transport http \
+  --method tools/call --tool-name who_knows --tool-arg system_name=AuthService --format json
+```
+
+### Generic MCP client configuration
+
 ```json
 {
   "mcpServers": {
     "provenance-brain": {
-      "url": "http://localhost:8000/mcp",
-      "tools": [
-        "who_knows",
-        "trace_decision",
-        "bus_factor",
-        "detect_staleness",
-        "connection_path",
-        "as_of"
-      ]
+      "url": "http://localhost:8000/mcp"
     }
   }
 }
@@ -265,7 +268,7 @@ uv run --directory backend python ../bench/run_benchmark.py
 - [x] **Primary Graph Database**: FalkorDB v4.18 with GraphBLAS.
 - [x] **Graph Does Real Work**: Every feature uses Cypher traversals, shortest path, and centrality algorithms.
 - [x] **Track 3 (Company Brain)**: Solves knowledge from docs/tickets/chats, who knows what, decision provenance, and staleness detection.
-- [x] **MCP Support**: Full MCP server exposing tools to Claude and external agents.
+- [x] **MCP Support**: Real MCP server (Streamable HTTP at `/mcp`) exposing 8 graph tools to any MCP host; verifiable free via MCP Inspector.
 - [x] **Public & Synthetic Data**: Zero private data; reproducible ground-truth company model.
 - [x] **Explainable Results**: Every answer returns the exact graph path with node citations.
 - [x] **Comprehensive Benchmark**: 30 questions scored against plain vector-RAG baseline (100% vs 6.7%).
