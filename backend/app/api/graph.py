@@ -7,6 +7,7 @@ from app.queries.graph_queries import (
     connection_path, as_of, get_stale_decisions, get_graph_stats,
     impact_of, decision_timeline, knowledge_gaps,
     get_contradiction_candidates, confirm_contradiction,
+    ramp_plan,
 )
 
 router = APIRouter()
@@ -87,3 +88,9 @@ def contradictions(graph_name: str = "company_brain"):
 def confirm(req: ConfirmContradictionRequest, graph_name: str = "company_brain"):
     """HUMAN confirms a candidate — the ONLY path to a CONTRADICTS edge."""
     return confirm_contradiction(req.candidate_id, req.claim, graph_name)
+
+
+@router.get("/ramp/{system_name}")
+def ramp(system_name: str, graph_name: str = "company_brain"):
+    """Onboarding pack for one system: people, decisions, evidence, risks."""
+    return ramp_plan(system_name, graph_name)
