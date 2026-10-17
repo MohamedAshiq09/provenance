@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
 from app.graph.ingest import ingest_company_data, upsert_document
-from app.queries.graph_queries import detect_staleness, find_contradiction_candidates
+from app.queries.graph_queries import detect_staleness, find_contradiction_candidates, find_lineage_conflicts
 
 router = APIRouter()
 
@@ -54,6 +54,11 @@ async def ingest_document(req: IngestDocumentRequest, background_tasks: Backgrou
             )
         except Exception as e:
             contradiction_result = {"error": str(e)}
+        # T7: sweep for declared-superession defects the overlap pass can't see
+        try:
+            contradiction_result["lineage_scan"] = find_lineage_conflicts(graph_name=req.graph_name)
+        except Exception as e:
+            contradiction_result["lineage_scan"] = {"error": str(e)}
 
         return {
             "status": "ingested",
@@ -170,6 +175,10 @@ async def ingest_raw_text(req: IngestRawTextRequest):
         )
     except Exception as e:
         contradiction_result = {"error": str(e)}
+    try:
+        contradiction_result["lineage_scan"] = find_lineage_conflicts(graph_name=req.graph_name)
+    except Exception as e:
+        contradiction_result["lineage_scan"] = {"error": str(e)}
 
     return {
         "status": "extracted_and_ingested",
