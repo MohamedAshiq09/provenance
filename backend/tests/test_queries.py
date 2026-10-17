@@ -124,6 +124,29 @@ def test_impact_decision_downstream():
     assert res["downstream_count"] >= 1
 
 
+def test_who_knows_scores_differentiate():
+    """T4 regression: expertise scores must not saturate into one flat value."""
+    res = who_knows("AuthService")
+    scores = [e.get("expertise_score", 0) for e in res["experts"]]
+    assert res["experts"], "must return experts"
+    assert len(set(scores)) >= 3, f"scores still tie: {scores}"
+    top = res["experts"][0]
+    assert top.get("work_score", 0) > 0, "top expert must have hands-on work on the system"
+
+
+def test_ramp_plan_includes_decision_maker():
+    """T2 regression: person whose decisions AFFECT a system must be listed.
+
+    Live-test evidence: Alex Chen made the CockroachDB migration that AFFECTS
+    PaymentProcessor, yet the old WORKED_ON/AUTHORED-only scoring omitted him.
+    """
+    res = ramp_plan("PaymentProcessor")
+    names = [p.get("name", "") for p in res["people_to_ask"]]
+    assert "Alex Chen" in names, f"maker missing: {names}"
+    scores = [p.get("expertise_score", 0) for p in res["people_to_ask"]]
+    assert len(set(scores)) >= 2, f"contact list still fully tied: {scores}"
+
+
 def test_impact_unknown_node():
     """Unknown node ids return an error, not an empty blast radius."""
     res = impact_of("node_that_does_not_exist")
