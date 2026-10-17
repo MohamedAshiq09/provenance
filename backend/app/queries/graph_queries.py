@@ -904,6 +904,102 @@ def confirm_contradiction(candidate_id: str, claim: str = None, graph_name: str 
 # ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
+# QUERY 15: Ramp Plan ("you just joined — here's the map of system X")
+# WHY GRAPH: An onboarding pack is a multi-query composition over typed
+# edges: WHO to ask (WORKED_ON/AUTHORED centrality), WHAT decisions shaped
+# the system (AFFECTS with makers), WHICH docs are the evidence trail
+# (AUTHORED/AFFECTS), and WHAT is at risk (stale flags). A flat store can
+# return documents matching 'X' — it cannot assemble the people + decisions
+# + evidence + risk structure from relationship patterns.
+# ─────────────────────────────────────────────────────────────────────────────
+RAMP_DECISIONS_QUERY = """
+// Key decisions that shaped this system, with maker and evidence
+MATCH (s:System {name: $system_name})
+OPTIONAL MATCH (d:Decision)-[:AFFECTS]->(s)
+OPTIONAL MATCH (d)-[:MADE_BY]->(p:Person)
+OPTIONAL MATCH (d)-[:BASED_ON]->(src)
+RETURN d, p, collect(DISTINCT src) as sources
+ORDER BY coalesce(d.valid_from, d.made_at, '')
+"""
+RAMP_DOCS_QUERY = """
+// The evidence trail: source documents behind decisions that shaped this
+// system (AFFECTS → BASED_ON → AUTHORED). Documents have no direct system
+// edge in the schema — the provenance chain is the path.
+MATCH (s:System {name: $system_name})
+OPTIONAL MATCH (d:Decision)-[:AFFECTS]->(s)
+OPTIONAL MATCH (d)-[:BASED_ON]->(doc:Document)
+OPTIONAL MATCH (p:Person)-[:AUTHORED]->(doc)
+WITH DISTINCT doc, p WHERE doc IS NOT NULL
+RETURN doc, p
+ORDER BY coalesce(doc.valid_from, '') DESC
+LIMIT 10
+"""
+
+
+def ramp_plan(system_name: str, graph_name: str = None) -> dict:
+    """
+    Onboarding composer for one system: people to ask, decisions that shaped
+    it, the evidence trail, and open risks. Deterministic composition —
+    every section is a real graph query, no LLM anywhere in ranking.
+
+    GRAPH NECESSITY: joins four distinct edge patterns (WORKED_ON centrality,
+    AFFECTS + MADE_BY + BASED_ON, AUTHORED + AFFECTS, stale flags) into one
+    structured plan; impossible without the typed edges.
+    """
+    g = _graph(graph_name)
+
+    wk = who_knows(system_name, graph_name)
+    if not wk["experts"] and not wk["team_context"]:
+        exists = g.query(
+            "MATCH (s:System {name: $system_name}) RETURN s LIMIT 1",
+            {"system_name": system_name},
+        )
+        if not exists.result_set:
+            return {"error": f"System '{system_name}' not found"}
+
+    decisions = []
+    for row in g.query(RAMP_DECISIONS_QUERY, {"system_name": system_name}).result_set:
+        d = _node_to_dict(row[0])
+        if not d.get("id"):
+            continue
+        d["made_by"] = _node_to_dict(row[1]) if row[1] else None
+        d["evidence"] = [_node_to_dict(s) for s in (row[2] or []) if s]
+        decisions.append(d)
+
+    key_docs = []
+    for row in g.query(RAMP_DOCS_QUERY, {"system_name": system_name}).result_set:
+        doc = _node_to_dict(row[0])
+        if not doc.get("id"):
+            continue
+        doc["author"] = _node_to_dict(row[1]) if row[1] else None
+        key_docs.append(doc)
+
+    stale = [d for d in decisions if d.get("stale")]
+
+    ramp_sequence = (
+        [f"Talk to {e.get('name', e.get('id'))}" for e in wk["experts"][:3]]
+        + [f"Read decision: {d.get('title', d.get('id'))}" for d in decisions[:5]]
+        + [f"Skim evidence: {doc.get('title', doc.get('id'))}" for doc in key_docs[:3]]
+    )
+
+    return {
+        "system": system_name,
+        "people_to_ask": wk["experts"][:5],
+        "team": wk["team_context"],
+        "decisions": decisions,
+        "key_docs": key_docs,
+        "open_risks": stale,
+        "ramp_sequence": ramp_sequence,
+        "counts": {
+            "people": len(wk["experts"]),
+            "decisions": len(decisions),
+            "docs": len(key_docs),
+            "stale": len(stale),
+        },
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
 STATS_QUERY = """
