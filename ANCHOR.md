@@ -40,7 +40,7 @@
 
 ## (c) In progress right now
 
-- (none) — S2 closed 2026-10-17 (after pull-rebase of teammate's Benchmark v2 / PEPs / UI work). Next: S4 ramp_plan on owner go.
+- (none) — S4 closed 2026-10-17. Next: S5 team_risk on owner go (last of the filed tickets).
 
 ## (d) Next task (solution v2 — owner approved senior call 2026-10-16: F1,F3,F6,F2-guarded first, F4/F5 after; F7-push + F8 dropped)
 
@@ -48,7 +48,7 @@
 2. S3 DONE 2026-10-16 — c96cd50 graph + 0fe463d agent + 70d2066 mcp + c659f13 api + b748ce5 test. Gate (BEFORE commit, local): 38/38 pytest; benchmark 30/30 no regression; timeline 10.2 ms, exact order [use_jwt → opaque_tokens] both directions; REST + Inspector (cockroach chain live) + /ask routing verified.
 3. S6 DONE 2026-10-16 — dcfa2e8 graph + 1d0d755 agent + 6b835a6 mcp + 5cc1253 api + 6e0c4f4 test. Gate (BEFORE commit, local): 42/42 pytest; benchmark 30/30 no regression; gaps 13.1 ms, totals 118 = 0+0+116+2 matching hand counts; REST + Inspector + /ask verified. Incident: S3-era line-158 indent corruption found at gate, fixed, suite green.
 4. S2 DONE 2026-10-17 — ce40073 graph + 60e9617 agent + 7ee4390 mcp + c8a6768 api (ingest hook + confirm endpoint) + 5c38b54 test. GUARDED by design: candidates are :ContradictionCandidate nodes with CANDIDATE_SOURCE/CANDIDATE_TARGET edges; the ONLY path to a CONTRADICTS edge is confirm_contradiction() (human REST call); title-keyword overlap with SUPERSEDES-lineage exclusion (title-only matching — content match = noise). Gate (BEFORE commit, local): 47/47 pytest (arc: temp seed → detect → confirm → decision_tc goes stale → double-confirm rejected → DETACH DELETE cleanup); teammate's Benchmark v2 no-regression (router 88.1 ≥ 88.1, LLM 88.1 ≥ 85.7, false-premise 100%); full demo arc LIVE via REST (ingest/raw-text → scan → list → confirm → radar). MCP tool #12 wraps pending queue as read-only dir; confirm intentionally REST-only (human gate). Note: plain 'contradict' keyword stays on the rate-limit branch (benchmark phrasing) — review-queue route matches conflict/disagree/dispute phrasing.
-5. S4 api-agent: `ramp_plan(system_name)` composer in graph_queries (multi-query, still deterministic): who_knows + key decisions via AFFECTS + related docs. Wire: tool + MCP + REST. Verify: pytest non-empty experts+decisions + Inspector.
+5. S4 DONE 2026-10-17 — 0c84bb6 graph + 5769da9 agent + 36ea1b6 mcp + 8001b0f api + 1b5887a test. Composer over real paths: people (WORKED_ON centrality), decisions AFFECTS system (with maker + evidence), docs via AFFECTS→BASED_ON→AUTHORED chain (docs have NO direct System edge — provenance path is the way into evidence), risks = stale decisions, ordered ramp_sequence. Gate (BEFORE commit, local): 51/51 pytest; Benchmark v2 88.1% no regression; ramp 13.1 ms; MCP Inspector tools/list = 13; REST + /ask live ("I just joined, where do I start on AuthService?" → full Ramp Plan).
 6. S5 graph-agent: `team_risk()` — per team: members, sole-expert systems, active/stale decisions. Wire: tool + MCP + REST `GET /api/graph/team-risk`. Verify: pytest team_platform fields + Inspector.
 - NON-GOALS (explicit): F7 push digest, F8 reviewer routing, A4 envelopes, Ollama agent, MCP OAuth, P7 connectors. Future runs must not re-suggest silently.
 - PARKED earlier still parked: deploy/Render + TransportSecurity, v2 resources/prompts.
