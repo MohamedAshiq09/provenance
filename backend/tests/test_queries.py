@@ -18,6 +18,7 @@ from app.queries.graph_queries import (
     knowledge_gaps,
     is_filler_title,
     find_contradiction_candidates,
+    find_lineage_conflicts,
     get_contradiction_candidates,
     confirm_contradiction,
     ramp_plan,
@@ -337,3 +338,30 @@ def test_contradiction_no_auto_edges_without_confirm(contradiction_arc):
     assert len(pend) >= 2
     r = contradiction_arc.query("MATCH ()-[r:CONTRADICTS]->(doc_tc_new) RETURN count(r)")
     assert r.result_set[0][0] == 0
+
+
+def test_lineage_conflict_sweep_detects_declared_supersedes(contradiction_arc, tmp_path):
+    """T7 regression: a doc whose content DECLARES supersession of a doc
+    carrying a formal id (ADR-404) must produce a lineage-conflict candidate
+    while no SUPERSEDES edge exists; adding the edge clears it on re-sweep."""
+    from app.graph.ingest import upsert_document, upsert_edge
+    g = contradiction_arc
+    upsert_document({"id": "doc_tc_404_old", "title": "ADR-404: Old auth ruling",
+                     "content": "legacy ruling", "doc_type": "adr",
+                     "valid_from": "2025-01-01"}, None)
+    upsert_document({"id": "doc_tc_404_new", "title": "ADR-405: New ruling",
+                     "content": "This rescinds ADR-404 and replaces its guidance.",
+                     "doc_type": "adr", "valid_from": "2026-01-01"}, None)
+    try:
+        res = find_lineage_conflicts()
+        ids = [c["candidate_id"] for c in res["candidates"]]
+        assert "cc_lg_doc_tc_404_old_doc_tc_404_new" in ids
+        # edge exists now → sweep must report nothing for the pair
+        upsert_edge("doc_tc_404_new", "Document", "doc_tc_404_old", "Document",
+                    "SUPERSEDES", {}, source_id="doc_tc_404_new", graph_name=None)
+        res2 = find_lineage_conflicts()
+        assert "cc_lg_doc_tc_404_old_doc_tc_404_new" not in [c["candidate_id"] for c in res2["candidates"]]
+    finally:
+        g.query("""MATCH (n) WHERE (n:ContradictionCandidate)
+            OR (exists(n.id) AND (n.id STARTS WITH 'doc_tc_404'))
+            DETACH DELETE n""")
