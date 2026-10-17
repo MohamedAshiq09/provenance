@@ -1,19 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   HeartPulse, 
   BrainCircuit, 
   Zap, 
   ShieldCheck, 
   Network, 
-  Layers, 
   Terminal, 
+  Building2, 
+  ChevronDown, 
+  Sun, 
+  Moon,
   Sparkles,
-  Database,
-  ChevronRight,
-  Building2,
-  ExternalLink
+  BarChart3,
+  Check
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -23,153 +24,243 @@ export default function Sidebar({
   stats, 
   staleCount = 3,
   pendingApprovalsCount = 3,
-  workspace = 'novatech'
+  workspace = 'novatech',
+  setWorkspace
 }) {
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    try {
+      const current = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+      setTheme(current);
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const current = document.documentElement.getAttribute('data-theme') || theme;
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem('theme', next);
+    } catch (e) {}
+    setTheme(next);
+  };
+
   const navItems = [
+    { 
+      id: 'chat', 
+      label: 'Ask', 
+      icon: BrainCircuit, 
+      tooltip: 'Multi-hop graph provenance & time-travel Q&A'
+    },
     { 
       id: 'health', 
       label: 'Brain Health', 
       icon: HeartPulse, 
-      badge: staleCount > 0 ? `${staleCount} alerts` : null,
-      badgeColor: 'amber',
-      subtitle: 'Knowledge pulse & staleness'
-    },
-    { 
-      id: 'chat', 
-      label: 'Ask the Brain', 
-      icon: BrainCircuit, 
-      subtitle: 'Multi-hop graph provenance'
+      badge: staleCount > 0 ? `${staleCount}` : null,
+      badgeType: 'warn',
+      tooltip: 'Knowledge pulse, bus factors, and staleness'
     },
     { 
       id: 'ingest', 
       label: 'Live Ingest', 
       icon: Zap, 
-      badge: 'Interactive',
-      badgeColor: 'cyan',
-      subtitle: 'Drop doc & see ripple'
+      tooltip: 'Drop document & compute staleness ripple'
     },
     { 
       id: 'approvals', 
-      label: 'Approvals Hub', 
+      label: 'Approvals', 
       icon: ShieldCheck, 
       badge: pendingApprovalsCount > 0 ? `${pendingApprovalsCount}` : null,
-      badgeColor: 'rose',
-      subtitle: 'Remediations & handoffs'
+      badgeType: 'risk',
+      tooltip: 'Remediation queue & governance handoffs'
     },
     { 
       id: 'explore', 
-      label: 'Graph & Time Travel', 
+      label: 'Graph & Timeline', 
       icon: Network, 
-      subtitle: 'Temporal as-of scrubbing'
+      tooltip: 'Full interactive Cytoscape canvas & date scrubber'
     },
     { 
       id: 'under_the_hood', 
-      label: 'Under the Hood', 
-      icon: Terminal, 
-      badge: 'Evidence',
-      badgeColor: 'indigo',
-      subtitle: 'MCP Server & Benchmarks'
+      label: 'Benchmark & MCP', 
+      icon: BarChart3, 
+      tooltip: '42-Question comparative evaluation & MCP server'
     },
   ];
 
+  const totalNodes = (stats?.Person || 0) + (stats?.Decision || 0) + (stats?.System || 0) + (stats?.Document || 0);
+
   return (
-    <aside style={{
-      width: '260px',
-      minWidth: '260px',
-      background: 'rgba(10, 15, 29, 0.95)',
-      borderRight: '1px solid var(--border-subtle)',
+    <aside className="app-sidebar" style={{
+      width: '240px',
+      minWidth: '240px',
+      background: 'var(--surface)',
+      borderRight: '1px solid var(--border)',
       display: 'flex',
       flexDirection: 'column',
       height: '100vh',
       position: 'sticky',
       top: 0,
       zIndex: 40,
+      fontSize: '0.85rem',
+      userSelect: 'none',
+      transition: 'width 0.2s ease, min-width 0.2s ease',
     }}>
-      {/* Brand Header */}
+      {/* Brand Header & Workspace Selector at Top */}
       <div style={{
-        padding: '1.25rem 1.25rem 1rem 1.25rem',
-        borderBottom: '1px solid var(--border-subtle)',
+        padding: '1rem',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        {/* App Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
+            width: '28px',
+            height: '28px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--accent)',
+            color: 'var(--accent-contrast)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 18px rgba(6, 182, 212, 0.4)',
+            flexShrink: 0,
           }}>
-            <BrainCircuit size={22} color="#ffffff" />
+            <BrainCircuit size={16} />
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ 
-                fontSize: '1.15rem', 
-                fontWeight: '800', 
-                letterSpacing: '-0.02em',
-                color: '#ffffff',
-              }}>
-                PROVENANCE
-              </span>
-            </div>
-            <p style={{ fontSize: '0.68rem', color: '#38bdf8', fontWeight: '600' }}>
-              Self-Auditing Company Brain
-            </p>
-          </div>
+          <span className="sidebar-brand-text" style={{ 
+            fontSize: '1rem', 
+            fontWeight: '600', 
+            letterSpacing: '-0.01em',
+            color: 'var(--text)',
+          }}>
+            Provenance
+          </span>
         </div>
 
-        {/* Workspace selector / badge */}
-        <div style={{
-          marginTop: '0.9rem',
-          padding: '0.45rem 0.65rem',
-          borderRadius: 'var(--radius-sm)',
-          background: 'rgba(255, 255, 255, 0.03)',
-          border: '1px solid var(--border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-            <Building2 size={13} color={workspace === 'peps' ? '#34d399' : '#94a3b8'} />
-            <span style={{ fontSize: '0.72rem', fontWeight: '600', color: '#e2e8f0' }}>
-              {workspace === 'peps' ? 'Python PEPs Standards' : 'NovaTech Labs'}
-            </span>
-          </div>
-          <span style={{
-            fontSize: '0.62rem',
-            padding: '1px 5px',
-            borderRadius: '4px',
-            background: workspace === 'peps' ? 'rgba(52, 211, 153, 0.2)' : 'rgba(99, 102, 241, 0.2)',
-            color: workspace === 'peps' ? '#34d399' : '#a5b4fc',
+        {/* Workspace Switcher */}
+        <div className="sidebar-workspace-wrapper" style={{ position: 'relative' }}>
+          <div style={{
+            fontSize: '0.65rem',
             fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--muted)',
+            marginBottom: '0.3rem',
           }}>
-            {workspace === 'peps' ? 'Real World' : 'Synthetic'}
-          </span>
+            Workspace
+          </div>
+
+          <button
+            onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '6px 10px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
+              fontSize: '0.8rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'border-color 0.15s ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+              <Building2 size={13} color="var(--accent)" />
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {workspace === 'peps' ? 'Python PEPs' : 'NovaTech Labs'}
+              </span>
+            </div>
+            <ChevronDown size={12} color="var(--muted)" />
+          </button>
+
+          {workspaceMenuOpen && (
+            <div 
+              style={{
+                position: 'absolute',
+                top: '105%',
+                left: 0,
+                right: 0,
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'var(--shadow-subtle)',
+                padding: '4px',
+                zIndex: 50,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+              }}
+            >
+              <button
+                onClick={() => {
+                  if (setWorkspace) setWorkspace('novatech');
+                  setWorkspaceMenuOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 8px',
+                  borderRadius: '4px',
+                  background: workspace === 'novatech' ? 'var(--surface-2)' : 'transparent',
+                  border: 'none',
+                  color: 'var(--text)',
+                  fontSize: '0.78rem',
+                  fontWeight: workspace === 'novatech' ? '600' : '400',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <span>NovaTech Labs</span>
+                {workspace === 'novatech' && <Check size={12} color="var(--accent)" />}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (setWorkspace) setWorkspace('peps');
+                  setWorkspaceMenuOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 8px',
+                  borderRadius: '4px',
+                  background: workspace === 'peps' ? 'var(--surface-2)' : 'transparent',
+                  border: 'none',
+                  color: 'var(--text)',
+                  fontSize: '0.78rem',
+                  fontWeight: workspace === 'peps' ? '600' : '400',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <span>Python PEPs</span>
+                {workspace === 'peps' && <Check size={12} color="var(--accent)" />}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Main Navigation */}
+      {/* Main Single-Line Navigation */}
       <nav style={{
-        padding: '1rem 0.75rem',
+        padding: '0.75rem 0.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.35rem',
+        gap: '2px',
         flex: 1,
         overflowY: 'auto',
       }}>
-        <div style={{
-          fontSize: '0.65rem',
-          fontWeight: '700',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--text-muted)',
-          padding: '0 0.5rem 0.4rem 0.5rem',
-        }}>
-          Workflows
-        </div>
-
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -178,62 +269,49 @@ export default function Sidebar({
               key={item.id}
               id={`nav-item-${item.id}`}
               onClick={() => setActiveTab(item.id)}
+              title={item.tooltip}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0.65rem 0.75rem',
+                padding: '7px 10px',
                 borderRadius: 'var(--radius-sm)',
-                background: isActive ? 'rgba(99, 102, 241, 0.18)' : 'transparent',
-                border: isActive ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
-                color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                background: isActive ? 'var(--surface-2)' : 'transparent',
+                border: '1px solid transparent',
+                borderColor: isActive ? 'var(--border)' : 'transparent',
+                color: isActive ? 'var(--text)' : 'var(--muted)',
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.15s ease',
                 width: '100%',
+                fontWeight: isActive ? '600' : '400',
+                fontSize: '0.82rem',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.style.color = 'var(--text)';
+                  e.currentTarget.style.background = 'var(--surface-2)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
+                  e.currentTarget.style.color = 'var(--muted)';
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'var(--text-secondary)';
                 }
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <Icon size={17} color={isActive ? '#38bdf8' : '#94a3b8'} />
-                <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: isActive ? '700' : '500' }}>
-                    {item.label}
-                  </div>
-                  <div style={{ fontSize: '0.64rem', color: 'var(--text-muted)', marginTop: '1px' }}>
-                    {item.subtitle}
-                  </div>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Icon size={15} color={isActive ? 'var(--accent)' : 'currentColor'} style={{ flexShrink: 0 }} />
+                <span className="sidebar-nav-label">{item.label}</span>
               </div>
 
               {item.badge && (
-                <span style={{
-                  fontSize: '0.62rem',
-                  fontWeight: '700',
+                <span className={`chip-${item.badgeType || 'off'} sidebar-nav-label`} style={{
+                  fontSize: '0.65rem',
+                  fontWeight: '600',
                   padding: '1px 6px',
                   borderRadius: '10px',
-                  background: item.badgeColor === 'amber' ? 'rgba(245, 158, 11, 0.2)' :
-                              item.badgeColor === 'rose' ? 'rgba(244, 63, 94, 0.2)' :
-                              item.badgeColor === 'cyan' ? 'rgba(6, 182, 212, 0.2)' : 'rgba(99, 102, 241, 0.2)',
-                  color: item.badgeColor === 'amber' ? '#f59e0b' :
-                         item.badgeColor === 'rose' ? '#fb7185' :
-                         item.badgeColor === 'cyan' ? '#22d3ee' : '#a5b4fc',
-                  border: `1px solid ${
-                    item.badgeColor === 'amber' ? 'rgba(245, 158, 11, 0.3)' :
-                    item.badgeColor === 'rose' ? 'rgba(244, 63, 94, 0.3)' :
-                    item.badgeColor === 'cyan' ? 'rgba(6, 182, 212, 0.3)' : 'rgba(99, 102, 241, 0.3)'
-                  }`,
+                  lineHeight: '1.2',
                 }}>
                   {item.badge}
                 </span>
@@ -243,83 +321,54 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Database & LLM Engine Status Footer */}
+      {/* Clean Footer: Connection Dot, Model, and Theme Toggle */}
       <div style={{
-        padding: '1rem',
-        borderTop: '1px solid var(--border-subtle)',
-        background: 'rgba(0, 0, 0, 0.25)',
+        padding: '0.75rem 1rem',
+        borderTop: '1px solid var(--border)',
         display: 'flex',
-        flexDirection: 'column',
-        gap: '0.6rem',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        fontSize: '0.72rem',
+        color: 'var(--muted)',
       }}>
-        {/* FalkorDB Cloud */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '0.72rem',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-            <Database size={13} color="#06b6d4" />
-            <span style={{ color: 'var(--text-secondary)' }}>FalkorDB Cloud</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              backgroundColor: dbStatus === 'connected' ? '#10b981' : '#f59e0b',
-              boxShadow: dbStatus === 'connected' ? '0 0 8px #10b981' : 'none',
-            }} />
-            <span style={{ 
-              fontWeight: '700', 
-              color: dbStatus === 'connected' ? '#34d399' : '#fbbf24',
-              fontSize: '0.7rem' 
-            }}>
-              {(() => {
-                const total = (stats?.Person || 0) + (stats?.Decision || 0) + (stats?.System || 0) + (stats?.Document || 0);
-                return total > 0 ? `${total.toLocaleString()} nodes` : 'Connected';
-              })()}
-            </span>
-          </div>
-        </div>
-
-        {/* Model Indicator */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '0.72rem',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-            <Sparkles size={13} color="#818cf8" />
-            <span style={{ color: 'var(--text-secondary)' }}>Model</span>
-          </div>
+        {/* Connection status and model */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{
-            fontSize: '0.68rem',
-            padding: '1px 6px',
-            borderRadius: '4px',
-            background: 'rgba(99, 102, 241, 0.15)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-            color: '#c7d2fe',
-            fontWeight: '600',
-          }}>
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            backgroundColor: dbStatus === 'connected' ? 'var(--ok)' : 'var(--warn)',
+            display: 'inline-block',
+            flexShrink: 0,
+          }} />
+          <span className="sidebar-footer-text" style={{ color: 'var(--text)', fontWeight: '500' }}>
             Gemini 2.5-Flash
           </span>
         </div>
 
-        {/* Track Info */}
-        <div style={{
-          fontSize: '0.62rem',
-          color: 'var(--text-muted)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          paddingTop: '0.3rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-        }}>
-          <span>FalkorDB Track 3</span>
-          <span>v2.1 • Graph Verified</span>
-        </div>
+        {/* Theme Toggle Button */}
+        <button
+          id="theme-toggle-btn"
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label="Toggle color theme"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--muted)',
+            cursor: 'pointer',
+            padding: '4px',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.15s ease',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
+        >
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
       </div>
     </aside>
   );
