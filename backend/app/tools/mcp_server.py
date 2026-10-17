@@ -99,6 +99,12 @@ def contradiction_candidates() -> dict:
     }
 
 
+@mcp.tool()
+def ramp_plan(system_name: str) -> dict:
+    """Onboarding pack for one system — people to ask, decisions that shaped it, the evidence trail, open risks, ordered ramp sequence. USE FOR: 'ramp', 'onboard', 'getting started', 'just joined', 'where do I start'. Graph capability: composed multi-pattern traversal (WORKED_ON centrality + AFFECTS/MADE_BY/BASED_ON + AUTHORED)."""
+    return run_tool("ramp_plan", {"system_name": system_name}, GRAPH_NAME)
+
+
 # Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
 # (see main.py). Built at module level so `mcp.session_manager` exists before
 # the host lifespan enters `session_manager.run()`.
