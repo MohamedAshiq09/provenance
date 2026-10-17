@@ -362,7 +362,7 @@ def generate_decisions(people: list, documents: list) -> list:
         "status": "active",
         "made_at": date_str(ago(290)),
         "valid_from": date_str(ago(290)),
-        "valid_to": None,
+        "valid_to": date_str(ago(30)),
         "source_id": "doc_rate_limit_50",
         "made_by": "person_leo",
         "based_on": ["doc_rate_limit_50"],  # ← this is now stale!
@@ -439,8 +439,24 @@ def generate_decisions(people: list, documents: list) -> list:
     ]
 
     for i in range(44):
-        item = REAL_DECISIONS_POOL[i % len(REAL_DECISIONS_POOL)]
-        made = ago(random.randint(30, 480))
+        # Find semantically matching doc for this decision
+        matched_doc_id = None
+        for doc in documents:
+            title_clean = doc.get("title", "").lower()
+            # Match by common distinctive keywords
+            for kw in ["grpc", "tensorrt", "redis", "opentelemetry", "tls 1.3", "kafka", "iceberg",
+                       "postgres", "pkce", "accept headers", "prometheus", "soc2", "argo", "backup",
+                       "circuit breaker", "golang", "spark", "csp", "rollouts", "sqs", "api versioning",
+                       "terraform", "sliding-window", "priority queue", "synonym", "pgbouncer",
+                       "distroless", "faiss", "uuidv7", "chaos", "cronjob", "ebs", "passkey", "etag",
+                       "statsd", "rfc 7807", "envelope encryption", "replay", "opensearch", "trivy"]:
+                if kw in item[0].lower() and kw in title_clean:
+                    matched_doc_id = doc["id"]
+                    break
+            if matched_doc_id:
+                break
+
+        chosen_doc = matched_doc_id or (doc_ids[i % len(doc_ids)] if doc_ids else uid("doc"))
         decisions.append({
             "id": uid("decision"),
             "title": item[0],
@@ -449,9 +465,9 @@ def generate_decisions(people: list, documents: list) -> list:
             "made_at": date_str(made),
             "valid_from": date_str(made),
             "valid_to": None,
-            "source_id": random.choice(doc_ids) if doc_ids else uid("doc"),
+            "source_id": chosen_doc,
             "made_by": random.choice(person_ids),
-            "based_on": random.sample(doc_ids, min(2, len(doc_ids))) if doc_ids else [],
+            "based_on": [chosen_doc],
             "affects": item[2],
         })
 

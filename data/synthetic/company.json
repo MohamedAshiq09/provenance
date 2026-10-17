@@ -1896,8 +1896,7 @@
       "source_id": "doc_adr_jwt_reversal",
       "made_by": "person_jordan",
       "based_on": [
-        "doc_adr_jwt_reversal",
-        "msg_buried_origin"
+        "doc_adr_jwt_reversal"
       ],
       "affects": [
         "sys_auth",
@@ -1949,7 +1948,7 @@
       "status": "active",
       "made_at": "2025-12-30",
       "valid_from": "2025-12-30",
-      "valid_to": null,
+      "valid_to": "2026-10-16",
       "source_id": "doc_rate_limit_50",
       "made_by": "person_leo",
       "based_on": [
@@ -1968,7 +1967,7 @@
       "made_at": "2026-06-08",
       "valid_from": "2026-06-08",
       "valid_to": null,
-      "source_id": "doc_adr_jwt_reversal",
+      "source_id": "doc_4a58a076",
       "made_by": "person_priya",
       "based_on": [
         "doc_adr_jwt_reversal",
@@ -1986,11 +1985,10 @@
       "made_at": "2025-09-28",
       "valid_from": "2025-09-28",
       "valid_to": null,
-      "source_id": "doc_c1fa4cdb",
+      "source_id": "doc_45d26917",
       "made_by": "person_raj",
       "based_on": [
-        "doc_e3c8a5f5",
-        "doc_b8f38e92"
+        "doc_45d26917"
       ],
       "affects": [
         "sys_auth",
@@ -2005,11 +2003,10 @@
       "made_at": "2026-03-04",
       "valid_from": "2026-03-04",
       "valid_to": null,
-      "source_id": "doc_35e92bda",
+      "source_id": "doc_45808156",
       "made_by": "person_alex",
       "based_on": [
-        "doc_952f64d8",
-        "doc_91b22cc2"
+        "doc_45808156"
       ],
       "affects": [
         "sys_ml"
@@ -2023,11 +2020,10 @@
       "made_at": "2025-11-28",
       "valid_from": "2025-11-28",
       "valid_to": null,
-      "source_id": "doc_a71da0d1",
+      "source_id": "doc_1f2be6c5",
       "made_by": "person_maya",
       "based_on": [
-        "doc_2be5e124",
-        "doc_984c1124"
+        "doc_1f2be6c5"
       ],
       "affects": [
         "sys_mobile_api"
@@ -2041,11 +2037,10 @@
       "made_at": "2025-07-19",
       "valid_from": "2025-07-19",
       "valid_to": null,
-      "source_id": "doc_b798e182",
+      "source_id": "doc_f8040972",
       "made_by": "person_maya",
       "based_on": [
-        "doc_45d26917",
-        "doc_b5934052"
+        "doc_f8040972"
       ],
       "affects": [
         "sys_auth",
@@ -2061,11 +2056,10 @@
       "made_at": "2025-11-10",
       "valid_from": "2025-11-10",
       "valid_to": null,
-      "source_id": "doc_2c32bb6c",
+      "source_id": "doc_1439d1dd",
       "made_by": "person_maya",
       "based_on": [
-        "doc_4c63b8a6",
-        "doc_df6fb38b"
+        "doc_1439d1dd"
       ],
       "affects": [
         "sys_auth",
@@ -2080,11 +2074,10 @@
       "made_at": "2026-05-27",
       "valid_from": "2026-05-27",
       "valid_to": null,
-      "source_id": "doc_cdbc5f71",
+      "source_id": "doc_3146822e",
       "made_by": "person_maya",
       "based_on": [
-        "doc_cc823c77",
-        "doc_f1486368"
+        "doc_3146822e"
       ],
       "affects": [
         "sys_payments",
@@ -2099,10 +2092,9 @@
       "made_at": "2025-10-30",
       "valid_from": "2025-10-30",
       "valid_to": null,
-      "source_id": "doc_4a58a076",
+      "source_id": "doc_98ea1938",
       "made_by": "person_maya",
       "based_on": [
-        "doc_123ff04f",
         "doc_98ea1938"
       ],
       "affects": [
@@ -2117,11 +2109,10 @@
       "made_at": "2025-11-24",
       "valid_from": "2025-11-24",
       "valid_to": null,
-      "source_id": "doc_07eae47b",
+      "source_id": "doc_b5934052",
       "made_by": "person_sam",
       "based_on": [
-        "doc_16ff66cb",
-        "doc_2be5e124"
+        "doc_b5934052"
       ],
       "affects": [
         "sys_search",
@@ -2136,11 +2127,10 @@
       "made_at": "2026-04-02",
       "valid_from": "2026-04-02",
       "valid_to": null,
-      "source_id": "doc_03f959cc",
+      "source_id": "doc_29a1221f",
       "made_by": "person_sam",
       "based_on": [
-        "doc_0d9b78f2",
-        "doc_ace07641"
+        "doc_29a1221f"
       ],
       "affects": [
         "sys_mobile_api",
@@ -2155,11 +2145,10 @@
       "made_at": "2025-08-10",
       "valid_from": "2025-08-10",
       "valid_to": null,
-      "source_id": "doc_0c5b349d",
+      "source_id": "doc_b7300c1e",
       "made_by": "person_leo",
       "based_on": [
-        "doc_a833ab03",
-        "doc_1ea66c52"
+        "doc_b7300c1e"
       ],
       "affects": [
         "sys_mobile_api"
@@ -2173,11 +2162,10 @@
       "made_at": "2026-04-30",
       "valid_from": "2026-04-30",
       "valid_to": null,
-      "source_id": "doc_325c1106",
+      "source_id": "doc_4a58a076",
       "made_by": "person_maya",
       "based_on": [
-        "doc_35e92bda",
-        "doc_2be5e124"
+        "doc_4a58a076"
       ],
       "affects": [
         "sys_auth",
@@ -2193,11 +2181,10 @@
       "made_at": "2025-08-30",
       "valid_from": "2025-08-30",
       "valid_to": null,
-      "source_id": "doc_ff9084ea",
+      "source_id": "doc_b65316a6",
       "made_by": "person_alex",
       "based_on": [
-        "doc_6b274a64",
-        "doc_190efc27"
+        "doc_b65316a6"
       ],
       "affects": [
         "sys_auth"
@@ -2211,11 +2198,10 @@
       "made_at": "2026-07-06",
       "valid_from": "2026-07-06",
       "valid_to": null,
-      "source_id": "doc_e0f50270",
+      "source_id": "doc_29a1221f",
       "made_by": "person_nina",
       "based_on": [
-        "doc_07eae47b",
-        "doc_16ff66cb"
+        "doc_29a1221f"
       ],
       "affects": [
         "sys_mobile_api"
@@ -2229,11 +2215,10 @@
       "made_at": "2025-08-08",
       "valid_from": "2025-08-08",
       "valid_to": null,
-      "source_id": "doc_b798e182",
+      "source_id": "doc_b5934052",
       "made_by": "person_priya",
       "based_on": [
-        "doc_8036aad0",
-        "doc_fc275ee0"
+        "doc_b5934052"
       ],
       "affects": [
         "sys_billing",
@@ -2248,11 +2233,10 @@
       "made_at": "2026-07-15",
       "valid_from": "2026-07-15",
       "valid_to": null,
-      "source_id": "doc_cfc68c0d",
+      "source_id": "doc_3dfdf937",
       "made_by": "person_leo",
       "based_on": [
-        "doc_8036aad0",
-        "doc_91b22cc2"
+        "doc_3dfdf937"
       ],
       "affects": [
         "sys_payments"
@@ -2266,11 +2250,10 @@
       "made_at": "2025-07-22",
       "valid_from": "2025-07-22",
       "valid_to": null,
-      "source_id": "doc_06756995",
+      "source_id": "doc_530288c7",
       "made_by": "person_alex",
       "based_on": [
-        "doc_1f067faf",
-        "doc_af5ec81b"
+        "doc_530288c7"
       ],
       "affects": [
         "sys_auth"
@@ -2284,11 +2267,10 @@
       "made_at": "2026-09-04",
       "valid_from": "2026-09-04",
       "valid_to": null,
-      "source_id": "doc_8330b587",
+      "source_id": "doc_98ea1938",
       "made_by": "person_jordan",
       "based_on": [
-        "doc_b65316a6",
-        "doc_8cf9d77a"
+        "doc_98ea1938"
       ],
       "affects": [
         "sys_data_lake",
@@ -2303,11 +2285,10 @@
       "made_at": "2025-09-23",
       "valid_from": "2025-09-23",
       "valid_to": null,
-      "source_id": "doc_e3c8a5f5",
+      "source_id": "doc_1439d1dd",
       "made_by": "person_nina",
       "based_on": [
-        "doc_40403332",
-        "doc_cc823c77"
+        "doc_1439d1dd"
       ],
       "affects": [
         "sys_auth",
@@ -2322,11 +2303,10 @@
       "made_at": "2026-08-24",
       "valid_from": "2026-08-24",
       "valid_to": null,
-      "source_id": "doc_d3e1e3ca",
+      "source_id": "doc_4a58a076",
       "made_by": "person_maya",
       "based_on": [
-        "doc_d010eb2c",
-        "doc_40403332"
+        "doc_4a58a076"
       ],
       "affects": [
         "sys_auth",
@@ -2342,11 +2322,10 @@
       "made_at": "2026-07-29",
       "valid_from": "2026-07-29",
       "valid_to": null,
-      "source_id": "doc_952f64d8",
+      "source_id": "doc_6c807055",
       "made_by": "person_sam",
       "based_on": [
-        "doc_bd7ae3e2",
-        "doc_cfc68c0d"
+        "doc_6c807055"
       ],
       "affects": [
         "sys_notification"
@@ -2360,11 +2339,10 @@
       "made_at": "2026-03-11",
       "valid_from": "2026-03-11",
       "valid_to": null,
-      "source_id": "doc_0c5b349d",
+      "source_id": "doc_b7300c1e",
       "made_by": "person_nina",
       "based_on": [
-        "doc_96c573dc",
-        "doc_03f959cc"
+        "doc_b7300c1e"
       ],
       "affects": [
         "sys_mobile_api"
@@ -2378,11 +2356,10 @@
       "made_at": "2025-10-16",
       "valid_from": "2025-10-16",
       "valid_to": null,
-      "source_id": "doc_1ca6a6e9",
+      "source_id": "doc_1439d1dd",
       "made_by": "person_raj",
       "based_on": [
-        "doc_6f835f17",
-        "doc_4f5edda8"
+        "doc_1439d1dd"
       ],
       "affects": [
         "sys_auth",
@@ -2397,11 +2374,10 @@
       "made_at": "2026-08-31",
       "valid_from": "2026-08-31",
       "valid_to": null,
-      "source_id": "doc_56ff7458",
+      "source_id": "doc_1f2be6c5",
       "made_by": "person_jordan",
       "based_on": [
-        "doc_9edfc057",
-        "doc_952f64d8"
+        "doc_1f2be6c5"
       ],
       "affects": [
         "sys_mobile_api",
@@ -2416,11 +2392,10 @@
       "made_at": "2025-07-06",
       "valid_from": "2025-07-06",
       "valid_to": null,
-      "source_id": "doc_860ad1c2",
+      "source_id": "doc_6c807055",
       "made_by": "person_alex",
       "based_on": [
-        "doc_56ff7458",
-        "doc_1deb2798"
+        "doc_6c807055"
       ],
       "affects": [
         "sys_notification"
@@ -2434,11 +2409,10 @@
       "made_at": "2025-10-21",
       "valid_from": "2025-10-21",
       "valid_to": null,
-      "source_id": "doc_a71da0d1",
+      "source_id": "doc_d3e1e3ca",
       "made_by": "person_priya",
       "based_on": [
-        "doc_b798e182",
-        "doc_3bfacb77"
+        "doc_d3e1e3ca"
       ],
       "affects": [
         "sys_search"
@@ -2452,11 +2426,10 @@
       "made_at": "2026-06-11",
       "valid_from": "2026-06-11",
       "valid_to": null,
-      "source_id": "doc_c563bbd8",
+      "source_id": "doc_190efc27",
       "made_by": "person_raj",
       "based_on": [
-        "doc_16ff66cb",
-        "doc_755f766b"
+        "doc_190efc27"
       ],
       "affects": [
         "sys_auth",
@@ -2471,11 +2444,10 @@
       "made_at": "2025-10-23",
       "valid_from": "2025-10-23",
       "valid_to": null,
-      "source_id": "doc_984c1124",
+      "source_id": "doc_42411966",
       "made_by": "person_priya",
       "based_on": [
-        "doc_c0757ab8",
-        "doc_175bef8a"
+        "doc_42411966"
       ],
       "affects": [
         "sys_auth",
@@ -2491,11 +2463,10 @@
       "made_at": "2026-07-14",
       "valid_from": "2026-07-14",
       "valid_to": null,
-      "source_id": "doc_9780fdb3",
+      "source_id": "doc_e8a9b4f7",
       "made_by": "person_alex",
       "based_on": [
-        "doc_060e7bc2",
-        "doc_f1bd8f7b"
+        "doc_e8a9b4f7"
       ],
       "affects": [
         "sys_ml",
@@ -2510,11 +2481,10 @@
       "made_at": "2025-11-20",
       "valid_from": "2025-11-20",
       "valid_to": null,
-      "source_id": "doc_3ade5b59",
+      "source_id": "doc_984c1124",
       "made_by": "person_jordan",
       "based_on": [
-        "doc_5600e3f2",
-        "doc_0881fca8"
+        "doc_984c1124"
       ],
       "affects": [
         "sys_billing",
@@ -2529,11 +2499,10 @@
       "made_at": "2025-08-09",
       "valid_from": "2025-08-09",
       "valid_to": null,
-      "source_id": "doc_rate_limit_50",
+      "source_id": "doc_4a58a076",
       "made_by": "person_maya",
       "based_on": [
-        "doc_0881fca8",
-        "doc_ace07641"
+        "doc_4a58a076"
       ],
       "affects": [
         "sys_auth",
@@ -2548,11 +2517,10 @@
       "made_at": "2025-12-14",
       "valid_from": "2025-12-14",
       "valid_to": null,
-      "source_id": "doc_c1fa4cdb",
+      "source_id": "doc_4a58a076",
       "made_by": "person_sam",
       "based_on": [
-        "doc_fcb1097a",
-        "doc_3146822e"
+        "doc_4a58a076"
       ],
       "affects": [
         "sys_billing"
@@ -2566,11 +2534,10 @@
       "made_at": "2026-07-11",
       "valid_from": "2026-07-11",
       "valid_to": null,
-      "source_id": "doc_45808156",
+      "source_id": "doc_b5934052",
       "made_by": "person_leo",
       "based_on": [
-        "doc_952f64d8",
-        "doc_4ebb05ca"
+        "doc_b5934052"
       ],
       "affects": [
         "sys_data_lake",
@@ -2585,11 +2552,10 @@
       "made_at": "2026-09-08",
       "valid_from": "2026-09-08",
       "valid_to": null,
-      "source_id": "doc_e754b1fb",
+      "source_id": "doc_29a1221f",
       "made_by": "person_maya",
       "based_on": [
-        "doc_3dfdf937",
-        "doc_f7676e87"
+        "doc_29a1221f"
       ],
       "affects": [
         "sys_auth"
@@ -2603,11 +2569,10 @@
       "made_at": "2025-09-02",
       "valid_from": "2025-09-02",
       "valid_to": null,
-      "source_id": "doc_a4352890",
+      "source_id": "doc_b7300c1e",
       "made_by": "person_alex",
       "based_on": [
-        "doc_b65316a6",
-        "doc_a5db4a74"
+        "doc_b7300c1e"
       ],
       "affects": [
         "sys_search",
@@ -2622,11 +2587,10 @@
       "made_at": "2026-01-30",
       "valid_from": "2026-01-30",
       "valid_to": null,
-      "source_id": "doc_860ad1c2",
+      "source_id": "doc_4a58a076",
       "made_by": "person_alex",
       "based_on": [
-        "doc_4062955d",
-        "doc_1ea66c52"
+        "doc_4a58a076"
       ],
       "affects": [
         "sys_auth",
@@ -2642,11 +2606,10 @@
       "made_at": "2026-05-26",
       "valid_from": "2026-05-26",
       "valid_to": null,
-      "source_id": "doc_5415e196",
+      "source_id": "doc_984c1124",
       "made_by": "person_maya",
       "based_on": [
-        "doc_a45248c8",
-        "doc_1439d1dd"
+        "doc_984c1124"
       ],
       "affects": [
         "sys_auth",
@@ -2662,11 +2625,10 @@
       "made_at": "2026-08-16",
       "valid_from": "2026-08-16",
       "valid_to": null,
-      "source_id": "doc_8630c0cf",
+      "source_id": "doc_984c1124",
       "made_by": "person_nina",
       "based_on": [
-        "doc_c07b7932",
-        "doc_ea9232f2"
+        "doc_984c1124"
       ],
       "affects": [
         "sys_payments"
@@ -2680,11 +2642,10 @@
       "made_at": "2025-09-17",
       "valid_from": "2025-09-17",
       "valid_to": null,
-      "source_id": "doc_f8040972",
+      "source_id": "doc_6c807055",
       "made_by": "person_alex",
       "based_on": [
-        "doc_4ebb05ca",
-        "doc_0881fca8"
+        "doc_6c807055"
       ],
       "affects": [
         "sys_payments"
@@ -2698,11 +2659,10 @@
       "made_at": "2026-08-14",
       "valid_from": "2026-08-14",
       "valid_to": null,
-      "source_id": "doc_3bfacb77",
+      "source_id": "doc_d3e1e3ca",
       "made_by": "person_leo",
       "based_on": [
-        "doc_91b22cc2",
-        "doc_a833ab03"
+        "doc_d3e1e3ca"
       ],
       "affects": [
         "sys_search"
@@ -2716,11 +2676,10 @@
       "made_at": "2026-04-19",
       "valid_from": "2026-04-19",
       "valid_to": null,
-      "source_id": "doc_9e412fb6",
+      "source_id": "doc_42411966",
       "made_by": "person_nina",
       "based_on": [
-        "doc_1ca6a6e9",
-        "doc_40403332"
+        "doc_42411966"
       ],
       "affects": [
         "sys_auth",
@@ -2736,11 +2695,10 @@
       "made_at": "2025-07-07",
       "valid_from": "2025-07-07",
       "valid_to": null,
-      "source_id": "doc_1f7b3397",
+      "source_id": "doc_f8040972",
       "made_by": "person_raj",
       "based_on": [
-        "doc_4c63b8a6",
-        "doc_2058a809"
+        "doc_f8040972"
       ],
       "affects": [
         "sys_auth",
@@ -2757,11 +2715,10 @@
       "made_at": "2026-03-27",
       "valid_from": "2026-03-27",
       "valid_to": null,
-      "source_id": "doc_8630c0cf",
+      "source_id": "doc_190efc27",
       "made_by": "person_nina",
       "based_on": [
-        "doc_f1486368",
-        "doc_f7d68133"
+        "doc_190efc27"
       ],
       "affects": [
         "sys_billing",
@@ -2776,11 +2733,10 @@
       "made_at": "2026-02-10",
       "valid_from": "2026-02-10",
       "valid_to": null,
-      "source_id": "doc_ec09c6e1",
+      "source_id": "doc_29a1221f",
       "made_by": "person_leo",
       "based_on": [
-        "doc_96c573dc",
-        "doc_a5db4a74"
+        "doc_29a1221f"
       ],
       "affects": [
         "sys_mobile_api",
@@ -2795,11 +2751,10 @@
       "made_at": "2026-08-13",
       "valid_from": "2026-08-13",
       "valid_to": null,
-      "source_id": "doc_e8a9b4f7",
+      "source_id": "doc_3146822e",
       "made_by": "person_alex",
       "based_on": [
-        "doc_1f7b3397",
-        "doc_f1486368"
+        "doc_3146822e"
       ],
       "affects": [
         "sys_auth",
@@ -5990,18 +5945,6 @@
     {
       "from_id": "decision_use_jwt",
       "from_label": "Decision",
-      "to_id": "doc_adr_jwt_original",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-04-24",
-      "source_id": "doc_adr_jwt_original"
-    },
-    {
-      "from_id": "decision_use_jwt",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6019,18 +5962,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-08-17"
-      },
-      "valid_from": "2026-08-17",
-      "source_id": "doc_adr_jwt_reversal"
-    },
-    {
-      "from_id": "decision_opaque_tokens",
-      "from_label": "Decision",
-      "to_id": "doc_adr_jwt_reversal",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-08-17",
       "source_id": "doc_adr_jwt_reversal"
@@ -6110,18 +6041,6 @@
     {
       "from_id": "decision_postgres_billing",
       "from_label": "Decision",
-      "to_id": "doc_adr_postgres_billing",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-06-23",
-      "source_id": "doc_adr_postgres_billing"
-    },
-    {
-      "from_id": "decision_postgres_billing",
-      "from_label": "Decision",
       "to_id": "sys_billing",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6139,18 +6058,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-07-18"
-      },
-      "valid_from": "2026-07-18",
-      "source_id": "doc_adr_cockroach_billing"
-    },
-    {
-      "from_id": "decision_cockroach_billing",
-      "from_label": "Decision",
-      "to_id": "doc_adr_cockroach_billing",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-07-18",
       "source_id": "doc_adr_cockroach_billing"
@@ -6206,18 +6113,6 @@
     {
       "from_id": "decision_rate_limit_mobile",
       "from_label": "Decision",
-      "to_id": "doc_rate_limit_50",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-12-30",
-      "source_id": "doc_rate_limit_50"
-    },
-    {
-      "from_id": "decision_rate_limit_mobile",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6235,18 +6130,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-06-08"
-      },
-      "valid_from": "2026-06-08",
-      "source_id": "doc_adr_jwt_reversal"
-    },
-    {
-      "from_id": "decision_hpa_auth",
-      "from_label": "Decision",
-      "to_id": "doc_adr_jwt_reversal",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-06-08",
       "source_id": "doc_adr_jwt_reversal"
@@ -6290,30 +6173,6 @@
     {
       "from_id": "decision_c35bb52d",
       "from_label": "Decision",
-      "to_id": "doc_e3c8a5f5",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-09-28",
-      "source_id": "doc_c1fa4cdb"
-    },
-    {
-      "from_id": "decision_c35bb52d",
-      "from_label": "Decision",
-      "to_id": "doc_b8f38e92",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-09-28",
-      "source_id": "doc_c1fa4cdb"
-    },
-    {
-      "from_id": "decision_c35bb52d",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6350,30 +6209,6 @@
     {
       "from_id": "decision_8e166442",
       "from_label": "Decision",
-      "to_id": "doc_952f64d8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-03-04",
-      "source_id": "doc_35e92bda"
-    },
-    {
-      "from_id": "decision_8e166442",
-      "from_label": "Decision",
-      "to_id": "doc_91b22cc2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-03-04",
-      "source_id": "doc_35e92bda"
-    },
-    {
-      "from_id": "decision_8e166442",
-      "from_label": "Decision",
       "to_id": "sys_ml",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6398,30 +6233,6 @@
     {
       "from_id": "decision_76d56ed6",
       "from_label": "Decision",
-      "to_id": "doc_2be5e124",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-11-28",
-      "source_id": "doc_a71da0d1"
-    },
-    {
-      "from_id": "decision_76d56ed6",
-      "from_label": "Decision",
-      "to_id": "doc_984c1124",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-11-28",
-      "source_id": "doc_a71da0d1"
-    },
-    {
-      "from_id": "decision_76d56ed6",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6439,30 +6250,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-07-19"
-      },
-      "valid_from": "2025-07-19",
-      "source_id": "doc_b798e182"
-    },
-    {
-      "from_id": "decision_63e244c1",
-      "from_label": "Decision",
-      "to_id": "doc_45d26917",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-07-19",
-      "source_id": "doc_b798e182"
-    },
-    {
-      "from_id": "decision_63e244c1",
-      "from_label": "Decision",
-      "to_id": "doc_b5934052",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-07-19",
       "source_id": "doc_b798e182"
@@ -6518,30 +6305,6 @@
     {
       "from_id": "decision_de90123d",
       "from_label": "Decision",
-      "to_id": "doc_4c63b8a6",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-11-10",
-      "source_id": "doc_2c32bb6c"
-    },
-    {
-      "from_id": "decision_de90123d",
-      "from_label": "Decision",
-      "to_id": "doc_df6fb38b",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-11-10",
-      "source_id": "doc_2c32bb6c"
-    },
-    {
-      "from_id": "decision_de90123d",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6571,30 +6334,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-05-27"
-      },
-      "valid_from": "2026-05-27",
-      "source_id": "doc_cdbc5f71"
-    },
-    {
-      "from_id": "decision_5cfc3c36",
-      "from_label": "Decision",
-      "to_id": "doc_cc823c77",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-05-27",
-      "source_id": "doc_cdbc5f71"
-    },
-    {
-      "from_id": "decision_5cfc3c36",
-      "from_label": "Decision",
-      "to_id": "doc_f1486368",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-05-27",
       "source_id": "doc_cdbc5f71"
@@ -6638,30 +6377,6 @@
     {
       "from_id": "decision_255ac847",
       "from_label": "Decision",
-      "to_id": "doc_123ff04f",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-10-30",
-      "source_id": "doc_4a58a076"
-    },
-    {
-      "from_id": "decision_255ac847",
-      "from_label": "Decision",
-      "to_id": "doc_98ea1938",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-10-30",
-      "source_id": "doc_4a58a076"
-    },
-    {
-      "from_id": "decision_255ac847",
-      "from_label": "Decision",
       "to_id": "sys_data_lake",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6679,30 +6394,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-11-24"
-      },
-      "valid_from": "2025-11-24",
-      "source_id": "doc_07eae47b"
-    },
-    {
-      "from_id": "decision_dfbebd63",
-      "from_label": "Decision",
-      "to_id": "doc_16ff66cb",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-11-24",
-      "source_id": "doc_07eae47b"
-    },
-    {
-      "from_id": "decision_dfbebd63",
-      "from_label": "Decision",
-      "to_id": "doc_2be5e124",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-11-24",
       "source_id": "doc_07eae47b"
@@ -6746,30 +6437,6 @@
     {
       "from_id": "decision_1354b9ff",
       "from_label": "Decision",
-      "to_id": "doc_0d9b78f2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-04-02",
-      "source_id": "doc_03f959cc"
-    },
-    {
-      "from_id": "decision_1354b9ff",
-      "from_label": "Decision",
-      "to_id": "doc_ace07641",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-04-02",
-      "source_id": "doc_03f959cc"
-    },
-    {
-      "from_id": "decision_1354b9ff",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6806,30 +6473,6 @@
     {
       "from_id": "decision_fa3ab4d4",
       "from_label": "Decision",
-      "to_id": "doc_a833ab03",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-10",
-      "source_id": "doc_0c5b349d"
-    },
-    {
-      "from_id": "decision_fa3ab4d4",
-      "from_label": "Decision",
-      "to_id": "doc_1ea66c52",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-10",
-      "source_id": "doc_0c5b349d"
-    },
-    {
-      "from_id": "decision_fa3ab4d4",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6847,30 +6490,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-04-30"
-      },
-      "valid_from": "2026-04-30",
-      "source_id": "doc_325c1106"
-    },
-    {
-      "from_id": "decision_da84ab33",
-      "from_label": "Decision",
-      "to_id": "doc_35e92bda",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-04-30",
-      "source_id": "doc_325c1106"
-    },
-    {
-      "from_id": "decision_da84ab33",
-      "from_label": "Decision",
-      "to_id": "doc_2be5e124",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-04-30",
       "source_id": "doc_325c1106"
@@ -6926,30 +6545,6 @@
     {
       "from_id": "decision_ea7d25b6",
       "from_label": "Decision",
-      "to_id": "doc_6b274a64",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-30",
-      "source_id": "doc_ff9084ea"
-    },
-    {
-      "from_id": "decision_ea7d25b6",
-      "from_label": "Decision",
-      "to_id": "doc_190efc27",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-30",
-      "source_id": "doc_ff9084ea"
-    },
-    {
-      "from_id": "decision_ea7d25b6",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -6974,30 +6569,6 @@
     {
       "from_id": "decision_32cdbb41",
       "from_label": "Decision",
-      "to_id": "doc_07eae47b",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-06",
-      "source_id": "doc_e0f50270"
-    },
-    {
-      "from_id": "decision_32cdbb41",
-      "from_label": "Decision",
-      "to_id": "doc_16ff66cb",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-06",
-      "source_id": "doc_e0f50270"
-    },
-    {
-      "from_id": "decision_32cdbb41",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7015,30 +6586,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-08-08"
-      },
-      "valid_from": "2025-08-08",
-      "source_id": "doc_b798e182"
-    },
-    {
-      "from_id": "decision_74d2ce2e",
-      "from_label": "Decision",
-      "to_id": "doc_8036aad0",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-08",
-      "source_id": "doc_b798e182"
-    },
-    {
-      "from_id": "decision_74d2ce2e",
-      "from_label": "Decision",
-      "to_id": "doc_fc275ee0",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-08-08",
       "source_id": "doc_b798e182"
@@ -7082,30 +6629,6 @@
     {
       "from_id": "decision_6a5da04f",
       "from_label": "Decision",
-      "to_id": "doc_8036aad0",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-15",
-      "source_id": "doc_cfc68c0d"
-    },
-    {
-      "from_id": "decision_6a5da04f",
-      "from_label": "Decision",
-      "to_id": "doc_91b22cc2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-15",
-      "source_id": "doc_cfc68c0d"
-    },
-    {
-      "from_id": "decision_6a5da04f",
-      "from_label": "Decision",
       "to_id": "sys_payments",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7130,30 +6653,6 @@
     {
       "from_id": "decision_c5a145c2",
       "from_label": "Decision",
-      "to_id": "doc_1f067faf",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-07-22",
-      "source_id": "doc_06756995"
-    },
-    {
-      "from_id": "decision_c5a145c2",
-      "from_label": "Decision",
-      "to_id": "doc_af5ec81b",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-07-22",
-      "source_id": "doc_06756995"
-    },
-    {
-      "from_id": "decision_c5a145c2",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7171,30 +6670,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-09-04"
-      },
-      "valid_from": "2026-09-04",
-      "source_id": "doc_8330b587"
-    },
-    {
-      "from_id": "decision_c32c0c09",
-      "from_label": "Decision",
-      "to_id": "doc_b65316a6",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-09-04",
-      "source_id": "doc_8330b587"
-    },
-    {
-      "from_id": "decision_c32c0c09",
-      "from_label": "Decision",
-      "to_id": "doc_8cf9d77a",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-09-04",
       "source_id": "doc_8330b587"
@@ -7238,30 +6713,6 @@
     {
       "from_id": "decision_18c42cdd",
       "from_label": "Decision",
-      "to_id": "doc_40403332",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-09-23",
-      "source_id": "doc_e3c8a5f5"
-    },
-    {
-      "from_id": "decision_18c42cdd",
-      "from_label": "Decision",
-      "to_id": "doc_cc823c77",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-09-23",
-      "source_id": "doc_e3c8a5f5"
-    },
-    {
-      "from_id": "decision_18c42cdd",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7291,30 +6742,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-08-24"
-      },
-      "valid_from": "2026-08-24",
-      "source_id": "doc_d3e1e3ca"
-    },
-    {
-      "from_id": "decision_fdb76c29",
-      "from_label": "Decision",
-      "to_id": "doc_d010eb2c",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-24",
-      "source_id": "doc_d3e1e3ca"
-    },
-    {
-      "from_id": "decision_fdb76c29",
-      "from_label": "Decision",
-      "to_id": "doc_40403332",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-08-24",
       "source_id": "doc_d3e1e3ca"
@@ -7370,30 +6797,6 @@
     {
       "from_id": "decision_2ee0d4b6",
       "from_label": "Decision",
-      "to_id": "doc_bd7ae3e2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-29",
-      "source_id": "doc_952f64d8"
-    },
-    {
-      "from_id": "decision_2ee0d4b6",
-      "from_label": "Decision",
-      "to_id": "doc_cfc68c0d",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-29",
-      "source_id": "doc_952f64d8"
-    },
-    {
-      "from_id": "decision_2ee0d4b6",
-      "from_label": "Decision",
       "to_id": "sys_notification",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7418,30 +6821,6 @@
     {
       "from_id": "decision_4c1f7dad",
       "from_label": "Decision",
-      "to_id": "doc_96c573dc",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-03-11",
-      "source_id": "doc_0c5b349d"
-    },
-    {
-      "from_id": "decision_4c1f7dad",
-      "from_label": "Decision",
-      "to_id": "doc_03f959cc",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-03-11",
-      "source_id": "doc_0c5b349d"
-    },
-    {
-      "from_id": "decision_4c1f7dad",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7459,30 +6838,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-10-16"
-      },
-      "valid_from": "2025-10-16",
-      "source_id": "doc_1ca6a6e9"
-    },
-    {
-      "from_id": "decision_b992f69f",
-      "from_label": "Decision",
-      "to_id": "doc_6f835f17",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-10-16",
-      "source_id": "doc_1ca6a6e9"
-    },
-    {
-      "from_id": "decision_b992f69f",
-      "from_label": "Decision",
-      "to_id": "doc_4f5edda8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-10-16",
       "source_id": "doc_1ca6a6e9"
@@ -7526,30 +6881,6 @@
     {
       "from_id": "decision_27704f0f",
       "from_label": "Decision",
-      "to_id": "doc_9edfc057",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-31",
-      "source_id": "doc_56ff7458"
-    },
-    {
-      "from_id": "decision_27704f0f",
-      "from_label": "Decision",
-      "to_id": "doc_952f64d8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-31",
-      "source_id": "doc_56ff7458"
-    },
-    {
-      "from_id": "decision_27704f0f",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7586,30 +6917,6 @@
     {
       "from_id": "decision_ce7eba93",
       "from_label": "Decision",
-      "to_id": "doc_56ff7458",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-07-06",
-      "source_id": "doc_860ad1c2"
-    },
-    {
-      "from_id": "decision_ce7eba93",
-      "from_label": "Decision",
-      "to_id": "doc_1deb2798",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-07-06",
-      "source_id": "doc_860ad1c2"
-    },
-    {
-      "from_id": "decision_ce7eba93",
-      "from_label": "Decision",
       "to_id": "sys_notification",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7634,30 +6941,6 @@
     {
       "from_id": "decision_2f805123",
       "from_label": "Decision",
-      "to_id": "doc_b798e182",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-10-21",
-      "source_id": "doc_a71da0d1"
-    },
-    {
-      "from_id": "decision_2f805123",
-      "from_label": "Decision",
-      "to_id": "doc_3bfacb77",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-10-21",
-      "source_id": "doc_a71da0d1"
-    },
-    {
-      "from_id": "decision_2f805123",
-      "from_label": "Decision",
       "to_id": "sys_search",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7675,30 +6958,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-06-11"
-      },
-      "valid_from": "2026-06-11",
-      "source_id": "doc_c563bbd8"
-    },
-    {
-      "from_id": "decision_0b952f42",
-      "from_label": "Decision",
-      "to_id": "doc_16ff66cb",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-06-11",
-      "source_id": "doc_c563bbd8"
-    },
-    {
-      "from_id": "decision_0b952f42",
-      "from_label": "Decision",
-      "to_id": "doc_755f766b",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-06-11",
       "source_id": "doc_c563bbd8"
@@ -7735,30 +6994,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-10-23"
-      },
-      "valid_from": "2025-10-23",
-      "source_id": "doc_984c1124"
-    },
-    {
-      "from_id": "decision_3fb74218",
-      "from_label": "Decision",
-      "to_id": "doc_c0757ab8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-10-23",
-      "source_id": "doc_984c1124"
-    },
-    {
-      "from_id": "decision_3fb74218",
-      "from_label": "Decision",
-      "to_id": "doc_175bef8a",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-10-23",
       "source_id": "doc_984c1124"
@@ -7814,30 +7049,6 @@
     {
       "from_id": "decision_4b06ecaf",
       "from_label": "Decision",
-      "to_id": "doc_060e7bc2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-14",
-      "source_id": "doc_9780fdb3"
-    },
-    {
-      "from_id": "decision_4b06ecaf",
-      "from_label": "Decision",
-      "to_id": "doc_f1bd8f7b",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-14",
-      "source_id": "doc_9780fdb3"
-    },
-    {
-      "from_id": "decision_4b06ecaf",
-      "from_label": "Decision",
       "to_id": "sys_ml",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7867,30 +7078,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-11-20"
-      },
-      "valid_from": "2025-11-20",
-      "source_id": "doc_3ade5b59"
-    },
-    {
-      "from_id": "decision_ffc17756",
-      "from_label": "Decision",
-      "to_id": "doc_5600e3f2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-11-20",
-      "source_id": "doc_3ade5b59"
-    },
-    {
-      "from_id": "decision_ffc17756",
-      "from_label": "Decision",
-      "to_id": "doc_0881fca8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-11-20",
       "source_id": "doc_3ade5b59"
@@ -7934,30 +7121,6 @@
     {
       "from_id": "decision_33ea17bc",
       "from_label": "Decision",
-      "to_id": "doc_0881fca8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-09",
-      "source_id": "doc_rate_limit_50"
-    },
-    {
-      "from_id": "decision_33ea17bc",
-      "from_label": "Decision",
-      "to_id": "doc_ace07641",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-08-09",
-      "source_id": "doc_rate_limit_50"
-    },
-    {
-      "from_id": "decision_33ea17bc",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -7994,30 +7157,6 @@
     {
       "from_id": "decision_c1430a81",
       "from_label": "Decision",
-      "to_id": "doc_fcb1097a",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-12-14",
-      "source_id": "doc_c1fa4cdb"
-    },
-    {
-      "from_id": "decision_c1430a81",
-      "from_label": "Decision",
-      "to_id": "doc_3146822e",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-12-14",
-      "source_id": "doc_c1fa4cdb"
-    },
-    {
-      "from_id": "decision_c1430a81",
-      "from_label": "Decision",
       "to_id": "sys_billing",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8035,30 +7174,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-07-11"
-      },
-      "valid_from": "2026-07-11",
-      "source_id": "doc_45808156"
-    },
-    {
-      "from_id": "decision_613220cb",
-      "from_label": "Decision",
-      "to_id": "doc_952f64d8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-07-11",
-      "source_id": "doc_45808156"
-    },
-    {
-      "from_id": "decision_613220cb",
-      "from_label": "Decision",
-      "to_id": "doc_4ebb05ca",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-07-11",
       "source_id": "doc_45808156"
@@ -8102,30 +7217,6 @@
     {
       "from_id": "decision_841b5b17",
       "from_label": "Decision",
-      "to_id": "doc_3dfdf937",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-09-08",
-      "source_id": "doc_e754b1fb"
-    },
-    {
-      "from_id": "decision_841b5b17",
-      "from_label": "Decision",
-      "to_id": "doc_f7676e87",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-09-08",
-      "source_id": "doc_e754b1fb"
-    },
-    {
-      "from_id": "decision_841b5b17",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8143,30 +7234,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-09-02"
-      },
-      "valid_from": "2025-09-02",
-      "source_id": "doc_a4352890"
-    },
-    {
-      "from_id": "decision_c00abd05",
-      "from_label": "Decision",
-      "to_id": "doc_b65316a6",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-09-02",
-      "source_id": "doc_a4352890"
-    },
-    {
-      "from_id": "decision_c00abd05",
-      "from_label": "Decision",
-      "to_id": "doc_a5db4a74",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-09-02",
       "source_id": "doc_a4352890"
@@ -8203,30 +7270,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-01-30"
-      },
-      "valid_from": "2026-01-30",
-      "source_id": "doc_860ad1c2"
-    },
-    {
-      "from_id": "decision_0479cb94",
-      "from_label": "Decision",
-      "to_id": "doc_4062955d",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-01-30",
-      "source_id": "doc_860ad1c2"
-    },
-    {
-      "from_id": "decision_0479cb94",
-      "from_label": "Decision",
-      "to_id": "doc_1ea66c52",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-01-30",
       "source_id": "doc_860ad1c2"
@@ -8282,30 +7325,6 @@
     {
       "from_id": "decision_9db396bf",
       "from_label": "Decision",
-      "to_id": "doc_a45248c8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-05-26",
-      "source_id": "doc_5415e196"
-    },
-    {
-      "from_id": "decision_9db396bf",
-      "from_label": "Decision",
-      "to_id": "doc_1439d1dd",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-05-26",
-      "source_id": "doc_5415e196"
-    },
-    {
-      "from_id": "decision_9db396bf",
-      "from_label": "Decision",
       "to_id": "sys_auth",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8354,30 +7373,6 @@
     {
       "from_id": "decision_ce322103",
       "from_label": "Decision",
-      "to_id": "doc_c07b7932",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-16",
-      "source_id": "doc_8630c0cf"
-    },
-    {
-      "from_id": "decision_ce322103",
-      "from_label": "Decision",
-      "to_id": "doc_ea9232f2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-16",
-      "source_id": "doc_8630c0cf"
-    },
-    {
-      "from_id": "decision_ce322103",
-      "from_label": "Decision",
       "to_id": "sys_payments",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8395,30 +7390,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-09-17"
-      },
-      "valid_from": "2025-09-17",
-      "source_id": "doc_f8040972"
-    },
-    {
-      "from_id": "decision_c60f3a78",
-      "from_label": "Decision",
-      "to_id": "doc_4ebb05ca",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-09-17",
-      "source_id": "doc_f8040972"
-    },
-    {
-      "from_id": "decision_c60f3a78",
-      "from_label": "Decision",
-      "to_id": "doc_0881fca8",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-09-17",
       "source_id": "doc_f8040972"
@@ -8450,30 +7421,6 @@
     {
       "from_id": "decision_f0afc8a0",
       "from_label": "Decision",
-      "to_id": "doc_91b22cc2",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-14",
-      "source_id": "doc_3bfacb77"
-    },
-    {
-      "from_id": "decision_f0afc8a0",
-      "from_label": "Decision",
-      "to_id": "doc_a833ab03",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-14",
-      "source_id": "doc_3bfacb77"
-    },
-    {
-      "from_id": "decision_f0afc8a0",
-      "from_label": "Decision",
       "to_id": "sys_search",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8491,30 +7438,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-04-19"
-      },
-      "valid_from": "2026-04-19",
-      "source_id": "doc_9e412fb6"
-    },
-    {
-      "from_id": "decision_1fc2bee6",
-      "from_label": "Decision",
-      "to_id": "doc_1ca6a6e9",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-04-19",
-      "source_id": "doc_9e412fb6"
-    },
-    {
-      "from_id": "decision_1fc2bee6",
-      "from_label": "Decision",
-      "to_id": "doc_40403332",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-04-19",
       "source_id": "doc_9e412fb6"
@@ -8563,30 +7486,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2025-07-07"
-      },
-      "valid_from": "2025-07-07",
-      "source_id": "doc_1f7b3397"
-    },
-    {
-      "from_id": "decision_42273f7c",
-      "from_label": "Decision",
-      "to_id": "doc_4c63b8a6",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2025-07-07",
-      "source_id": "doc_1f7b3397"
-    },
-    {
-      "from_id": "decision_42273f7c",
-      "from_label": "Decision",
-      "to_id": "doc_2058a809",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2025-07-07",
       "source_id": "doc_1f7b3397"
@@ -8654,30 +7553,6 @@
     {
       "from_id": "decision_c56de2f0",
       "from_label": "Decision",
-      "to_id": "doc_f1486368",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-03-27",
-      "source_id": "doc_8630c0cf"
-    },
-    {
-      "from_id": "decision_c56de2f0",
-      "from_label": "Decision",
-      "to_id": "doc_f7d68133",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-03-27",
-      "source_id": "doc_8630c0cf"
-    },
-    {
-      "from_id": "decision_c56de2f0",
-      "from_label": "Decision",
       "to_id": "sys_billing",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8714,30 +7589,6 @@
     {
       "from_id": "decision_207274d4",
       "from_label": "Decision",
-      "to_id": "doc_96c573dc",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-02-10",
-      "source_id": "doc_ec09c6e1"
-    },
-    {
-      "from_id": "decision_207274d4",
-      "from_label": "Decision",
-      "to_id": "doc_a5db4a74",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-02-10",
-      "source_id": "doc_ec09c6e1"
-    },
-    {
-      "from_id": "decision_207274d4",
-      "from_label": "Decision",
       "to_id": "sys_mobile_api",
       "to_label": "System",
       "rel_type": "AFFECTS",
@@ -8767,30 +7618,6 @@
       "rel_type": "MADE_BY",
       "props": {
         "at": "2026-08-13"
-      },
-      "valid_from": "2026-08-13",
-      "source_id": "doc_e8a9b4f7"
-    },
-    {
-      "from_id": "decision_f3765678",
-      "from_label": "Decision",
-      "to_id": "doc_1f7b3397",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
-      },
-      "valid_from": "2026-08-13",
-      "source_id": "doc_e8a9b4f7"
-    },
-    {
-      "from_id": "decision_f3765678",
-      "from_label": "Decision",
-      "to_id": "doc_f1486368",
-      "to_label": "Document",
-      "rel_type": "BASED_ON",
-      "props": {
-        "weight": 1.0
       },
       "valid_from": "2026-08-13",
       "source_id": "doc_e8a9b4f7"
@@ -9240,6 +8067,506 @@
       },
       "valid_from": "2025-09-08",
       "source_id": "doc_1ca6a6e9"
+    },
+    {
+      "from_id": "decision_use_jwt",
+      "from_label": "Decision",
+      "to_id": "doc_adr_jwt_original",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-04-24",
+      "valid_to": "2026-08-17",
+      "source_id": "doc_adr_jwt_original"
+    },
+    {
+      "from_id": "decision_opaque_tokens",
+      "from_label": "Decision",
+      "to_id": "doc_adr_jwt_reversal",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-08-17",
+      "valid_to": null,
+      "source_id": "doc_adr_jwt_reversal"
+    },
+    {
+      "from_id": "decision_postgres_billing",
+      "from_label": "Decision",
+      "to_id": "doc_adr_postgres_billing",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-06-23",
+      "valid_to": "2026-07-18",
+      "source_id": "doc_adr_postgres_billing"
+    },
+    {
+      "from_id": "decision_cockroach_billing",
+      "from_label": "Decision",
+      "to_id": "doc_adr_cockroach_billing",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-07-18",
+      "valid_to": null,
+      "source_id": "doc_adr_cockroach_billing"
+    },
+    {
+      "from_id": "decision_rate_limit_mobile",
+      "from_label": "Decision",
+      "to_id": "doc_rate_limit_50",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-12-30",
+      "valid_to": "2026-10-16",
+      "source_id": "doc_rate_limit_50"
+    },
+    {
+      "from_id": "decision_hpa_auth",
+      "from_label": "Decision",
+      "to_id": "doc_adr_jwt_reversal",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-06-08",
+      "valid_to": null,
+      "source_id": "doc_adr_jwt_reversal"
+    },
+    {
+      "from_id": "decision_c35bb52d",
+      "from_label": "Decision",
+      "to_id": "doc_45d26917",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-09-28",
+      "valid_to": null,
+      "source_id": "doc_45d26917"
+    },
+    {
+      "from_id": "decision_8e166442",
+      "from_label": "Decision",
+      "to_id": "doc_45808156",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-03-04",
+      "valid_to": null,
+      "source_id": "doc_45808156"
+    },
+    {
+      "from_id": "decision_76d56ed6",
+      "from_label": "Decision",
+      "to_id": "doc_1f2be6c5",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-11-28",
+      "valid_to": null,
+      "source_id": "doc_1f2be6c5"
+    },
+    {
+      "from_id": "decision_63e244c1",
+      "from_label": "Decision",
+      "to_id": "doc_f8040972",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-07-19",
+      "valid_to": null,
+      "source_id": "doc_f8040972"
+    },
+    {
+      "from_id": "decision_de90123d",
+      "from_label": "Decision",
+      "to_id": "doc_1439d1dd",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-11-10",
+      "valid_to": null,
+      "source_id": "doc_1439d1dd"
+    },
+    {
+      "from_id": "decision_5cfc3c36",
+      "from_label": "Decision",
+      "to_id": "doc_3146822e",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-05-27",
+      "valid_to": null,
+      "source_id": "doc_3146822e"
+    },
+    {
+      "from_id": "decision_255ac847",
+      "from_label": "Decision",
+      "to_id": "doc_98ea1938",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-10-30",
+      "valid_to": null,
+      "source_id": "doc_98ea1938"
+    },
+    {
+      "from_id": "decision_dfbebd63",
+      "from_label": "Decision",
+      "to_id": "doc_b5934052",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-11-24",
+      "valid_to": null,
+      "source_id": "doc_b5934052"
+    },
+    {
+      "from_id": "decision_1354b9ff",
+      "from_label": "Decision",
+      "to_id": "doc_29a1221f",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-04-02",
+      "valid_to": null,
+      "source_id": "doc_29a1221f"
+    },
+    {
+      "from_id": "decision_fa3ab4d4",
+      "from_label": "Decision",
+      "to_id": "doc_b7300c1e",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-08-10",
+      "valid_to": null,
+      "source_id": "doc_b7300c1e"
+    },
+    {
+      "from_id": "decision_da84ab33",
+      "from_label": "Decision",
+      "to_id": "doc_4a58a076",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-04-30",
+      "valid_to": null,
+      "source_id": "doc_4a58a076"
+    },
+    {
+      "from_id": "decision_ea7d25b6",
+      "from_label": "Decision",
+      "to_id": "doc_b65316a6",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-08-30",
+      "valid_to": null,
+      "source_id": "doc_b65316a6"
+    },
+    {
+      "from_id": "decision_32cdbb41",
+      "from_label": "Decision",
+      "to_id": "doc_29a1221f",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-07-06",
+      "valid_to": null,
+      "source_id": "doc_29a1221f"
+    },
+    {
+      "from_id": "decision_74d2ce2e",
+      "from_label": "Decision",
+      "to_id": "doc_b5934052",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-08-08",
+      "valid_to": null,
+      "source_id": "doc_b5934052"
+    },
+    {
+      "from_id": "decision_6a5da04f",
+      "from_label": "Decision",
+      "to_id": "doc_3dfdf937",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-07-15",
+      "valid_to": null,
+      "source_id": "doc_3dfdf937"
+    },
+    {
+      "from_id": "decision_c5a145c2",
+      "from_label": "Decision",
+      "to_id": "doc_530288c7",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-07-22",
+      "valid_to": null,
+      "source_id": "doc_530288c7"
+    },
+    {
+      "from_id": "decision_c32c0c09",
+      "from_label": "Decision",
+      "to_id": "doc_98ea1938",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-09-04",
+      "valid_to": null,
+      "source_id": "doc_98ea1938"
+    },
+    {
+      "from_id": "decision_18c42cdd",
+      "from_label": "Decision",
+      "to_id": "doc_1439d1dd",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-09-23",
+      "valid_to": null,
+      "source_id": "doc_1439d1dd"
+    },
+    {
+      "from_id": "decision_fdb76c29",
+      "from_label": "Decision",
+      "to_id": "doc_4a58a076",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-08-24",
+      "valid_to": null,
+      "source_id": "doc_4a58a076"
+    },
+    {
+      "from_id": "decision_2ee0d4b6",
+      "from_label": "Decision",
+      "to_id": "doc_6c807055",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-07-29",
+      "valid_to": null,
+      "source_id": "doc_6c807055"
+    },
+    {
+      "from_id": "decision_4c1f7dad",
+      "from_label": "Decision",
+      "to_id": "doc_b7300c1e",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-03-11",
+      "valid_to": null,
+      "source_id": "doc_b7300c1e"
+    },
+    {
+      "from_id": "decision_b992f69f",
+      "from_label": "Decision",
+      "to_id": "doc_1439d1dd",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-10-16",
+      "valid_to": null,
+      "source_id": "doc_1439d1dd"
+    },
+    {
+      "from_id": "decision_27704f0f",
+      "from_label": "Decision",
+      "to_id": "doc_1f2be6c5",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-08-31",
+      "valid_to": null,
+      "source_id": "doc_1f2be6c5"
+    },
+    {
+      "from_id": "decision_ce7eba93",
+      "from_label": "Decision",
+      "to_id": "doc_6c807055",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-07-06",
+      "valid_to": null,
+      "source_id": "doc_6c807055"
+    },
+    {
+      "from_id": "decision_2f805123",
+      "from_label": "Decision",
+      "to_id": "doc_d3e1e3ca",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-10-21",
+      "valid_to": null,
+      "source_id": "doc_d3e1e3ca"
+    },
+    {
+      "from_id": "decision_0b952f42",
+      "from_label": "Decision",
+      "to_id": "doc_190efc27",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-06-11",
+      "valid_to": null,
+      "source_id": "doc_190efc27"
+    },
+    {
+      "from_id": "decision_3fb74218",
+      "from_label": "Decision",
+      "to_id": "doc_42411966",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-10-23",
+      "valid_to": null,
+      "source_id": "doc_42411966"
+    },
+    {
+      "from_id": "decision_4b06ecaf",
+      "from_label": "Decision",
+      "to_id": "doc_e8a9b4f7",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-07-14",
+      "valid_to": null,
+      "source_id": "doc_e8a9b4f7"
+    },
+    {
+      "from_id": "decision_ffc17756",
+      "from_label": "Decision",
+      "to_id": "doc_984c1124",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-11-20",
+      "valid_to": null,
+      "source_id": "doc_984c1124"
+    },
+    {
+      "from_id": "decision_33ea17bc",
+      "from_label": "Decision",
+      "to_id": "doc_4a58a076",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-08-09",
+      "valid_to": null,
+      "source_id": "doc_4a58a076"
+    },
+    {
+      "from_id": "decision_c1430a81",
+      "from_label": "Decision",
+      "to_id": "doc_4a58a076",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-12-14",
+      "valid_to": null,
+      "source_id": "doc_4a58a076"
+    },
+    {
+      "from_id": "decision_613220cb",
+      "from_label": "Decision",
+      "to_id": "doc_b5934052",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-07-11",
+      "valid_to": null,
+      "source_id": "doc_b5934052"
+    },
+    {
+      "from_id": "decision_841b5b17",
+      "from_label": "Decision",
+      "to_id": "doc_29a1221f",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-09-08",
+      "valid_to": null,
+      "source_id": "doc_29a1221f"
+    },
+    {
+      "from_id": "decision_c00abd05",
+      "from_label": "Decision",
+      "to_id": "doc_b7300c1e",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-09-02",
+      "valid_to": null,
+      "source_id": "doc_b7300c1e"
+    },
+    {
+      "from_id": "decision_0479cb94",
+      "from_label": "Decision",
+      "to_id": "doc_4a58a076",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-01-30",
+      "valid_to": null,
+      "source_id": "doc_4a58a076"
+    },
+    {
+      "from_id": "decision_9db396bf",
+      "from_label": "Decision",
+      "to_id": "doc_984c1124",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-05-26",
+      "valid_to": null,
+      "source_id": "doc_984c1124"
+    },
+    {
+      "from_id": "decision_ce322103",
+      "from_label": "Decision",
+      "to_id": "doc_984c1124",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-08-16",
+      "valid_to": null,
+      "source_id": "doc_984c1124"
+    },
+    {
+      "from_id": "decision_c60f3a78",
+      "from_label": "Decision",
+      "to_id": "doc_6c807055",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-09-17",
+      "valid_to": null,
+      "source_id": "doc_6c807055"
+    },
+    {
+      "from_id": "decision_f0afc8a0",
+      "from_label": "Decision",
+      "to_id": "doc_d3e1e3ca",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-08-14",
+      "valid_to": null,
+      "source_id": "doc_d3e1e3ca"
+    },
+    {
+      "from_id": "decision_1fc2bee6",
+      "from_label": "Decision",
+      "to_id": "doc_42411966",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-04-19",
+      "valid_to": null,
+      "source_id": "doc_42411966"
+    },
+    {
+      "from_id": "decision_42273f7c",
+      "from_label": "Decision",
+      "to_id": "doc_f8040972",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2025-07-07",
+      "valid_to": null,
+      "source_id": "doc_f8040972"
+    },
+    {
+      "from_id": "decision_c56de2f0",
+      "from_label": "Decision",
+      "to_id": "doc_190efc27",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-03-27",
+      "valid_to": null,
+      "source_id": "doc_190efc27"
+    },
+    {
+      "from_id": "decision_207274d4",
+      "from_label": "Decision",
+      "to_id": "doc_29a1221f",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-02-10",
+      "valid_to": null,
+      "source_id": "doc_29a1221f"
+    },
+    {
+      "from_id": "decision_f3765678",
+      "from_label": "Decision",
+      "to_id": "doc_3146822e",
+      "to_label": "Document",
+      "rel_type": "BASED_ON",
+      "valid_from": "2026-08-13",
+      "valid_to": null,
+      "source_id": "doc_3146822e"
     }
   ]
 }
