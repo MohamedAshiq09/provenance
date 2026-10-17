@@ -76,6 +76,19 @@ def test_staleness_detection():
     assert "decision_rate_limit_mobile" in stale_ids
 
 
+def test_staleness_effect_date_matches_superseding_source():
+    """T6 regression: stale_effect_at must be the superseding doc's effective
+    date (doc_rate_limit_200 valid_from = 2026-09-15), not the query date —
+    and the notice lag must be derivable ('stale for N days unnoticed')."""
+    res = detect_staleness("doc_rate_limit_200")
+    assert res["stale_decisions_found"] >= 1
+    for item in res["stale_items"]:
+        d = item["stale_decision"]
+        assert d.get("stale_effect_at") == "2026-09-15", (
+            f"effect date wrong: {d.get('stale_effect_at')}")
+        assert isinstance(d.get("notice_lag_days"), int) and d["notice_lag_days"] > 0
+
+
 def test_as_of_temporal():
     """Verify as_of query reconstructs historical decisions."""
     # In 2025, JWT was the active decision
