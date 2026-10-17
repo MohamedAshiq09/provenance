@@ -55,7 +55,30 @@ export default function TimeTravelSlider({ onDateChange, workspace = 'novatech',
     },
   ];
 
-  const dates = workspace === 'peps' ? pepsDates : novatechDates;
+  const falkordbDates = [
+    {
+      label: 'Jan 2026',
+      date: '2026-01-01',
+      desc: 'Early 2026 Baseline'
+    },
+    {
+      label: 'May 2026',
+      date: '2026-05-01',
+      desc: 'v1.6-1.7 Enhancements'
+    },
+    {
+      label: 'Aug 2026',
+      date: '2026-08-01',
+      desc: 'Client & Storage Updates'
+    },
+    {
+      label: 'Oct 2026',
+      date: '2026-10-17',
+      desc: 'Current Master State'
+    },
+  ];
+
+  const dates = workspace === 'peps' ? pepsDates : (workspace === 'falkordb' ? falkordbDates : novatechDates);
 
   const [selectedIndex, setSelectedIndex] = useState(dates.length - 1);
   const [activeDecisions, setActiveDecisions] = useState([]);

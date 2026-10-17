@@ -53,7 +53,16 @@ export default function ChatPanel({
     { label: 'Why MongoDB?', q: 'Why did we choose MongoDB?', tag: 'False Premise' }
   ];
 
-  const presets = workspace === 'peps' ? pepsPresets : novatechPresets;
+  const falkordbPresets = [
+    { label: 'Who owns Core Engine?', q: 'Who owns the FalkorDB Core Engine?', tag: 'Ownership' },
+    { label: 'Expert on Python Client', q: 'Who is the expert on the Python Client SDK?', tag: 'Expertise' },
+    { label: 'What if Avi leaves?', q: 'What happens if Avi leaves?', tag: 'Bus Factor' },
+    { label: 'Core changes in 2026', q: 'What changed in area engine between 2026-01-01 and 2026-10-31?', tag: 'Evolution' },
+    { label: 'Superseded dependency PRs', q: 'What decisions are stale or superseded in the repository?', tag: 'Staleness' },
+    { label: 'Why MongoDB?', q: 'Why did we choose MongoDB?', tag: 'False Premise' }
+  ];
+
+  const presets = workspace === 'peps' ? pepsPresets : (workspace === 'falkordb' ? falkordbPresets : novatechPresets);
 
   const handleSubmit = (e) => {
     e.preventDefault();

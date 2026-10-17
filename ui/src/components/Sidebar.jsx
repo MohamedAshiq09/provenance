@@ -176,7 +176,7 @@ export default function Sidebar({
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
               <Building2 size={13} color="var(--accent)" />
               <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {workspace === 'peps' ? 'Python PEPs' : 'NovaTech Labs'}
+                {workspace === 'peps' ? 'Python PEPs' : (workspace === 'falkordb' ? 'FalkorDB Repos' : 'NovaTech Labs')}
               </span>
             </div>
             <ChevronDown size={12} color="var(--muted)" />
@@ -246,6 +246,30 @@ export default function Sidebar({
               >
                 <span>Python PEPs</span>
                 {workspace === 'peps' && <Check size={12} color="var(--accent)" />}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (setWorkspace) setWorkspace('falkordb');
+                  setWorkspaceMenuOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 8px',
+                  borderRadius: '4px',
+                  background: workspace === 'falkordb' ? 'var(--surface-2)' : 'transparent',
+                  border: 'none',
+                  color: 'var(--text)',
+                  fontSize: '0.78rem',
+                  fontWeight: workspace === 'falkordb' ? '600' : '400',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <span>FalkorDB Repos</span>
+                {workspace === 'falkordb' && <Check size={12} color="var(--accent)" />}
               </button>
             </div>
           )}

@@ -34,11 +34,11 @@ export default function Home() {
   // Modal states
   const [handoffModalData, setHandoffModalData] = useState(null);
 
-  const [workspace, setWorkspace] = useState('novatech'); // 'novatech' | 'peps'
+  const [workspace, setWorkspace] = useState('novatech'); // 'novatech' | 'peps' | 'falkordb'
   const [selectedDate, setSelectedDate] = useState('2026-10-17');
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(3);
 
-  const currentGraphName = workspace === 'peps' ? 'peps_brain' : 'company_brain';
+  const currentGraphName = workspace === 'peps' ? 'peps_brain' : (workspace === 'falkordb' ? 'falkordb_repos' : 'company_brain');
 
   // Initial load & workspace change
   useEffect(() => {
@@ -69,6 +69,8 @@ export default function Home() {
       } else {
         if (graphName === 'peps_brain') {
           setStats({ Person: 356, Decision: 745, System: 4, Document: 745 });
+        } else if (graphName === 'falkordb_repos') {
+          setStats({ Person: 22, Decision: 226, System: 13, Issue: 91 });
         } else {
           setStats({ Person: 40, Decision: 50, Document: 146, System: 8 });
         }
@@ -77,6 +79,8 @@ export default function Home() {
       console.warn("Could not fetch stats:", e);
       if (graphName === 'peps_brain') {
         setStats({ Person: 356, Decision: 745, System: 4, Document: 745 });
+      } else if (graphName === 'falkordb_repos') {
+        setStats({ Person: 22, Decision: 226, System: 13, Issue: 91 });
       } else {
         setStats({ Person: 40, Decision: 50, Document: 146, System: 8 });
       }

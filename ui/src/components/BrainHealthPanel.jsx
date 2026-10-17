@@ -145,7 +145,67 @@ export default function BrainHealthPanel({
     },
   ];
 
-  const metrics = workspace === 'peps' ? pepsMetrics : novatechMetrics;
+  // Real Repository Governance & Risk for FalkorDB Repos
+  const falkordbMetrics = [
+    {
+      id: 'repo_stale',
+      label: 'Superseded PRs & Bumps',
+      count: 31,
+      unit: 'superseded pull requests',
+      status: 'warn',
+      description: 'Dependency bumps and commits superseded by newer releases',
+      proof: {
+        title: 'PR #225: Bump ruff from 0.15.12 to 0.15.13',
+        path: 'PR #228 —[SUPERSEDES]→ PR #225 (Superseded)',
+        impact: 'Outdated linter and dependency pins superseded in subsequent pull request',
+        actionQuestion: 'What decisions are stale or superseded in the repository?'
+      }
+    },
+    {
+      id: 'repo_prs',
+      label: 'Merged Pull Requests',
+      count: 226,
+      unit: 'merged changes across 3 repos',
+      status: 'ok',
+      description: 'Pull requests spanning FalkorDB, falkordb-py, and falkordb-browser',
+      proof: {
+        title: 'FalkorDB Multi-Repository Corpus',
+        path: 'FalkorDB Core (84 PRs) + Python Client (72 PRs) + Browser UI (70 PRs)',
+        impact: 'Structural traceability across engine, client driver, and canvas UI',
+        actionQuestion: 'What changed in area engine between 2026-01-01 and 2026-10-31?'
+      }
+    },
+    {
+      id: 'repo_components',
+      label: 'Monitored Components',
+      count: 13,
+      unit: 'top-level subsystem domains',
+      status: 'ok',
+      description: 'Subsystems tracked with WORKED_ON and TOUCHES graph centrality',
+      proof: {
+        title: 'FalkorDB Core Engine (src/) Subsystem',
+        path: 'AviAvni / DvirDukhan / swilly22 —[WORKED_ON]→ FalkorDB Core Engine',
+        impact: 'Graph centrality identifies true subject-matter experts across core repos',
+        actionQuestion: 'Who owns the FalkorDB Core Engine?'
+      }
+    },
+    {
+      id: 'repo_issues',
+      label: 'Linked Closed Issues',
+      count: 91,
+      unit: 'closed issues resolved by PRs',
+      status: 'off',
+      description: 'GitHub issues closed and linked via CLOSES graph edges',
+      proof: {
+        title: 'Issue Traceability Lineage',
+        path: 'PR #3346 —[CLOSES]→ Issue #3338',
+        impact: 'Every PR resolves specific issue tickets with full provenance',
+        actionQuestion: 'Who is the expert on the Python Client SDK?'
+      }
+    },
+  ];
+
+  const metrics = workspace === 'peps' ? pepsMetrics : (workspace === 'falkordb' ? falkordbMetrics : novatechMetrics);
 
   // Needs Attention items for NovaTech
   const novatechAttention = [
