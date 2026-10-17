@@ -1023,6 +1023,102 @@ def find_contradiction_candidates(new_doc_id: str, new_text: str = None,
     }
 
 
+# T7 (live-test 2026-10-17): two text conflicts were visible to the user yet
+# the queue was empty — keyword overlap can't see them. Second pass:
+# DECLARED-SUPERSESSION bugs. A document whose title carries a formal id
+# (ADR-016, PEP-405, ...) is referenced by another doc's content claiming
+# supersession ("supersedes ADR-003") while the graph records NO
+# SUPERSEDES/CONTRADICTS edge between them. That is a lineage defect — the
+# text says the timeline changed, the graph disagrees. Same guarded pipeline:
+# ContradictionCandidate nodes, human confirm via REST only.
+_DECLARED_ID_RE = re.compile(r"\b(ADR|POL|SEC|INFRA|RFC|PEP)-(\d+)\b", re.IGNORECASE)
+
+LINEAGE_NO_EDGE_CHECK_QUERY = """
+MATCH (a:Document {id: $source_id})
+MATCH (b:Document)
+WHERE b.id <> a.id
+  AND (toLower(coalesce(b.content, '')) CONTAINS $claim AND
+       (toLower(coalesce(b.content, '')) CONTAINS 'supersedes' OR
+        toLower(coalesce(b.content, '')) CONTAINS 'reverses' OR
+        toLower(coalesce(b.content, '')) CONTAINS 'replaces' OR
+        toLower(coalesce(b.content, '')) CONTAINS 'rescinds' OR
+        toLower(coalesce(b.content, '')) CONTAINS 'voids'))
+  AND NOT (a)-[:SUPERSEDES|CONTRADICTS]-(b)
+RETURN b
+ORDER BY b.id
+LIMIT 5
+"""
+
+
+def find_lineage_conflicts(graph_name: str = None) -> dict:
+    """
+    Sweep for declarations of supersession that the graph does not record.
+    GUARDED: writes ContradictionCandidate nodes only; never creates
+    SUPERSEDES/CONTRADICTS edges. Idempotent: candidate ids are derived from
+    the pair, re-runs merge instead of duplicating.
+
+    GRAPH NECESSITY: only the graph knows whether the SUPERSEDES edge that the
+    text claims actually exists between the two documents.
+    """
+    g = _graph(graph_name)
+    now = datetime.now(timezone.utc).isoformat()
+
+    titles = g.query(
+        "MATCH (a:Document) WHERE a.id IS NOT NULL RETURN a.id, a.title",
+        {},
+    ).result_set
+
+    persisted = []
+    for doc_id, title in titles:
+        for token_match in _DECLARED_ID_RE.finditer(title or ""):
+            token = f"{token_match.group(1).lower()}-{token_match.group(2)}"
+            # the cited id must belong to THIS doc's title
+            if token not in (title or "").lower():
+                continue
+            claim = f"{token}"
+            rows = g.query(LINEAGE_NO_EDGE_CHECK_QUERY,
+                           {"source_id": doc_id, "claim": claim}).result_set
+            for row in rows:
+                b = _node_to_dict(row[0])
+                cc_id = f"cc_lg_{doc_id}_{b.get('id')}"
+                g.query("""
+                    MERGE (cc:ContradictionCandidate {id: $cc_id})
+                    SET cc.status = 'candidate', cc.verdict = 'lineage_conflict',
+                        cc.rationale = 'Doc content declares supersession of ' + $claim
+                                       + ' but the graph records no SUPERSEDES edge',
+                        cc.new_doc_id = $b_id, cc.target_id = $a_id,
+                        cc.target_title = $a_title, cc.target_type = 'Document',
+                        cc.matched_keyword = 'declared_supersedes_' + $claim,
+                        cc.detected_at = coalesce(cc.detected_at, $now)
+                    WITH cc
+                    MATCH (src:Document {id: $b_id})
+                    MERGE (cc)-[:CANDIDATE_SOURCE]->(src)
+                    WITH cc
+                    MATCH (t:Document {id: $a_id})
+                    MERGE (cc)-[:CANDIDATE_TARGET]->(t)
+                """, {"cc_id": cc_id, "claim": claim, "b_id": b.get("id"),
+                      "a_id": doc_id, "a_title": title or "",
+                      "now": now})
+                persisted.append({
+                    "candidate_id": cc_id,
+                    "new_doc_id": b.get("id"),
+                    "target_id": doc_id,
+                    "target_type": "Document",
+                    "target_title": title,
+                    "matched_keyword": f"declared_supersedes_{claim}",
+                    "verdict": "lineage_conflict",
+                    "rationale": (f"Doc '{title}' ({token}) is cited as superseded by "
+                                  f"'{b.get('title')}' in its content, but no SUPERSEDES "
+                                  f"edge exists between them in the graph"),
+                })
+
+    return {
+        "scan": "lineage_conflicts",
+        "candidates": persisted,
+        "candidate_count": len(persisted),
+    }
+
+
 def get_contradiction_candidates(graph_name: str = None) -> list:
     """Unresolved contradiction candidates awaiting human review."""
     g = _graph(graph_name)
