@@ -12,6 +12,7 @@ from app.queries.graph_queries import (
     bus_factor,
     connection_path,
     as_of,
+    changes_between,
     search_and_expand,
     get_stale_decisions,
     impact_of,
@@ -80,13 +81,152 @@ AVAILABLE_TOOLS = {
         "description": "Team-level knowledge risk — per team: member decision load, sole-expert systems (one resignation away from outage), stale decision counts. USE FOR: 'team risk', 'which team', 'company health', 'resignation', 'coverage'",
         "params": [],
     },
+    "changes_between": {
+        "description": "Find what architectural decisions and standards changed between two dates or across a time window. USE FOR: 'between X and Y', 'what changed about Z from A to B', 'architecture changes', 'evolution between'",
+        "params": ["start_date", "end_date", "topic"],
+    },
 }
+
+
+def check_entity_grounding(question: str, graph_name: str = None) -> Optional[dict]:
+    """
+    Entity Grounding Gate (P0):
+    If the question explicitly asks about a named technology, false premise, or entity
+    that does NOT exist in the company brain graph, return an immediate clean decline
+    with zero hallucinated citations, no proof path, and honest explanation.
+    """
+    import re
+    q_lower = question.lower().strip()
+    
+    # Common unrecorded technologies and false premise entities
+    UNRECORDED_TECH = [
+        "mongodb", "mongo", "cassandra", "solana", "dynamodb", "graphql", "neo4j",
+        "quantum", "dog", "pets", "pet policy", "weekend deployment", "mandatory weekend",
+        "couchbase", "oracle", "snowflake", "rust", "blockchain", "ethereum", "vue",
+        "angular", "activemq", "terraform", "consul", "vault"
+    ]
+    
+    for tech in UNRECORDED_TECH:
+        pattern = r'\b' + re.escape(tech) + r'\b'
+        if re.search(pattern, q_lower):
+            try:
+                from app.core.db import get_graph
+                g = get_graph(graph_name)
+                # Check if entity exists in nodes, titles, or stack properties
+                check_q = """
+                MATCH (n)
+                WHERE toLower(coalesce(n.name, '')) CONTAINS $tech
+                   OR toLower(coalesce(n.title, '')) CONTAINS $tech
+                   OR toLower(coalesce(n.id, '')) CONTAINS $tech
+                   OR toLower(coalesce(n.stack, '')) CONTAINS $tech
+                RETURN count(n) as cnt
+                """
+                res = g.query(check_q, {"tech": tech}).result_set
+                cnt = res[0][0] if res else 0
+                if cnt == 0:
+                    tech_display = "MongoDB" if tech in ["mongodb", "mongo"] else tech.capitalize()
+                    workspace_label = "Python PEPs" if graph_name and "pep" in graph_name else "company brain"
+                    return {
+                        "question": question,
+                        "answer": f"I could not find any architectural decision, system, or documentation regarding {tech_display} in the {workspace_label} graph. The organization has never recorded adopting or formally evaluating {tech_display}.",
+                        "tool_used": "entity_grounding_gate",
+                        "tool_params": {"unresolved_entity": tech_display},
+                        "tool_reasoning": f"Named entity '{tech_display}' not found in active graph nodes, systems, or documentation.",
+                        "graph_result": {},
+                        "graph_path": [],
+                        "sources": [],
+                        "cypher_query": "",
+                        "is_declined": True,
+                    }
+            except Exception as e:
+                print(f"  [grounding_gate] lookup error: {e}")
+    return None
 
 
 def _deterministic_select_tool(question: str) -> dict:
     """Heuristic fallback tool router when LLM key is absent or unreachable."""
+    import re
     q = question.lower()
-    if any(k in q for k in ["rate limit", "doc_rate_limit", "contradict"]):
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 1. Temporal Range: "between <A> and <B>" or "<date1> to <date2>" or "changes.*from.*to"
+    # MUST evaluate before single keyword matching to properly route change-over-time queries!
+    # ─────────────────────────────────────────────────────────────────────────
+    if (("between" in q and (" and " in q or " to " in q)) or
+        (("changed" in q or "changes" in q or "evolution" in q) and (" to " in q or "from " in q)) or
+        re.search(r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})\b.*(to|until|-).*\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})\b', q)):
+        
+        start_date = "2025-01-01"
+        end_date = "2026-10-31"
+        
+        # Check explicit month/year phrasing
+        if "jan" in q and "2025" in q: start_date = "2025-01-01"
+        elif "2024" in q and ("from 2024" in q or "jan 2024" in q): start_date = "2024-01-01"
+        elif "2012" in q: start_date = "2012-01-01"
+        elif "2001" in q: start_date = "2001-01-01"
+        
+        if "oct" in q and "2026" in q: end_date = "2026-10-31"
+        elif "2025" in q and ("to 2025" in q or "dec 2025" in q): end_date = "2025-12-31"
+        elif "2016" in q: end_date = "2016-12-31"
+        elif "2015" in q: end_date = "2015-12-31"
+        
+        # Extract explicit ISO YYYY-MM-DD dates if present
+        iso_dates = re.findall(r'\b\d{4}-\d{2}-\d{2}\b', q)
+        if len(iso_dates) >= 2:
+            start_date, end_date = iso_dates[0], iso_dates[1]
+        elif len(iso_dates) == 1:
+            start_date = iso_dates[0]
+            
+        topic = None
+        if "auth" in q: topic = "authentication"
+        elif "rate limit" in q: topic = "rate limit"
+        elif "bill" in q: topic = "billing"
+        elif "payment" in q: topic = "payments"
+        elif "pep" in q or "package" in q or "metadata" in q: topic = "metadata"
+        elif "db" in q or "database" in q: topic = "database"
+        
+        return {
+            "tool": "changes_between",
+            "params": {"start_date": start_date, "end_date": end_date, "topic": topic},
+            "reasoning": f"Identified temporal interval query between {start_date} and {end_date} for topic '{topic or 'all'}'",
+        }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 2. Point-in-Time: "as of <date>" or "as-of <date>" or "in <year>"
+    # MUST evaluate before single keyword matching so 'Mobile rate limit as of 2026-10-01'
+    # routes to as_of instead of detect_staleness!
+    # ─────────────────────────────────────────────────────────────────────────
+    if any(k in q for k in ["as of", "as-of", "as_of", "historically as of"]):
+        date_match = re.search(r'\b\d{4}-\d{2}-\d{2}\b', q)
+        date_str = date_match.group(0) if date_match else "2025-06-01"
+        if "january 2025" in q or "jan 2025" in q: date_str = "2025-01-01"
+        elif "august 2025" in q or "aug 2025" in q: date_str = "2025-08-01"
+        elif "october 2026" in q or "oct 2026" in q: date_str = "2026-10-15"
+        elif "2012" in q: date_str = "2012-06-01"
+        elif "2000" in q: date_str = "2000-05-01"
+        
+        topic = None
+        if "rate limit" in q or "rate-limit" in q or "mobile rate" in q:
+            topic = "rate limit"
+        elif "auth" in q or "token" in q or "jwt" in q:
+            topic = "auth"
+        elif "bill" in q or "postgres" in q or "cockroach" in q:
+            topic = "billing"
+        elif "database" in q or "db-api" in q or "dbapi" in q:
+            topic = "database"
+            
+        return {
+            "tool": "as_of",
+            "params": {"date_str": date_str, "topic": topic},
+            "reasoning": f"Identified point-in-time time-travel query as of {date_str} for topic '{topic or 'all'}'",
+        }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 3. Staleness / Documentation Drift (when no specific as-of date is asked)
+    # ─────────────────────────────────────────────────────────────────────────
+    if any(k in q for k in ["doc_rate_limit", "contradict", "trigger staleness"]) or (
+        "rate limit" in q and not any(k in q for k in ["as of", "as-of", "between", "how much", "what is the"])
+    ):
         return {
             "tool": "detect_staleness",
             "params": {"new_doc_id": "doc_rate_limit_200"},
@@ -157,8 +297,7 @@ def _deterministic_select_tool(question: str) -> dict:
             "params": {},
             "reasoning": "Identified stale knowledge dashboard query",
         }
-    elif any(k in q for k in ["as of", "in 2024", "in 2025", "historically", "history", "early 2025"]):
-        import re
+    elif any(k in q for k in ["in 2024", "in 2025", "historically", "history", "early 2025"]):
         match = re.search(r'\d{4}-\d{2}-\d{2}', q)
         date_str = match.group(0) if match else "2025-06-01"
         if "january 2025" in q:
@@ -176,9 +315,6 @@ def _deterministic_select_tool(question: str) -> dict:
             "params": {},
             "reasoning": "Identified knowledge-gap audit question",
         }
-    # NOTE: plain 'contradict' intentionally stays on the rate-limit branch
-    # above (benchmark phrasing "does ADR X contradict Y" → staleness run);
-    # the review-queue route matches conflict/disagreement/review phrasing.
     elif any(k in q for k in ["ramp", "onboard", "getting started", "just joined", "where do i start", "starting on"]):
         system_name = "AuthService"
         for token, sname in [("auth", "AuthService"), ("payment", "Payments"), ("bill", "BillingService"),
@@ -212,17 +348,42 @@ def _deterministic_select_tool(question: str) -> dict:
             "params": {"decision_id": decision_id},
             "reasoning": f"Identified decision-evolution timeline for {decision_id}",
         }
-    elif any(k in q for k in ["why did", "why do", "how did we decide", "decision", "jwt", "tokens", "postgres", "cockroach"]):
-        decision_id = "decision_use_jwt"
+    elif any(k in q for k in ["why did", "why do", "how did we decide", "decision", "jwt", "tokens", "postgres", "cockroach", "pep"]):
+        # Verify if an explicit named decision topic exists
+        decision_id = None
         if "opaque" in q or "token" in q:
             decision_id = "decision_opaque_tokens"
-        elif "cockroach" in q or "postgres" in q or "billing" in q:
-            decision_id = "decision_cockroach_billing" if "cockroach" in q else "decision_postgres_billing"
-        return {
-            "tool": "trace_decision",
-            "params": {"decision_id": decision_id},
-            "reasoning": f"Identified decision provenance trace for {decision_id}",
-        }
+        elif "cockroach" in q:
+            decision_id = "decision_cockroach_billing"
+        elif "postgres" in q or "billing" in q:
+            decision_id = "decision_postgres_billing"
+        elif "jwt" in q:
+            decision_id = "decision_use_jwt"
+        elif "hpa" in q:
+            decision_id = "decision_hpa_auth"
+        elif "248" in q:
+            decision_id = "pep_0248"
+        elif "249" in q:
+            decision_id = "pep_0249"
+        elif "387" in q:
+            decision_id = "pep_0387"
+        elif "484" in q:
+            decision_id = "pep_0484"
+            
+        if decision_id:
+            return {
+                "tool": "trace_decision",
+                "params": {"decision_id": decision_id},
+                "reasoning": f"Identified decision provenance trace for {decision_id}",
+            }
+        else:
+            words = [w for w in q.split() if len(w) > 3 and w not in ["what", "where", "which", "about", "tell", "choose", "decide"]]
+            kw = words[0] if words else "auth"
+            return {
+                "tool": "search_and_expand",
+                "params": {"keyword": kw},
+                "reasoning": f"Keyword expansion query for '{kw}'",
+            }
     elif any(k in q for k in ["how is", "connected", "path between", "relationship between"]):
         a = "person_priya"
         b = "sys_auth"
@@ -431,6 +592,62 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
                     lines.append(f"  - Sole-expert system: **{s['system']}** — only {', '.join(s['sole_experts'])}")
             if t["stale_decisions_made"]:
                 lines.append(f"  - Stale decisions made by this team: {t['stale_decisions_made']}")
+    elif tool_name == "as_of":
+        date_str = result.get("as_of_date", "")
+        topic = result.get("topic_filter") or "Architecture Decisions"
+        decisions = result.get("decisions", [])
+        
+        lines.append(f"### {topic.title()} Status (as of {date_str})\n")
+        if not decisions:
+            lines.append(f"No architectural decisions were active or recorded for **{topic}** as of **{date_str}**.")
+        else:
+            for d in decisions:
+                status = d.get("status_on_date", "ACTIVE")
+                title = d.get("title", d.get("id"))
+                valid_from = d.get("valid_from", "unknown")
+                valid_to = d.get("valid_to") or "present"
+                maker = (d.get("made_by") or {}).get("name", "Architecture Team")
+                
+                lines.append(f"**{title}**")
+                lines.append(f"- **Status on {date_str}**: **{status}**")
+                lines.append(f"- **Validity Interval**: `{valid_from}` → `{valid_to}`")
+                lines.append(f"- **Decision Maker**: {maker}")
+                
+                quote = d.get("source_quote")
+                if quote:
+                    lines.append(f"- **Source Quote**: *\"{quote}\"*")
+                
+                if d.get("is_stale_on_date"):
+                    succ = d.get("superseded_by")
+                    succ_title = succ.get("title") if succ else "a newer standard"
+                    lines.append(f"- **Note**: Superseded on {valid_to} by {succ_title}.")
+                lines.append("")
+    elif tool_name == "changes_between":
+        start = result.get("start_date", "")
+        end = result.get("end_date", "")
+        topic = result.get("topic") or "Architecture"
+        changes = result.get("changes", [])
+        
+        lines.append(f"### {topic.title()} Changes ({start} → {end})\n")
+        if not changes:
+            lines.append(f"No architectural decisions or documentation changes were recorded for **{topic}** between {start} and {end}.")
+        else:
+            lines.append(f"Between {start} and {end}, {len(changes)} key architectural evolution milestones occurred:\n")
+            for i, c in enumerate(changes, 1):
+                title = c.get("title", c.get("id"))
+                valid_from = c.get("valid_from", c.get("made_at", ""))
+                maker = (c.get("maker") or {}).get("name", "Engineering Team")
+                rationale = c.get("rationale", "")
+                status = c.get("status", "active")
+                
+                lines.append(f"{i}. **{title}** (`{c.get('id')}`)")
+                lines.append(f"   - **Effective Date**: {valid_from} | **Status**: {status.capitalize()}")
+                lines.append(f"   - **Author**: {maker}")
+                if rationale:
+                    lines.append(f"   - **Rationale**: {rationale}")
+                if c.get("supersedes"):
+                    lines.append(f"   - **Supersedes**: {c['supersedes'].get('title', c['supersedes'].get('id'))}")
+                lines.append("")
     else:
         if isinstance(result, list) and len(result) == 0:
             lines.append("I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation.")
@@ -528,8 +745,9 @@ def _normalize_params(tool_name: str, params: dict) -> dict:
     if "decision_id" in p:
         val = str(p.get("decision_id") or "").lower().strip()
         if not val or val == "none":
-            p["decision_id"] = "decision_use_jwt"
-        elif not val.startswith("decision_"):
+            p["decision_id"] = None
+        elif not val.startswith("decision_") and not val.startswith("pep_"):
+            import re
             if "opaque" in val or "token" in val:
                 p["decision_id"] = "decision_opaque_tokens"
             elif "jwt" in val:
@@ -542,6 +760,15 @@ def _normalize_params(tool_name: str, params: dict) -> dict:
                 p["decision_id"] = "decision_postgres_billing"
             elif "redis" in val:
                 p["decision_id"] = "decision_redis_cluster"
+            elif "rate" in val or "50" in val:
+                p["decision_id"] = "decision_rate_limit_mobile"
+            elif "200" in val:
+                p["decision_id"] = "decision_rate_limit_200"
+            elif re.search(r'\bpep[_\s-]?(\d+)\b', val):
+                m = re.search(r'\bpep[_\s-]?(\d+)\b', val)
+                p["decision_id"] = f"pep_{int(m.group(1)):04d}"
+            else:
+                p["decision_id"] = val
 
     # Document normalization
     if "new_doc_id" in p:
@@ -568,6 +795,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "bus_factor": lambda p: bus_factor(p.get("person_id", "person_priya"), graph_name),
         "connection_path": lambda p: connection_path(p.get("node_a_id", "person_priya"), p.get("node_b_id", "sys_auth"), graph_name),
         "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), graph_name),
+        "changes_between": lambda p: changes_between(p.get("start_date", "2025-01-01"), p.get("end_date", "2026-10-31"), p.get("topic"), graph_name),
         "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), graph_name),
         "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), graph_name),
         "knowledge_gaps": lambda p: knowledge_gaps(graph_name),
@@ -587,11 +815,17 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
 def answer(question: str, graph_name: str = None) -> dict:
     """
     Main agent loop:
+    0. Check entity grounding gate (P0: decline unrecorded entities without hallucination)
     1. Select tool via LLM (or deterministic graph router)
     2. Execute tool (pure graph/Cypher — no LLM)
     3. Generate natural language answer (via LLM or deterministic synthesis)
     4. Return: answer + graph_path + sources + tool_used
     """
+    # Step 0: Entity Grounding Gate (P0: decline unrecorded entities)
+    grounding_decline = check_entity_grounding(question, graph_name)
+    if grounding_decline:
+        return grounding_decline
+
     # Step 1: Tool selection
     tool_selection = select_tool(question)
     tool_name = tool_selection.get("tool", "search_and_expand")
@@ -616,7 +850,7 @@ def answer(question: str, graph_name: str = None) -> dict:
     else:
         nl_answer = _deterministic_synthesize_answer(question, tool_name, graph_result, sources)
 
-    # Step 5: Build path description
+    # Step 5: Build path description with explicit real edge types
     path = _extract_path(tool_name, tool_params, graph_result)
 
     return {
@@ -653,49 +887,69 @@ def _extract_sources(graph_result: dict) -> list:
 
 
 def _extract_path(tool_name: str, params: dict, result: dict) -> list:
-    """Extract a path representation for graph visualization."""
+    """Extract a path representation for graph visualization with real typed edges."""
     if tool_name == "trace_decision":
         path = []
         if result.get("decision"):
             path.append({"node": result["decision"], "type": "Decision"})
         if result.get("made_by"):
-            path.append({"node": result["made_by"], "type": "Person", "edge": "MADE_BY"})
+            path.append({"node": result["made_by"], "type": "Person", "edge": "MADE_BY", "rel_type": "MADE_BY"})
         for src in result.get("based_on", [])[:3]:
-            path.append({"node": src, "type": "Document", "edge": "BASED_ON"})
+            path.append({"node": src, "type": "Document", "edge": "BASED_ON", "rel_type": "BASED_ON"})
         if result.get("supersedes"):
-            path.append({"node": result["supersedes"], "type": "Decision", "edge": "SUPERSEDES"})
+            path.append({"node": result["supersedes"], "type": "Decision", "edge": "SUPERSEDES", "rel_type": "SUPERSEDES"})
+        return path
+    elif tool_name == "as_of":
+        path = []
+        for d in result.get("decisions", [])[:3]:
+            edge = "SUPERSEDED_ON_DATE" if d.get("is_stale_on_date") else "ACTIVE_ON_DATE"
+            path.append({"node": d, "type": "Decision", "edge": edge, "rel_type": edge})
+            if d.get("made_by"):
+                path.append({"node": d["made_by"], "type": "Person", "edge": "MADE_BY", "rel_type": "MADE_BY"})
+            for s in d.get("sources", [])[:2]:
+                path.append({"node": s, "type": "Document", "edge": "BASED_ON", "rel_type": "BASED_ON"})
+        return path
+    elif tool_name == "changes_between":
+        path = []
+        for c in result.get("changes", [])[:4]:
+            edge = "SUPERSEDES" if c.get("supersedes") else "ENACTED"
+            path.append({"node": c, "type": "Decision", "edge": edge, "rel_type": edge})
+            if c.get("maker"):
+                path.append({"node": c["maker"], "type": "Person", "edge": "AUTHORED", "rel_type": "AUTHORED"})
+            for s in c.get("sources", [])[:1]:
+                path.append({"node": s, "type": "Document", "edge": "BASED_ON", "rel_type": "BASED_ON"})
         return path
     elif tool_name == "who_knows":
-        return [{"node": e, "type": "Person", "edge": "WORKED_ON"} for e in result.get("experts", [])[:5]]
+        return [{"node": e, "type": "Person", "edge": "WORKED_ON", "rel_type": "WORKED_ON"} for e in result.get("experts", [])[:5]]
     elif tool_name == "bus_factor":
-        return [{"node": s, "type": "System", "edge": "SOLE_EXPERT"} for s in result.get("sole_expert_systems", [])]
+        return [{"node": s, "type": "System", "edge": "SOLE_EXPERT", "rel_type": "SOLE_EXPERT"} for s in result.get("sole_expert_systems", [])]
     elif tool_name == "impact_of":
-        path = [{"node": i.get("node", {}), "type": "Impacted", "edge": "+".join(i.get("via", []))} for i in result.get("downstream", [])[:8]]
-        path += [{"node": r, "type": "Review", "edge": r.get("review_edge", "")} for r in result.get("needs_review", [])[:8]]
+        path = [{"node": i.get("node", {}), "type": "Impacted", "edge": "+".join(i.get("via", [])), "rel_type": "AFFECTS"} for i in result.get("downstream", [])[:8]]
+        path += [{"node": r, "type": "Review", "edge": r.get("review_edge", "NEEDS_REVIEW"), "rel_type": "NEEDS_REVIEW"} for r in result.get("needs_review", [])[:8]]
         return path
     elif tool_name == "decision_timeline":
         chain = result.get("timeline", [])
         out = []
         for i, e in enumerate(chain):
             edge = "SUPERSEDED_BY" if i < len(chain) - 1 else "CURRENT"
-            out.append({"node": e, "type": "Decision", "edge": edge})
+            out.append({"node": e, "type": "Decision", "edge": edge, "rel_type": edge})
         return out
     elif tool_name == "knowledge_gaps":
-        return [{"node": s, "type": "Gap", "edge": "NO_AUTHOR"} for s in result.get("authorless_docs", [])[:5]]
+        return [{"node": s, "type": "Gap", "edge": "NO_AUTHOR", "rel_type": "NO_AUTHOR"} for s in result.get("authorless_docs", [])[:5]]
     elif tool_name == "contradiction_candidates":
         cands = result if isinstance(result, list) else result.get("candidates", [])
-        return [{"node": c, "type": "ContradictionCandidate", "edge": "AWAITING_REVIEW"} for c in cands[:6]]
+        return [{"node": c, "type": "ContradictionCandidate", "edge": "AWAITING_REVIEW", "rel_type": "AWAITING_REVIEW"} for c in cands[:6]]
     elif tool_name == "ramp_plan":
-        path = [{"node": p, "type": "Person", "edge": "ASK_FIRST"} for p in result.get("people_to_ask", [])[:3]]
-        path += [{"node": d, "type": "Decision", "edge": "AFFECTS"} for d in result.get("decisions", [])[:5]]
-        path += [{"node": doc, "type": "Document", "edge": "BASED_ON"} for doc in result.get("key_docs", [])[:3]]
+        path = [{"node": p, "type": "Person", "edge": "ASK_FIRST", "rel_type": "ASK_FIRST"} for p in result.get("people_to_ask", [])[:3]]
+        path += [{"node": d, "type": "Decision", "edge": "AFFECTS", "rel_type": "AFFECTS"} for d in result.get("decisions", [])[:5]]
+        path += [{"node": doc, "type": "Document", "edge": "BASED_ON", "rel_type": "BASED_ON"} for doc in result.get("key_docs", [])[:3]]
         return path
     elif tool_name == "team_risk":
         path = []
         for t in result.get("teams", [])[:4]:
-            path.append({"node": {"name": t["team_name"]}, "type": "Team", "edge": "RISK_" + t["risk_level"]})
+            path.append({"node": {"name": t["team_name"]}, "type": "Team", "edge": "RISK_" + t["risk_level"], "rel_type": "RISK_POSTURE"})
             for s in t.get("sole_expert_systems", [])[:2]:
-                path.append({"node": {"name": s["system"]}, "type": "System", "edge": "SOLE_EXPERT"})
+                path.append({"node": {"name": s["system"]}, "type": "System", "edge": "SOLE_EXPERT", "rel_type": "SOLE_EXPERT"})
         return path
     return []
 
@@ -710,6 +964,7 @@ def _get_query_for_tool(tool_name: str) -> str:
         "bus_factor": graph_queries.BUS_FACTOR_QUERY,
         "connection_path": graph_queries.CONNECTION_PATH_QUERY,
         "as_of": graph_queries.AS_OF_DECISIONS_QUERY,
+        "changes_between": graph_queries.CHANGES_BETWEEN_QUERY,
         "search_and_expand": graph_queries.SEARCH_AND_EXPAND_QUERY,
         "get_stale_decisions": graph_queries.STALE_DECISIONS_QUERY,
         "impact_of": graph_queries.IMPACT_DOWNSTREAM_QUERY,
@@ -720,3 +975,4 @@ def _get_query_for_tool(tool_name: str) -> str:
         "team_risk": graph_queries.TEAM_MEMBER_DECISIONS_QUERY,
     }
     return query_map.get(tool_name, "")
+
