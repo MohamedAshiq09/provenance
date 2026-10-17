@@ -264,11 +264,17 @@ RETURN d as stale_decision,
 """
 
 MARK_STALE_QUERY = """
-// Mark a decision as stale with reason
+// Mark a decision as stale with reason.
+// T6 (live-test 2026-10-17): stale_detected_at was the only timestamp, so every
+// freshly-checked flag said 'today' even when the superseding policy took
+// effect weeks earlier. Keep detected_at (first query to notice) AND record
+// stale_effect_at (when the superseding source took effect) so UI/agent can
+// surface 'stale for N days before anyone checked'.
 MATCH (d:Decision {id: $decision_id})
 SET d.stale = true,
     d.stale_reason = $reason,
-    d.stale_detected_at = $detected_at
+    d.stale_detected_at = $detected_at,
+    d.stale_effect_at = $effect_at
 RETURN d
 """
 
@@ -284,7 +290,7 @@ def detect_staleness(new_doc_id: str, graph_name: str = None) -> dict:
     result = g.query(STALENESS_QUERY, {"new_doc_id": new_doc_id})
     
     stale_items = []
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
     
     for row in result.result_set:
         stale_decision = _node_to_dict(row[0])
@@ -292,14 +298,27 @@ def detect_staleness(new_doc_id: str, graph_name: str = None) -> dict:
         new_source = _node_to_dict(row[2])
         downstream = [_node_to_dict(d) for d in (row[3] or []) if d]
         reason = row[4]
-        
+
+        # T6: the flag's business-date is when the new source took effect
+        # (valid_from, falling back to made_at), not the moment we noticed.
+        effect_at = (new_source.get("valid_from") or new_source.get("made_at") or None)
+        effect_at_iso = str(effect_at) if effect_at else now.date().isoformat()
+        try:
+            effect_date = datetime.fromisoformat(str(effect_at)).date() if effect_at else now.date()
+            notice_lag_days = (now.date() - effect_date).days
+        except ValueError:
+            notice_lag_days = None
+
         # Mark the decision as stale in the graph
         g.query(MARK_STALE_QUERY, {
             "decision_id": stale_decision.get("id"),
             "reason": f"Source document '{stale_source.get('title')}' was superseded by '{new_source.get('title')}'",
-            "detected_at": now,
+            "detected_at": now.isoformat(),
+            "effect_at": effect_at_iso,
         })
-        
+
+        stale_decision["stale_effect_at"] = effect_at_iso
+        stale_decision["notice_lag_days"] = notice_lag_days
         stale_items.append({
             "stale_decision": stale_decision,
             "stale_source": stale_source,

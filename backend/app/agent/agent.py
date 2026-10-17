@@ -326,7 +326,7 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             src = item.get("stale_source", {})
             new_src = item.get("new_source", {})
             lines.append(f"- **{d.get('title', d.get('id'))}** (`{d.get('id')}`)")
-            lines.append(f"  *Reason*: Relies on superseded document `{src.get('id')}` ('{src.get('title')}') which was updated to `{new_src.get('id')}` ('{new_src.get('title')}'). Rate limit updated to 200 req/s.")
+            lines.append(f"  *Reason*: {item.get('reason', d.get('stale_reason', 'Source documentation changed'))}.")
 
     elif tool_name == "get_stale_decisions":
         stale_list = result if isinstance(result, list) else result.get("stale_decisions", [])
@@ -335,6 +335,11 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             lines.append(f"- **{item.get('title')}** (`{item.get('id')}`)")
             lines.append(f"  *Reason*: {item.get('stale_reason', 'Source documentation changed')}")
             lines.append(f"  *Impact Radius*: {item.get('impact_radius', 0)} dependent systems")
+            effect = item.get("stale_effect_at")
+            lag = item.get("notice_lag_days")
+            if effect:
+                lag_txt = f" (stale for {lag} days before noticed)" if isinstance(lag, int) and lag > 0 else ""
+                lines.append(f"  *Stale since*: {effect}{lag_txt}")
 
     elif tool_name == "connection_path":
         paths = result.get("paths", [])
