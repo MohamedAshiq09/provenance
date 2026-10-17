@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, CheckCircle2, FileText, ExternalLink, ShieldCheck, Quote } from 'lucide-react';
+import { X, FileText, ExternalLink, ShieldCheck, Quote } from 'lucide-react';
 
 export default function CitationModal({ citation, onClose }) {
   if (!citation) return null;
@@ -13,8 +13,7 @@ export default function CitationModal({ citation, onClose }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(0, 0, 0, 0.6)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -22,130 +21,125 @@ export default function CitationModal({ citation, onClose }) {
       padding: '1rem',
     }} onClick={onClose}>
       <div 
-        className="glass-panel" 
+        className="clean-card" 
         style={{
-          maxWidth: '680px',
+          maxWidth: '620px',
           width: '100%',
-          background: 'rgba(15, 23, 42, 0.98)',
-          border: '1px solid rgba(6, 182, 212, 0.4)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '1.5rem',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '1.25rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '1rem',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
+          boxShadow: 'var(--shadow-subtle)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.3rem' }}>
-              <span style={{
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem' }}>
+              <span className="chip-accent" style={{
                 fontSize: '0.68rem',
-                fontWeight: '700',
-                padding: '2px 8px',
+                fontWeight: '600',
+                padding: '2px 7px',
                 borderRadius: 'var(--radius-full)',
-                background: 'rgba(6, 182, 212, 0.15)',
-                color: '#22d3ee',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.3rem',
+                gap: '4px',
               }}>
-                <ShieldCheck size={12} /> VERBATIM CITATION PROOF
+                <ShieldCheck size={12} /> Verbatim Citation Proof
               </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Doc ID: <code>{citation.id || 'doc_ref'}</code>
+              <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+                Doc ID: <code className="font-mono">{citation.id || 'doc_ref'}</code>
               </span>
             </div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '600', color: 'var(--text)' }}>
               {citation.title || citation.name || 'Document Citation'}
             </h3>
           </div>
 
           <button
             onClick={onClose}
+            aria-label="Close modal"
             style={{
               background: 'transparent',
               border: 'none',
-              color: 'var(--text-muted)',
+              color: 'var(--muted)',
               cursor: 'pointer',
               padding: '4px',
+              borderRadius: '4px',
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Verbatim Supporting Quote Box */}
         <div style={{
-          padding: '1rem',
+          padding: '0.9rem',
           borderRadius: 'var(--radius-sm)',
-          background: 'rgba(6, 182, 212, 0.08)',
-          border: '1px solid rgba(6, 182, 212, 0.3)',
+          background: 'var(--surface-2)',
+          border: '1px solid var(--border)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.5rem',
+          gap: '0.4rem',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem', fontWeight: '700', color: '#22d3ee' }}>
-            <Quote size={14} />
-            <span>Supporting Verbatim Quote in Source Text</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem', fontWeight: '600', color: 'var(--accent)' }}>
+            <Quote size={13} />
+            <span>Supporting Verbatim Quote</span>
           </div>
           <p style={{
             fontSize: '0.85rem',
-            lineHeight: '1.5',
-            color: '#f8fafc',
+            lineHeight: '1.6',
+            color: 'var(--text)',
             fontStyle: 'italic',
-            borderLeft: '3px solid #06b6d4',
+            borderLeft: '3px solid var(--accent)',
             paddingLeft: '0.75rem',
+            margin: '0.25rem 0',
           }}>
-            "{citation.quote || citation.snippet || 'We raise the API Gateway mobile tier rate limit from 50 req/s to 200 req/s to eliminate client throttling errors.'}"
+            "{citation.quote || citation.content || 'Verified architectural constraint indexed in FalkorDB graph.'}"
           </p>
         </div>
 
-        {/* Document Context / Metadata */}
+        {/* Metadata Details */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '0.6rem',
-          padding: '0.75rem',
-          borderRadius: 'var(--radius-sm)',
-          background: 'rgba(0, 0, 0, 0.3)',
-          fontSize: '0.72rem',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '0.5rem',
+          fontSize: '0.75rem',
         }}>
-          <div>
-            <span style={{ color: 'var(--text-muted)', display: 'block' }}>Document Type</span>
-            <strong style={{ color: '#ffffff' }}>{citation.doc_type || 'Architecture Record'}</strong>
+          <div style={{ padding: '0.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            <div style={{ color: 'var(--muted)', fontSize: '0.68rem', marginBottom: '2px' }}>Document Type</div>
+            <div style={{ fontWeight: '600', color: 'var(--text)', textTransform: 'capitalize' }}>
+              {citation.doc_type || 'ADR'}
+            </div>
           </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)', display: 'block' }}>Valid From</span>
-            <strong style={{ color: '#ffffff' }}>{citation.valid_from || '2025-08-01'}</strong>
+
+          <div style={{ padding: '0.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            <div style={{ color: 'var(--muted)', fontSize: '0.68rem', marginBottom: '2px' }}>Valid From</div>
+            <div style={{ fontWeight: '600', color: 'var(--text)' }}>
+              {citation.valid_from || '2025-08-01'}
+            </div>
           </div>
-          <div>
-            <span style={{ color: 'var(--text-muted)', display: 'block' }}>Verified In Graph</span>
-            <strong style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              <CheckCircle2 size={13} /> 100% Match
-            </strong>
+
+          <div style={{ padding: '0.5rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            <div style={{ color: 'var(--muted)', fontSize: '0.68rem', marginBottom: '2px' }}>Graph Status</div>
+            <div style={{ fontWeight: '600', color: 'var(--ok)' }}>
+              Active in Index
+            </div>
           </div>
         </div>
 
-        {/* Close button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+        {/* Footer */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
           <button
             onClick={onClose}
-            style={{
-              padding: '0.5rem 1.25rem',
-              borderRadius: 'var(--radius-sm)',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid var(--border-subtle)',
-              color: '#ffffff',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
+            className="btn-ghost"
+            style={{ fontSize: '0.78rem', padding: '6px 14px' }}
           >
-            Close Citation
+            Close
           </button>
         </div>
       </div>

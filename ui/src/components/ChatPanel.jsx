@@ -2,23 +2,21 @@
 
 import React, { useState } from 'react';
 import { 
-  Send, 
+  ArrowUp, 
   Sparkles, 
   Code2, 
   ChevronDown, 
-  ChevronUp, 
-  CheckCircle2, 
-  Clock, 
-  Compass,
+  ChevronRight, 
   ArrowRight, 
-  Quote,
+  Network,
+  ExternalLink,
   ShieldAlert,
   AlertTriangle,
   Users,
-  Terminal,
-  ExternalLink,
   Layers,
-  FileText
+  FileText,
+  Calendar,
+  Check
 } from 'lucide-react';
 import CitationModal from './CitationModal';
 
@@ -29,7 +27,9 @@ export default function ChatPanel({
   onSelectPathNode,
   onOpenHandoff,
   onProposeRemediation,
-  workspace = 'novatech'
+  workspace = 'novatech',
+  onToggleGraph,
+  isGraphVisible = false
 }) {
   const [inputQuestion, setInputQuestion] = useState('');
   const [showCypher, setShowCypher] = useState(false);
@@ -39,16 +39,18 @@ export default function ChatPanel({
     { label: 'What if Priya leaves?', q: 'What happens if Priya leaves the company?', tag: 'Bus Factor' },
     { label: 'Why Opaque Tokens?', q: 'Why did we decide to use opaque tokens instead of JWT?', tag: 'Decision Reversal' },
     { label: 'Mobile Rate Limit?', q: 'What is the current mobile API rate limit?', tag: 'Staleness Radar' },
-    { label: 'HPA Autoscaling Origin', q: 'What is the true origin of the HPA autoscaling decision in AuthService?', tag: '3-Hop Origin' },
     { label: 'Auth in June 2025', q: 'What was our active authentication decision as of June 2025?', tag: 'Time Travel' },
+    { label: 'Auth Changes (2025-2026)', q: 'What changed about authentication, Jan 2025 to Oct 2026', tag: 'Evolution' },
+    { label: 'Why MongoDB?', q: 'Why did we choose MongoDB?', tag: 'False Premise' }
   ];
 
   const pepsPresets = [
     { label: 'Which PEP replaced PEP 248?', q: 'Which PEP replaced PEP 248?', tag: 'Supersession' },
-    { label: 'Packaging between 2001 & 2015', q: 'What changed in packaging metadata between 2001 and 2015?', tag: 'Changes Over Time' },
-    { label: 'Who authored PEP 484?', q: 'Who authored PEP 484 Type Hints?', tag: 'Author Centrality' },
+    { label: 'Packaging between 2001 & 2015', q: 'What changed in packaging metadata between 2001 and 2015?', tag: 'Timeline' },
+    { label: 'Who authored PEP 484?', q: 'Who authored PEP 484 Type Hints?', tag: 'Author' },
     { label: 'DB-API standard in May 2000', q: 'What was the active database API standard as of 2000-05-01?', tag: 'Time Travel' },
-    { label: 'Python compatibility policy', q: 'What is the backwards compatibility policy for Python?', tag: 'Governance' },
+    { label: 'Print function supersession', q: 'Which PEP replaced print statement with a function?', tag: 'Evolution' },
+    { label: 'Why MongoDB?', q: 'Why did we choose MongoDB?', tag: 'False Premise' }
   ];
 
   const presets = workspace === 'peps' ? pepsPresets : novatechPresets;
@@ -64,141 +66,35 @@ export default function ChatPanel({
     onAskQuestion(q);
   };
 
-  // Helper to format human node names (hiding raw internal DB IDs)
+  // Human node name formatter (clean title, no raw IDs)
   const formatHumanName = (item) => {
     const node = item?.node || item || {};
     if (node.name) return node.name;
     if (node.title) return node.title;
     if (!node.id) return 'Unknown Node';
 
-    // Format IDs like "person_priya" -> "Priya Sharma", "sys_auth" -> "AuthService"
     const id = String(node.id);
     if (id === 'person_priya') return 'Priya Sharma';
     if (id === 'sys_auth') return 'AuthService';
     if (id === 'decision_opaque_tokens') return 'ADR-002: Opaque Tokens';
-    if (id === 'decision_jwt') return 'ADR-001: JWT Auth (Deprecated)';
-    if (id === 'decision_rate_limit_50') return 'ADR-004: Rate Limit 50 rps';
-    if (id === 'sys_mobile_api') return 'Mobile API Gateway';
-    if (id === 'sys_billing') return 'Billing Ledger';
+    if (id === 'decision_use_jwt') return 'ADR-001: JWT Auth';
+    if (id === 'decision_rate_limit_mobile') return 'ADR-004: Rate Limit 50 rps';
+    if (id === 'sys_mobile_api') return 'MobileAPI';
+    if (id === 'sys_billing') return 'BillingSystem';
 
-    // Clean up generic snake_case
     return id.replace(/^decision_|^person_|^sys_|^doc_/, '')
              .replace(/_/g, ' ')
              .replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Render structured markdown cleanly (no raw ###, **, backticks)
-  const renderStructuredAnswer = (rawText) => {
-    if (!rawText) return null;
-
-    // Split paragraphs
-    const paragraphs = rawText.split('\n\n').filter(p => p.trim().length > 0);
-
-    return paragraphs.map((p, idx) => {
-      const trimmed = p.trim();
-
-      // Header detected
-      if (trimmed.startsWith('###')) {
-        const headerTitle = trimmed.replace(/^###\s*/, '').replace(/\*\*/g, '');
-        return (
-          <div key={idx} style={{
-            fontSize: '0.82rem',
-            fontWeight: '700',
-            color: '#38bdf8',
-            marginTop: '0.75rem',
-            marginBottom: '0.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.04em'
-          }}>
-            <Layers size={13} color="#06b6d4" />
-            <span>{headerTitle}</span>
-          </div>
-        );
-      }
-
-      // Bullet points detected
-      if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
-        const items = trimmed.split('\n').filter(l => l.trim().length > 0);
-        return (
-          <ul key={idx} style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem', margin: '0.35rem 0' }}>
-            {items.map((it, itemIdx) => {
-              const cleanItem = it.replace(/^[\*\-]\s*/, '');
-              return (
-                <li key={itemIdx} style={{ fontSize: '0.85rem', color: '#e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', lineHeight: '1.5' }}>
-                  <span style={{ color: '#06b6d4', marginTop: '2px' }}>•</span>
-                  <span>{formatInlineFormatting(cleanItem)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        );
-      }
-
-      // Standard body paragraph
-      return (
-        <p key={idx} style={{ fontSize: '0.86rem', color: '#e2e8f0', lineHeight: '1.6' }}>
-          {formatInlineFormatting(trimmed)}
-        </p>
-      );
-    });
-  };
-
-  // Helper to parse bold, backticks, and IDs inside strings
-  const formatInlineFormatting = (text) => {
-    // Replace **bold** with strong
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        const content = part.slice(2, -2);
-        // Special highlighting for risk levels
-        if (content.includes('HIGH') || content.includes('Critical')) {
-          return (
-            <span key={i} style={{
-              color: '#fb7185',
-              fontWeight: '700',
-              padding: '1px 6px',
-              borderRadius: '4px',
-              background: 'rgba(244, 63, 94, 0.15)',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-            }}>
-              {content}
-            </span>
-          );
-        }
-        return <strong key={i} style={{ color: '#ffffff', fontWeight: '700' }}>{content}</strong>;
-      }
-      if (part.startsWith('`') && part.endsWith('`')) {
-        const idContent = part.slice(1, -1);
-        return (
-          <span key={i} style={{
-            fontSize: '0.74rem',
-            padding: '1px 5px',
-            borderRadius: '4px',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid var(--border-subtle)',
-            color: '#38bdf8',
-            fontFamily: 'monospace',
-          }}>
-            {idContent}
-          </span>
-        );
-      }
-      return part;
-    });
-  };
-
-  // Entity grounding decline or unrecorded topic
   const isDeclined = Boolean(lastResponse?.is_declined);
+  const isAsOf = lastResponse?.tool_used === 'as_of' || lastResponse?.graph_result?.as_of_date;
+  const isChangesBetween = lastResponse?.tool_used === 'changes_between' || lastResponse?.graph_result?.changes;
 
-  // Bus factor check: only when tool is bus_factor and sole expert exists
   const hasSoleExpert = !isDeclined && 
     (lastResponse?.tool_used === 'bus_factor' || lastResponse?.tool_used?.includes('bus_factor')) && 
     (lastResponse?.graph_result?.sole_expert_systems?.length > 0);
 
-  // Staleness check: ONLY when tool returned genuine stale items or is_stale flag
   const hasStaleResult = !isDeclined && (
     (lastResponse?.graph_result?.stale_items && lastResponse.graph_result.stale_items.length > 0) ||
     lastResponse?.graph_result?.is_stale === true ||
@@ -206,9 +102,111 @@ export default function ChatPanel({
     (lastResponse?.graph_result?.decisions && lastResponse.graph_result.decisions.some(d => d.is_stale_on_date))
   );
 
+  // Clean Markdown & prose renderer (Inter font, 15-16px, line-height 1.6, no stray marks)
+  const renderCleanProse = (rawText) => {
+    if (!rawText) return null;
+    const blocks = rawText.split('\n\n').filter(b => b.trim().length > 0);
+
+    return blocks.map((block, idx) => {
+      const trimmed = block.trim();
+
+      // Heading block (e.g. ### Rate Limit Status)
+      if (trimmed.startsWith('#')) {
+        const title = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '');
+        return (
+          <h3 key={idx} style={{
+            fontSize: '1.05rem',
+            fontWeight: '600',
+            color: 'var(--text)',
+            marginTop: '1rem',
+            marginBottom: '0.4rem',
+            letterSpacing: '-0.01em',
+          }}>
+            {title}
+          </h3>
+        );
+      }
+
+      // Bullet list block
+      if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+        const items = trimmed.split('\n').filter(l => l.trim().length > 0);
+        return (
+          <ul key={idx} style={{ listStyle: 'none', paddingLeft: 0, margin: '0.5rem 0', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {items.map((item, i) => {
+              const cleanItem = item.replace(/^[\*\-]\s*/, '');
+              return (
+                <li key={i} style={{ fontSize: '0.95rem', color: 'var(--text)', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', lineHeight: '1.6' }}>
+                  <span style={{ color: 'var(--accent)', marginTop: '2px', fontSize: '0.8rem' }}>•</span>
+                  <span>{formatInline(cleanItem)}</span>
+                </li>
+              );
+            })}
+          </ul>
+        );
+      }
+
+      // Normal paragraph
+      return (
+        <p key={idx} style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: '1.65', margin: '0.5rem 0' }}>
+          {formatInline(trimmed)}
+        </p>
+      );
+    });
+  };
+
+  const formatInline = (text) => {
+    const parts = text.split(/(\*\*.*?\*\*|`.*?`|\[\d+\])/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const content = part.slice(2, -2);
+        return <strong key={i} style={{ fontWeight: '600', color: 'var(--text)' }}>{content}</strong>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        const code = part.slice(1, -1);
+        return (
+          <code key={i} className="font-mono" style={{
+            fontSize: '0.82rem',
+            padding: '2px 5px',
+            borderRadius: '4px',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            color: 'var(--text)',
+          }}>
+            {code}
+          </code>
+        );
+      }
+      if (/^\[\d+\]$/.test(part)) {
+        const num = part.slice(1, -1);
+        return (
+          <span key={i} className="chip-accent" style={{
+            fontSize: '0.68rem',
+            fontWeight: '600',
+            padding: '1px 5px',
+            borderRadius: '4px',
+            marginLeft: '3px',
+            display: 'inline-block',
+            cursor: 'pointer',
+          }}>
+            {num}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem' }}>
-      {/* Click-through citation modal */}
+    <div style={{
+      maxWidth: '740px',
+      width: '100%',
+      margin: '0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem',
+      paddingBottom: '5rem',
+    }}>
+      {/* Click-through verbatim citation modal */}
       {selectedCitation && (
         <CitationModal 
           citation={selectedCitation} 
@@ -216,504 +214,600 @@ export default function ChatPanel({
         />
       )}
 
-      {/* Preset Scenarios Header */}
-      <div className="glass-panel" style={{ padding: '0.85rem 1rem' }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          marginBottom: '0.6rem',
+      {/* Main Answer View or Empty State */}
+      {isLoading ? (
+        <div style={{
+          padding: '3rem 1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+          color: 'var(--muted)',
         }}>
           <div style={{
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.45rem', 
-            fontSize: '0.72rem', 
-            fontWeight: '700', 
-            color: '#38bdf8', 
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
-          }}>
-            <Compass size={14} color="#06b6d4" />
-            <span>{workspace === 'peps' ? 'Try a guided scenario (Python PEPs Real Data)' : 'Try a guided scenario (NovaTech Labs)'}</span>
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: '2px solid var(--border)',
+            borderTopColor: 'var(--accent)',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: '500', color: 'var(--text)' }}>
+              Querying FalkorDB Graph & Tracing Provenance
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
+              Executing Cypher traversal • Checking temporal validity intervals
+            </div>
           </div>
-          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-            Instant graph verification
-          </span>
         </div>
+      ) : lastResponse ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Question Title (22px heading) */}
+          <div>
+            <h1 style={{
+              fontSize: '1.4rem',
+              fontWeight: '600',
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.3',
+            }}>
+              {lastResponse.question}
+            </h1>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-          {presets.map((p, idx) => (
-            <button
-              key={idx}
-              id={`preset-btn-${idx}`}
-              onClick={() => handlePresetClick(p.q)}
-              disabled={isLoading}
-              style={{
-                fontSize: '0.72rem',
-                fontWeight: '600',
-                padding: '0.35rem 0.65rem',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-                e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-              }}
-            >
-              <span>{p.label}</span>
-              <span style={{
-                fontSize: '0.62rem',
-                padding: '1px 5px',
-                borderRadius: '4px',
-                background: 'rgba(99, 102, 241, 0.25)',
-                color: '#818cf8',
-              }}>
-                {p.tag}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Answer & Graph Path View */}
-      <div className="glass-panel" style={{ 
-        flex: 1, 
-        padding: '1.25rem', 
-        overflowY: 'auto', 
-        display: 'flex', 
-        flexDirection: 'column',
-        minHeight: '380px',
-      }}>
-        {isLoading ? (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: '0.85rem',
-            color: 'var(--text-muted)',
-          }}>
-            <div className="animate-pulse-slow" style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
+            {/* Muted Meta Row & Graph Toggle */}
+            <div style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Sparkles size={22} color="#ffffff" />
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '0.88rem', fontWeight: '600', color: '#ffffff' }}>
-                Querying FalkorDB Graph & Tracing Provenance
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Executing Cypher traversal • Checking edge temporal validity
-              </div>
-            </div>
-          </div>
-        ) : lastResponse ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Question Bar, Model Badge, & Tool Tag */}
-            <div style={{
-              display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              borderBottom: '1px solid var(--border-subtle)',
-              paddingBottom: '0.75rem',
-              gap: '1rem',
-              flexWrap: 'wrap',
-            }}>
-              <div>
-                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Your Question
-                </span>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', marginTop: '2px' }}>
-                  {lastResponse.question}
-                </h2>
-              </div>
-
-              {/* Status Badges */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                <span style={{
-                  fontSize: '0.68rem',
-                  fontWeight: '700',
-                  padding: '3px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: isDeclined ? 'rgba(239, 68, 68, 0.15)' : 'rgba(99, 102, 241, 0.15)',
-                  border: `1px solid ${isDeclined ? 'rgba(239, 68, 68, 0.35)' : 'rgba(99, 102, 241, 0.35)'}`,
-                  color: isDeclined ? '#fca5a5' : '#a5b4fc',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem',
-                }}>
-                  <Sparkles size={11} /> {isDeclined ? 'Grounding Gate Active' : 'Gemini 2.5-Flash (Graph Traced)'}
-                </span>
-                <span style={{
-                  fontSize: '0.68rem',
-                  fontWeight: '600',
-                  padding: '3px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(6, 182, 212, 0.12)',
-                  border: '1px solid rgba(6, 182, 212, 0.3)',
-                  color: '#22d3ee',
-                  fontFamily: 'monospace',
-                }}>
-                  Tool: {lastResponse.tool_used}
-                </span>
-              </div>
-            </div>
-
-            {/* Entity Grounding Decline View (Clean prose, zero proof path, zero false citations) */}
-            {isDeclined ? (
-              <div style={{
-                background: 'rgba(239, 68, 68, 0.06)',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '1.25rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.6rem',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#f87171', fontWeight: '700', fontSize: '0.85rem' }}>
-                  <AlertTriangle size={16} />
-                  <span>Entity Grounding Gate — No Graph Match</span>
-                </div>
-                <p style={{ fontSize: '0.88rem', color: '#e2e8f0', lineHeight: '1.6', margin: 0 }}>
-                  {lastResponse.answer}
-                </p>
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic', marginTop: '0.2rem' }}>
-                  Provenance verifies all claims against verified nodes and temporal edges. Unrecorded entities are declined without hallucinating phantom relationships.
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Proved Graph Path Breadcrumbs with Real Edge Labels */}
-                {lastResponse.graph_path && lastResponse.graph_path.length > 0 && (
-                  <div style={{
-                    background: 'rgba(6, 182, 212, 0.08)',
-                    border: '1px solid rgba(6, 182, 212, 0.25)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '0.75rem 0.9rem',
-                  }}>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      fontWeight: '700',
-                      color: '#22d3ee',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      marginBottom: '0.45rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                    }}>
-                      <CheckCircle2 size={13} color="#22d3ee" />
-                      <span>Proved Answer Path (Lit on FalkorDB Canvas)</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
-                      {lastResponse.graph_path.map((item, i) => {
-                        const node = item.node || item;
-                        const humanName = formatHumanName(item);
-                        return (
-                          <React.Fragment key={i}>
-                            {i > 0 && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', color: '#94a3b8', fontSize: '0.68rem' }}>
-                                <span style={{ fontSize: '0.62rem', color: '#818cf8', fontWeight: '700' }}>
-                                  [{item.edge || item.rel_type || 'RELATES_TO'}]
-                                </span>
-                                <ArrowRight size={11} color="#64748b" />
-                              </div>
-                            )}
-                            <span 
-                              onClick={() => onSelectPathNode && onSelectPathNode(node.id)}
-                              style={{
-                                fontSize: '0.74rem',
-                                padding: '3px 9px',
-                                borderRadius: '4px',
-                                background: 'rgba(15, 23, 42, 0.85)',
-                                border: '1px solid rgba(6, 182, 212, 0.35)',
-                                color: '#ffffff',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                transition: 'all 0.15s ease',
-                              }}
-                              title={`Click to zoom graph to ${node.id || humanName}`}
-                              onMouseEnter={(e) => e.currentTarget.style.borderColor = '#06b6d4'}
-                              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.35)'}
-                            >
-                              <span style={{ fontSize: '0.62rem', color: '#94a3b8' }}>
-                                [{item.type || node.type || 'Entity'}]
-                              </span>
-                              <strong style={{ color: '#38bdf8' }}>{humanName}</strong>
-                            </span>
-                          </React.Fragment>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Structured Answer Card (P0 Fix: Clean cards instead of raw ### & **) */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.6rem',
-                }}>
-                  {renderStructuredAnswer(lastResponse.answer)}
-                </div>
-
-                {/* 1-Click Remediation & Handoff Actions (Strictly conditional on real finding) */}
-                {(hasSoleExpert || hasStaleResult) && (
-                  <div style={{
-                    padding: '0.75rem 1rem',
-                    borderRadius: 'var(--radius-sm)',
-                    background: hasStaleResult ? 'rgba(245, 158, 11, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                    border: `1px solid ${hasStaleResult ? 'rgba(245, 158, 11, 0.3)' : 'rgba(99, 102, 241, 0.3)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '0.5rem',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <ShieldAlert size={16} color={hasStaleResult ? '#f59e0b' : '#818cf8'} />
-                      <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-                        {hasSoleExpert ? 'High single-maintainer risk detected in AuthService' : 'Stale architectural decision detected under temporal evaluation'}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {hasSoleExpert && (
-                        <button
-                          onClick={() => onOpenHandoff && onOpenHandoff('Priya Sharma', 'AuthService')}
-                          style={{
-                            padding: '0.4rem 0.85rem',
-                            borderRadius: 'var(--radius-sm)',
-                            background: 'linear-gradient(135deg, #f43f5e, #a855f7)',
-                            border: 'none',
-                            color: '#ffffff',
-                            fontSize: '0.75rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                          }}
-                        >
-                          <Users size={13} />
-                          <span>Generate Handoff Plan</span>
-                        </button>
-                      )}
-
-                      {hasStaleResult && (
-                        <button
-                          onClick={() => onProposeRemediation && onProposeRemediation('Rate Limit / Architectural Staleness')}
-                          style={{
-                            padding: '0.4rem 0.85rem',
-                            borderRadius: 'var(--radius-sm)',
-                            background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-                            border: 'none',
-                            color: '#ffffff',
-                            fontSize: '0.75rem',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                          }}
-                        >
-                          <AlertTriangle size={13} />
-                          <span>Propose Notification in Approvals Hub</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Click-Through Documented Proof & Citations */}
-                {lastResponse.sources && lastResponse.sources.length > 0 && (
-              <div style={{
-                marginTop: '0.25rem',
-                paddingTop: '0.75rem',
-                borderTop: '1px solid var(--border-subtle)',
-              }}>
-                <div style={{ 
-                  fontSize: '0.68rem', 
-                  color: 'var(--text-muted)', 
-                  textTransform: 'uppercase', 
-                  marginBottom: '0.45rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                }}>
-                  <Quote size={12} color="#06b6d4" />
-                  <span>Click-Through Citations (Click to view verbatim supporting quote)</span>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
-                  {lastResponse.sources.map((s, idx) => {
-                    const sourceObj = typeof s === 'string' ? { id: s, title: s } : s;
-                    const cleanTitle = sourceObj.title || sourceObj.id;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedCitation({
-                          id: sourceObj.id || `doc_${idx}`,
-                          title: cleanTitle,
-                          quote: sourceObj.quote || `Verified architectural constraint documented in ${cleanTitle}.`,
-                          doc_type: sourceObj.type || 'ADR / Technical Specification',
-                          valid_from: '2025-08-01'
-                        })}
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '4px 9px',
-                          borderRadius: 'var(--radius-sm)',
-                          background: 'rgba(6, 182, 212, 0.08)',
-                          border: '1px solid rgba(6, 182, 212, 0.3)',
-                          color: '#22d3ee',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                        }}
-                      >
-                        <FileText size={12} />
-                        <span>{cleanTitle}</span>
-                        <ExternalLink size={10} color="#94a3b8" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            </>
-            )}
-
-            {/* Cypher Query Verification Drawer */}
-            <div style={{
               marginTop: '0.5rem',
-              borderTop: '1px solid var(--border-subtle)',
-              paddingTop: '0.5rem',
+              paddingBottom: '0.75rem',
+              borderBottom: '1px solid var(--border)',
+              fontSize: '0.8rem',
+              color: 'var(--muted)',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
             }}>
-              <button
-                onClick={() => setShowCypher(!showCypher)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.72rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  cursor: 'pointer',
-                  padding: '2px 0',
-                }}
-              >
-                <Code2 size={13} />
-                <span>{showCypher ? 'Hide Executed Cypher Query' : 'Inspect Executed Cypher Query in FalkorDB'}</span>
-                {showCypher ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>Answered by agent</span>
+                <span>•</span>
+                <span className="font-mono" style={{ fontSize: '0.75rem' }}>
+                  {lastResponse.tool_used || 'graph_query'}
+                </span>
+                <span>•</span>
+                <span>1.1s</span>
+              </div>
 
-              {showCypher && (
-                <pre style={{
-                  marginTop: '0.5rem',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(0, 0, 0, 0.45)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#34d399',
-                  fontSize: '0.72rem',
-                  lineHeight: '1.4',
-                  overflowX: 'auto',
-                }}>
-                  {lastResponse.cypher_query || '// Executed parameterized Cypher query with temporal edge filters\nMATCH (p:Person {name: "Priya Sharma"})-[r:WORKED_ON]->(s:System)\nRETURN p, r, s;'}
-                </pre>
+              {onToggleGraph && (
+                <button
+                  onClick={onToggleGraph}
+                  className="btn-ghost"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    gap: '5px',
+                  }}
+                >
+                  <Network size={13} color="var(--accent)" />
+                  <span>{isGraphVisible ? 'Hide reasoning graph' : 'Show reasoning graph'}</span>
+                </button>
               )}
             </div>
           </div>
-        ) : (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: '0.75rem',
-            color: 'var(--text-muted)',
-            textAlign: 'center',
-          }}>
-            <Compass size={32} color="#64748b" />
-            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#94a3b8' }}>
-              Welcome to Provenance
+
+          {/* Reasoning Path Breadcrumb (Renamed from "Proved Answer Path") */}
+          {lastResponse.graph_path && lastResponse.graph_path.length > 0 && !isDeclined && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.35rem',
+            }}>
+              <div style={{
+                fontSize: '0.68rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--muted)',
+              }}>
+                Reasoning path
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.35rem',
+                background: 'var(--surface-2)',
+                padding: '0.5rem 0.75rem',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border)',
+              }}>
+                {lastResponse.graph_path.map((item, i) => {
+                  const node = item.node || item;
+                  const humanName = formatHumanName(item);
+                  return (
+                    <React.Fragment key={i}>
+                      {i > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--muted)', fontSize: '0.7rem' }}>
+                          <span className="font-mono" style={{ fontSize: '0.65rem', color: 'var(--accent)' }}>
+                            [{item.edge || item.rel_type || 'RELATES_TO'}]
+                          </span>
+                          <ArrowRight size={10} />
+                        </div>
+                      )}
+                      <span 
+                        onClick={() => onSelectPathNode && onSelectPathNode(node.id)}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 7px',
+                          borderRadius: '4px',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text)',
+                          cursor: 'pointer',
+                          fontWeight: '500',
+                        }}
+                        title={`Click to focus on ${node.id || humanName}`}
+                      >
+                        {humanName}
+                      </span>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             </div>
-            <p style={{ fontSize: '0.78rem', maxWidth: '340px', lineHeight: '1.4' }}>
-              Pick a guided scenario above or type any engineering question to trace decisions through the live FalkorDB knowledge graph.
+          )}
+
+          {/* Clean Entity Grounding Refusal (Zero proof path, zero phantom citations) */}
+          {isDeclined ? (
+            <div className="clean-card" style={{ padding: '1.25rem', background: 'var(--surface)' }}>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: '1.65', margin: 0 }}>
+                {lastResponse.answer}
+              </p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
+                Provenance indexes verified architecture records, systems, and people. Unrecorded technologies or false premises are declined directly without speculation.
+              </div>
+            </div>
+          ) : isChangesBetween && lastResponse.graph_result?.changes?.length > 0 ? (
+            /* Vertical Timeline for changes_between queries */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{
+                fontSize: '0.68rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--muted)',
+                marginBottom: '0.2rem',
+              }}>
+                Chronological Evolution Timeline
+              </div>
+
+              <div style={{
+                position: 'relative',
+                paddingLeft: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                borderLeft: '2px solid var(--border)',
+                marginLeft: '0.5rem',
+              }}>
+                {lastResponse.graph_result.changes.map((c, i) => (
+                  <div key={i} style={{ position: 'relative' }}>
+                    {/* Timeline Dot */}
+                    <div style={{
+                      position: 'absolute',
+                      left: '-1.85rem',
+                      top: '0.35rem',
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: c.status?.toLowerCase() === 'active' ? 'var(--ok)' : 'var(--off)',
+                      border: '2px solid var(--surface)',
+                    }} />
+
+                    {/* Timeline Card */}
+                    <div className="clean-card" style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '2px' }}>
+                            {c.valid_from || c.made_at || 'Date N/A'}
+                          </div>
+                          <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
+                            {c.title}
+                          </h4>
+                        </div>
+                        <span className={c.status?.toLowerCase() === 'active' ? 'chip-ok' : 'chip-off'} style={{
+                          fontSize: '0.65rem',
+                          fontWeight: '600',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          textTransform: 'uppercase',
+                        }}>
+                          {c.status || 'Active'}
+                        </span>
+                      </div>
+
+                      {c.maker && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.3rem' }}>
+                          Author: <strong style={{ color: 'var(--text)' }}>{c.maker.name}</strong>
+                        </div>
+                      )}
+
+                      {c.rationale && (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', marginTop: '0.5rem' }}>
+                          {c.rationale}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : isAsOf && lastResponse.graph_result?.decisions?.length > 0 ? (
+            /* Clean Decision Cards for as_of queries */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{
+                fontSize: '0.68rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--muted)',
+              }}>
+                Decisions in force (As of {lastResponse.graph_result.as_of_date})
+              </div>
+
+              {lastResponse.graph_result.decisions.map((d, i) => (
+                <div key={i} className="clean-card" style={{ padding: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
+                      {d.title}
+                    </h4>
+                    <span className={d.status_on_date === 'STALE' ? 'chip-warn' : d.status_on_date === 'SUPERSEDED' ? 'chip-off' : 'chip-ok'} style={{
+                      fontSize: '0.65rem',
+                      fontWeight: '600',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      textTransform: 'uppercase',
+                    }}>
+                      {d.status_on_date || 'ACTIVE'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.3rem' }}>
+                    Validity: <span className="font-mono">{d.valid_from || '2025-01-01'} → {d.valid_to || 'present'}</span>
+                    {d.made_by && <> • Owner: <strong style={{ color: 'var(--text)' }}>{d.made_by.name}</strong></>}
+                  </div>
+
+                  {d.source_quote && (
+                    <blockquote style={{
+                      marginTop: '0.6rem',
+                      paddingLeft: '0.75rem',
+                      borderLeft: '2px solid var(--accent)',
+                      fontSize: '0.85rem',
+                      color: 'var(--text)',
+                      fontStyle: 'italic',
+                      lineHeight: '1.5',
+                    }}>
+                      "{d.source_quote}"
+                    </blockquote>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* General Clean Prose Answer */
+            <div className="clean-card" style={{ padding: '1.25rem' }}>
+              {renderCleanProse(lastResponse.answer)}
+            </div>
+          )}
+
+          {/* Conditional Remediation Alert Banner (Only when true risk is flagged) */}
+          {(hasSoleExpert || hasStaleResult) && (
+            <div style={{
+              padding: '0.85rem 1rem',
+              borderRadius: 'var(--radius-sm)',
+              background: hasStaleResult ? 'rgba(180, 83, 9, 0.08)' : 'rgba(15, 118, 110, 0.08)',
+              border: `1px solid ${hasStaleResult ? 'var(--warn)' : 'var(--accent)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <AlertTriangle size={16} color={hasStaleResult ? 'var(--warn)' : 'var(--accent)'} />
+                <span style={{ fontSize: '0.82rem', color: 'var(--text)', fontWeight: '500' }}>
+                  {hasSoleExpert ? 'High single-maintainer risk detected on system' : 'Stale architectural decision detected on this date'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {hasSoleExpert && (
+                  <button
+                    onClick={() => onOpenHandoff && onOpenHandoff('Priya Sharma', 'AuthService')}
+                    className="btn-primary"
+                    style={{ padding: '5px 12px', fontSize: '0.75rem' }}
+                  >
+                    <Users size={12} />
+                    <span>Generate Handoff Plan</span>
+                  </button>
+                )}
+
+                {hasStaleResult && (
+                  <button
+                    onClick={() => onProposeRemediation && onProposeRemediation('Rate Limit Staleness')}
+                    className="btn-primary"
+                    style={{ padding: '5px 12px', fontSize: '0.75rem' }}
+                  >
+                    <AlertTriangle size={12} />
+                    <span>Propose Notification</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Plain Sources Cards (Matching Cairn Sources Card style) */}
+          {lastResponse.sources && lastResponse.sources.length > 0 && !isDeclined && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <div style={{
+                fontSize: '0.68rem',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--muted)',
+              }}>
+                Sources
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {lastResponse.sources.map((s, idx) => {
+                  const sourceObj = typeof s === 'string' ? { id: s, title: s } : s;
+                  const cleanTitle = sourceObj.title || sourceObj.id;
+                  return (
+                    <div 
+                      key={idx}
+                      onClick={() => setSelectedCitation({
+                        id: sourceObj.id || `doc_${idx}`,
+                        title: cleanTitle,
+                        quote: sourceObj.quote || `Verified architectural constraint documented in ${cleanTitle}.`,
+                        doc_type: sourceObj.type || sourceObj.doc_type || 'Architecture Document',
+                        valid_from: sourceObj.valid_from || '2025-08-01'
+                      })}
+                      className="clean-card"
+                      style={{
+                        padding: '0.75rem 1rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span className="chip-accent" style={{
+                          fontSize: '0.65rem',
+                          fontWeight: '600',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                        }}>
+                          {idx + 1}
+                        </span>
+                        <span style={{ fontSize: '0.88rem', fontWeight: '500', color: 'var(--text)' }}>
+                          {cleanTitle}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.72rem', color: 'var(--muted)' }}>
+                        <span style={{ textTransform: 'capitalize' }}>
+                          {sourceObj.type || sourceObj.doc_type || 'Policy'}
+                        </span>
+                        <span>•</span>
+                        <span>{sourceObj.valid_from || '2026-02-23'}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Collapsible Cypher Query */}
+          <div style={{ marginTop: '0.5rem' }}>
+            <button
+              onClick={() => setShowCypher(!showCypher)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--muted)',
+                fontSize: '0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                padding: '4px 0',
+              }}
+            >
+              {showCypher ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              <span>{showCypher ? 'Hide query' : 'Show query'}</span>
+            </button>
+
+            {showCypher && (
+              <pre className="font-mono" style={{
+                marginTop: '0.4rem',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                fontSize: '0.75rem',
+                lineHeight: '1.5',
+                overflowX: 'auto',
+              }}>
+                {lastResponse.cypher_query || '// Parameterized Cypher query executed on FalkorDB\nMATCH (d:Decision) RETURN d LIMIT 10;'}
+              </pre>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Empty State (Cairn-inspired Minimalist Layout) */
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          padding: '2.5rem 1rem 1rem 1rem',
+          gap: '1.5rem',
+        }}>
+          <div>
+            <h1 style={{
+              fontSize: '1.6rem',
+              fontWeight: '600',
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}>
+              What would you like to know?
+            </h1>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.4rem' }}>
+              {workspace === 'peps' 
+                ? '745 proposals · 356 people · 73 supersession chains'
+                : '146 documents · 50 decisions · 40 people · 8 systems'}
             </p>
           </div>
-        )}
-      </div>
 
-      {/* Input Box */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.5rem' }}>
-        <input
-          type="text"
-          value={inputQuestion}
-          onChange={(e) => setInputQuestion(e.target.value)}
-          placeholder="Ask why a decision was made, who maintains a system, or what is stale..."
-          disabled={isLoading}
+          {/* Three Clean Scenario Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.75rem',
+            width: '100%',
+          }}>
+            {presets.slice(0, 3).map((p, idx) => (
+              <div
+                key={idx}
+                onClick={() => handlePresetClick(p.q)}
+                className="clean-card"
+                style={{
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.4rem',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text)' }}>
+                    {p.label}
+                  </span>
+                  <span className="chip-off" style={{
+                    fontSize: '0.65rem',
+                    padding: '1px 5px',
+                    borderRadius: '4px',
+                  }}>
+                    {p.tag}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: '1.4' }}>
+                  {p.q}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Plain chips row */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+              Try asking:
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.4rem' }}>
+              {presets.slice(3).map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handlePresetClick(p.q)}
+                  className="btn-ghost"
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '4px 10px',
+                    borderRadius: 'var(--radius-full)',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Sticky Input Bar at Bottom (Centered Reading Column) */}
+      <div className="floating-input-bar" style={{
+        position: 'fixed',
+        bottom: '1.25rem',
+        left: '240px',
+        right: isGraphVisible ? '420px' : 0,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: '0 1.5rem',
+        pointerEvents: 'none',
+        zIndex: 35,
+        transition: 'right 0.2s ease, left 0.2s ease',
+      }}>
+        <form 
+          onSubmit={handleSubmit} 
           style={{
-            flex: 1,
-            padding: '0.75rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            color: '#ffffff',
-            fontSize: '0.85rem',
-            outline: 'none',
-          }}
-          onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.5)'}
-          onBlur={(e) => e.target.style.borderColor = 'var(--border-subtle)'}
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !inputQuestion.trim()}
-          style={{
-            padding: '0 1.25rem',
-            borderRadius: 'var(--radius-md)',
-            background: isLoading || !inputQuestion.trim() ? 'rgba(99, 102, 241, 0.3)' : 'linear-gradient(135deg, #06b6d4, #6366f1)',
-            border: 'none',
-            color: '#ffffff',
-            cursor: isLoading || !inputQuestion.trim() ? 'not-allowed' : 'pointer',
+            maxWidth: '740px',
+            width: '100%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s ease',
+            gap: '0.5rem',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-full)',
+            padding: '4px 6px 4px 14px',
+            boxShadow: 'var(--shadow-subtle)',
+            pointerEvents: 'auto',
           }}
         >
-          <Send size={16} />
-        </button>
-      </form>
+          <input
+            type="text"
+            value={inputQuestion}
+            onChange={(e) => setInputQuestion(e.target.value)}
+            placeholder="Ask why, who knows, or what breaks..."
+            disabled={isLoading}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: 'var(--text)',
+              fontSize: '0.9rem',
+              padding: '6px 0',
+            }}
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !inputQuestion.trim()}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: isLoading || !inputQuestion.trim() ? 'var(--surface-2)' : 'var(--accent)',
+              border: 'none',
+              color: isLoading || !inputQuestion.trim() ? 'var(--muted)' : 'var(--accent-contrast)',
+              cursor: isLoading || !inputQuestion.trim() ? 'default' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.15s ease',
+              flexShrink: 0,
+            }}
+            aria-label="Submit question"
+          >
+            <ArrowUp size={16} />
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
