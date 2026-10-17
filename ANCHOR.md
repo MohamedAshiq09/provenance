@@ -59,17 +59,24 @@
     - 19921ec `ui: connect global date to graph node status recoloring and time travel` (`ui/src/app/page.js`, `ui/src/components/CytoscapeGraph.jsx`, `ui/src/components/TimeTravelSlider.jsx`). Global `selectedDate` state synchronizes Cytoscape node colors by status on that date (`#0f766e` active, `#b45309` stale, `#6b7280` superseded), `TimeTravelSlider`, and answer panel.
     - d151626 `ui: render structured bus factor card, constraint chip, real and synthetic links` (`ui/src/components/ChatPanel.jsx`, `ui/src/components/CitationModal.jsx`). Displays `[no other engineer has a WORKED_ON edge]` badge in reasoning paths, structured bus factor card, and distinguishes real URLs with external link button from labeled `(synthetic)` sources.
     - Verification: 66/66 pytest pass in 111s; `bun run build` in 3.6s with 0 errors; live API queries for Priya bus factor, mobile rate limit (2026-10-01 vs 2026-10-17), authentication changes (2025-2026), and MongoDB refusal verified.
+  - Stage 2: PEPs Verification & FalkorDB Repos Real-World Workspace (5 split atomic commits):
+    - 444a5a0 `graph: increase as_of decisions query limit to support large historical corpora like peps_brain` (`backend/app/queries/graph_queries.py`). Increased AS_OF_DECISIONS_QUERY limit from 50 to 1000 so historical decisions like PEP 249 (1999) under topic filters are discovered without truncation.
+    - 9d9a7bd `graph: support successor in trace_decision, deduplicate results, and recognize typing topic` (`backend/app/queries/graph_queries.py`, `backend/app/agent/agent.py`, `backend/app/api/agent.py`). Trace full supersession chains forwards and backwards; deduplicate decisions in as_of and changes_between; add typing topic synonyms to return PEP 484/483/482.
+    - d7eddc7 `data: cache offline FalkorDB multi-repo PR dataset and ingestion script` (`scripts/load_github.py`, `data/github/`). Fetched and cached 226 real merged PRs across FalkorDB/FalkorDB, FalkorDB/falkordb-py, and FalkorDB/falkordb-browser; UNWIND batch ingestion into falkordb_repos.
+    - f615d2a `graph: add falkordb_repos workspace routing, alerts, and isolation test` (`backend/app/agent/agent.py`, `backend/app/api/agent.py`, `backend/app/api/graph.py`, `backend/tests/test_queries.py`). Added falkordb_repos alias resolution, 31 superseded PR alerts, component expertise routing, and test_falkordb_repos_isolation() proving 0 synthetic/PEP nodes in falkordb_repos (67/67 pytest green).
+    - d754d48 `ui: integrate FalkorDB Repos workspace, scenario chips, and health metrics` (`ui/src/components/Sidebar.jsx`, `ui/src/app/page.js`, `ui/src/components/ChatPanel.jsx`, `ui/src/components/BrainHealthPanel.jsx`, `ui/src/components/TimeTravelSlider.jsx`). Added FalkorDB Repos workspace switcher option, 6 repository scenario chips, 31 superseded PR alerts, and 2026 repository milestone scrubber.
+    - Verification: 67/67 pytest pass in 115s (100%); `bun run build` in 2.5s (0 errors); all 4 PEPs probes and FalkorDB repo queries verified live over REST; browser subagent verified visual rendering and captured UI screenshots.
 
 ## (c) In progress right now
 
-- (none). Stage 1 completed. Ready for Stage 2 (PEPs verification and FalkorDB repos workspace).
+- (none). Stage 2 completed. Ready for Stage 3 / Final Rehearsal & Delivery.
 
 ## (d) Next task
 
-- Stage 2: PEPs verification and the FalkorDB repos workspace
-  1. Verify PEPs workspace end-to-end with 4 questions and screenshots.
-  2. Implement `scripts/load_github.py` for 3 FalkorDB repos (FalkorDB, falkordb-py, falkordb-browser) caching to `data/github/`.
-  3. Wire `falkordb_repos` graph workspace through all endpoints and UI.
+- Stage 3: Full End-to-End Demo Rehearsal & Submission Polish
+  1. Final verification of all three workspaces (NovaTech Labs, Python PEPs, FalkorDB Repos).
+  2. Final check of MCP tool definitions and Inspector commands.
+  3. Prepare final submission report and video walkthrough notes.
 
 ## (g) Tickets filed 2026-10-17 (from live test — do in this order, no silent skips)
 
