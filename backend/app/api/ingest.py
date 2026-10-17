@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
 from app.graph.ingest import ingest_company_data, upsert_document
-from app.queries.graph_queries import detect_staleness
+from app.queries.graph_queries import detect_staleness, find_contradiction_candidates
 
 router = APIRouter()
 
@@ -46,10 +46,20 @@ async def ingest_document(req: IngestDocumentRequest, background_tasks: Backgrou
             )
             stale_result = detect_staleness(req.id, req.graph_name)
 
+        # Guarded overlap: candidates for HUMAN review, never auto-edges
+        contradiction_result = {}
+        try:
+            contradiction_result = find_contradiction_candidates(
+                req.id, req.content, graph_name=req.graph_name
+            )
+        except Exception as e:
+            contradiction_result = {"error": str(e)}
+
         return {
             "status": "ingested",
             "document_id": req.id,
             "staleness_check": stale_result,
+            "contradiction_scan": contradiction_result,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -152,11 +162,21 @@ async def ingest_raw_text(req: IngestRawTextRequest):
         )
         stale_res = detect_staleness(doc_id, req.graph_name)
         
+    # Guarded overlap: candidates for HUMAN review, never auto-edges
+    contradiction_result = {}
+    try:
+        contradiction_result = find_contradiction_candidates(
+            doc_id, req.text, graph_name=req.graph_name
+        )
+    except Exception as e:
+        contradiction_result = {"error": str(e)}
+
     return {
         "status": "extracted_and_ingested",
         "doc_id": doc_id,
         "title": title,
         "decisions_created": decisions_created,
-        "staleness_radar": stale_res
+        "staleness_radar": stale_res,
+        "contradiction_scan": contradiction_result,
     }
 

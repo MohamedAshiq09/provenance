@@ -1,12 +1,20 @@
 """Graph exploration endpoints"""
+from pydantic import BaseModel
+from typing import Optional
 from fastapi import APIRouter
 from app.queries.graph_queries import (
     trace_decision, who_knows, bus_factor,
     connection_path, as_of, get_stale_decisions, get_graph_stats,
     impact_of, decision_timeline, knowledge_gaps,
+    get_contradiction_candidates, confirm_contradiction,
 )
 
 router = APIRouter()
+
+
+class ConfirmContradictionRequest(BaseModel):
+    candidate_id: str
+    claim: Optional[str] = None
 
 
 @router.get("/trace/{decision_id}")
@@ -67,3 +75,15 @@ def timeline(decision_id: str, graph_name: str = "company_brain"):
 def gaps(graph_name: str = "company_brain"):
     """Find what the company does NOT know (orphans)."""
     return knowledge_gaps(graph_name)
+
+
+@router.get("/contradictions")
+def contradictions(graph_name: str = "company_brain"):
+    """Contradiction candidates awaiting human review (no auto-edges)."""
+    return {"candidates": get_contradiction_candidates(graph_name)}
+
+
+@router.post("/contradictions/confirm")
+def confirm(req: ConfirmContradictionRequest, graph_name: str = "company_brain"):
+    """HUMAN confirms a candidate — the ONLY path to a CONTRADICTS edge."""
+    return confirm_contradiction(req.candidate_id, req.claim, graph_name)
