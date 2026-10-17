@@ -82,6 +82,24 @@ def test_as_of_temporal():
     assert res["count"] >= 1
 
 
+def test_as_of_excludes_future_decisions():
+    """T1 regression: as_of must not return decisions made AFTER the queried date.
+
+    Reproduces the live-test failure: as_of('2025-05-01', 'auth') returned the
+    2026 opaque-token migration and omitted the JWT decision then in force.
+    Root cause: bare `d.valid_from <= literal` on the indexed valid_from
+    property mis-evaluates under FalkorDB's index filter; wrapping the
+    property (coalesce) forces correct string comparison.
+    """
+    res = as_of("2025-05-01", topic="auth")
+    ids = [d.get("id") for d in res["decisions"]]
+    assert all(d.get("made_at", "") <= "2025-05-01" or not d.get("made_at") for d in res["decisions"]), (
+        f"future decisions leaked: {ids[:5]}")
+    assert "decision_use_jwt" in ids, "JWT decision in force on 2025-05-01 must be present"
+    assert "decision_opaque_tokens" not in ids
+    assert "decision_hpa_auth" not in ids
+
+
 def test_connection_path():
     """Verify shortest path between two nodes in the company brain."""
     res = connection_path("person_priya", "sys_auth")
