@@ -17,6 +17,7 @@ from app.queries.graph_queries import (
     impact_of,
     decision_timeline,
     knowledge_gaps,
+    get_contradiction_candidates,
 )
 
 
@@ -63,6 +64,10 @@ AVAILABLE_TOOLS = {
     },
     "knowledge_gaps": {
         "description": "Find what the company does NOT know — orphan systems, evidenceless decisions, authorless docs, unremediated stale. USE FOR: 'gaps', 'what do we not know', 'missing', 'undocumented', 'orphan'",
+        "params": [],
+    },
+    "contradiction_candidates": {
+        "description": "Guarded contradiction review queue — new documents that may contradict existing decisions or docs; a human must confirm before any CONTRADICTS edge is created. USE FOR: 'contradict', 'conflict', 'disagree', 'review queue', 'candidates'",
         "params": [],
     },
 }
@@ -154,6 +159,15 @@ def _deterministic_select_tool(question: str) -> dict:
             "tool": "knowledge_gaps",
             "params": {},
             "reasoning": "Identified knowledge-gap audit question",
+        }
+    # NOTE: plain 'contradict' intentionally stays on the rate-limit branch
+    # above (benchmark phrasing "does ADR X contradict Y" → staleness run);
+    # the review-queue route matches conflict/disagreement/review phrasing.
+    elif any(k in q for k in ["conflict", "disagree", "dispute", "review queue", "pending contradiction", "contradiction candidates"]):
+        return {
+            "tool": "contradiction_candidates",
+            "params": {},
+            "reasoning": "Identified contradiction-review question — candidates only, confirmation is a human action",
         }
     elif any(k in q for k in ["timeline", "evolv", "history of", "over time", "changed our mind", "flip-flop", "flip flop"]):
         decision_id = "decision_opaque_tokens"
@@ -343,6 +357,19 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             lines.append("\n**Sample gaps**:")
             for s in sample:
                 lines.append(f"- **{s.get('title', s.get('id'))}** (`{s.get('id')}`)")
+    elif tool_name == "contradiction_candidates":
+        cands = result if isinstance(result, list) else result.get("candidates", [])
+        lines.append(f"### Contradiction Review Queue ({len(cands)} candidates — guarded, nothing applied yet)")
+        if not cands:
+            lines.append("No contradiction candidates are pending. The queue is clean.")
+        for c in cands[:10]:
+            verdict = c.get("verdict", "unverified")
+            lines.append(
+                f"- **{c.get('target_title', c.get('target_id'))}** (`{c.get('target_id')}`, {c.get('target_type', '?')})"
+                f" — matched on '{c.get('matched_keyword', '?')}' — LLM verdict: **{verdict}**"
+            )
+        if cands:
+            lines.append("\n*Confirm via `POST /api/graph/contradictions/confirm` — a human decision creates the CONTRADICTS edge.*")
     else:
         if isinstance(result, list) and len(result) == 0:
             lines.append("I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation.")
@@ -483,6 +510,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), graph_name),
         "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), graph_name),
         "knowledge_gaps": lambda p: knowledge_gaps(graph_name),
+        "contradiction_candidates": lambda p: get_contradiction_candidates(graph_name),
         "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
         "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
     }
@@ -591,6 +619,9 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
         return out
     elif tool_name == "knowledge_gaps":
         return [{"node": s, "type": "Gap", "edge": "NO_AUTHOR"} for s in result.get("authorless_docs", [])[:5]]
+    elif tool_name == "contradiction_candidates":
+        cands = result if isinstance(result, list) else result.get("candidates", [])
+        return [{"node": c, "type": "ContradictionCandidate", "edge": "AWAITING_REVIEW"} for c in cands[:6]]
     return []
 
 
@@ -609,5 +640,6 @@ def _get_query_for_tool(tool_name: str) -> str:
         "impact_of": graph_queries.IMPACT_DOWNSTREAM_QUERY,
         "decision_timeline": graph_queries.TIMELINE_QUERY,
         "knowledge_gaps": graph_queries.GAPS_QUERY,
+        "contradiction_candidates": graph_queries.CONTRADICTION_CANDIDATES_QUERY,
     }
     return query_map.get(tool_name, "")
