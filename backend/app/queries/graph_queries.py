@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.llm import extract_json
 from datetime import datetime, timezone
 from typing import Optional, Any
+import re
 import uuid
 
 
@@ -777,6 +778,43 @@ MATCH (d:Decision) WHERE d.stale = true AND NOT ()-[:REMEDIATES]->(d) RETURN d
 
 _GAP_CAP = 20
 
+# T5 (live-test 2026-10-17): 116/146 authorless docs had word-soup titles from
+# the dataset import ('Court let analysis hair tough'), flooding the gap list
+# and hiding genuinely unowned docs. Deterministic heuristic, no LLM:
+# a title is FILLER when it has no structural signal (no digit, colon or
+# hyphen, which all curated/ADR-style/PEP-style titles carry) AND no domain
+# vocabulary. Uncertain titles are treated as REAL — missing a real gap is
+# worse than listing borderline filler.
+_FILLER_DOMAIN_VOCAB = {
+    "jwt", "auth", "authentication", "authservice", "billing", "billingystem",
+    "payments", "paymentprocessor", "postgresql", "cockroachdb", "redis",
+    "tokens", "session", "mobile", "api", "rate", "limit", "req", "rps",
+    "security", "incident", "postmortem", "review", "design", "deploy",
+    "migration", "kubernetes", "hpa", "scale", "scaling", "compliance",
+    "policy", "adr", "pol", "sec", "infra", "pep", "python", "provider",
+    "notification", "authservice.", "session.", "engine", "searchengine",
+    "recommendationengine", "cache", "service", "token",
+}
+
+
+def is_filler_title(title) -> bool:
+    """Deterministic low-information-title detection (T5). True = likely
+    synthetic filler; False = treat as a real knowledge artifact."""
+    if not title:
+        return False
+    t = str(title).strip()
+    if re.search(r"\d", t) or ":" in t or "-" in t:
+        return False
+    words = [w.replace(",", "").replace(".", "") for w in t.split()]
+    if not words or len(words) > 10:
+        return False
+    lowered = t.lower()
+    if any(w in _FILLER_DOMAIN_VOCAB for w in t.lower().split()):
+        return False
+    words_alpha = all(w.isalpha() for w in words)
+    return words_alpha
+
+
 
 def knowledge_gaps(graph_name: str = None) -> dict:
     """
@@ -797,13 +835,20 @@ def knowledge_gaps(graph_name: str = None) -> dict:
     authorless = _collect(GAPS_DOCS_QUERY)
     unremediated = _collect(GAPS_STALE_QUERY)
 
+    # T5: split authorless docs into real unowned artifacts vs likely filler.
+    # 'authorless_docs' keeps listing only REAL gaps (capped); filler is
+    # summarized as a count so the 116 filler titles never bury signal again.
+    real_unowned = [d for d in authorless if not is_filler_title(d.get("title"))]
+    filler_unowned = [d for d in authorless if is_filler_title(d.get("title"))]
+
     return {
         "docless_systems": docless[:_GAP_CAP],
         "docless_systems_total": len(docless),
         "evidenceless_decisions": evidenceless[:_GAP_CAP],
         "evidenceless_decisions_total": len(evidenceless),
-        "authorless_docs": authorless[:_GAP_CAP],
-        "authorless_docs_total": len(authorless),
+        "authorless_docs": real_unowned[:_GAP_CAP],
+        "authorless_docs_total": len(real_unowned),
+        "authorless_docs_filler_total": len(filler_unowned),
         "unremediated_stale": unremediated[:_GAP_CAP],
         "unremediated_stale_total": len(unremediated),
         "total_gaps": len(docless) + len(evidenceless) + len(authorless) + len(unremediated),

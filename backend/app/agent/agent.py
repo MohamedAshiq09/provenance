@@ -378,7 +378,9 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
         lines.append(f"### Knowledge Gaps: what the company does NOT know ({total} total)")
         lines.append(f"- **Systems with no affecting decision**: {result.get('docless_systems_total', 0)}")
         lines.append(f"- **Decisions with no evidence**: {result.get('evidenceless_decisions_total', 0)}")
-        lines.append(f"- **Documents with no author**: {result.get('authorless_docs_total', 0)}")
+        filler_total = result.get("authorless_docs_filler_total", 0)
+        lines.append(f"- **Documents with no author**: {result.get('authorless_docs_total', 0)}"
+                     + (f" ({filler_total} low-information filler titles bucketed separately)" if filler_total else ""))
         lines.append(f"- **Stale decisions with no remediation**: {result.get('unremediated_stale_total', 0)}")
         sample = (result.get("authorless_docs", [])[:3] + result.get("unremediated_stale", [])[:2])
         if sample:
