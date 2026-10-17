@@ -90,7 +90,12 @@ def trace_decision(decision_id: str, graph_name: str = None) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 WHO_KNOWS_QUERY = """
 // Find people most connected to a system, weighted by recency and edge type
-// WORKED_ON is primary, AUTHORED is secondary, team OWNS gives group context
+// NOTE (T4 fix, live-test 2026-10-17): this query only sees people directly
+// WORKED_ON or via a doc that DIRECTLY AFFECTS the system — but evidence docs
+// hang off decisions (Decision-AFFECTS->System, Decision-BASED_ON->doc,
+// Person-AUTHORED->doc), so it returned author_score 0 for genuine leads.
+// The live PEOPLE_SCORE_* queries below (merged in _person_scores_for_system)
+// cover the full chain. Kept for reference/cheap single-pass use.
 MATCH (s:System {name: $system_name})
 OPTIONAL MATCH (s)<-[w:WORKED_ON]-(p:Person)
 OPTIONAL MATCH (p)-[a:AUTHORED]->(doc:Document)-[:AFFECTS]->(s)
@@ -105,6 +110,97 @@ ORDER BY raw_score DESC, last_worked DESC
 LIMIT 10
 """
 
+# T2 (live-test 2026-10-17): ramp_plan contact list scored every person "3"
+# (a tie) and omitted decision-makers like Alex Chen whose decisions AFFECT the
+# system. These four component queries (one per typed-edge family, no cross
+# products — merging them in one MATCH would inflate counts) feed
+# _person_scores_for_system; ramp_plan and who_knows share the ranking.
+PEOPLE_SCORE_WORKED_QUERY = """
+MATCH (s:System {name: $system_name})<-[w:WORKED_ON]-(p:Person)
+RETURN p,
+       count(w) as work_score,
+       max(coalesce(w.to, '')) as last_worked
+ORDER BY p.id
+"""
+PEOPLE_SCORE_MAKER_QUERY = """
+MATCH (p:Person)<-[:MADE_BY]-(d:Decision)-[:AFFECTS]->(s:System {name: $system_name})
+RETURN p, count(d) as maker_score
+ORDER BY p.id
+"""
+PEOPLE_SCORE_EVIDENCE_AUTHOR_QUERY = """
+MATCH (p:Person)-[:AUTHORED]->(doc:Document)<-[:BASED_ON]-(d:Decision)-[:AFFECTS]->(s:System {name: $system_name})
+RETURN p, count(doc) as ev_author_score
+ORDER BY p.id
+"""
+PEOPLE_SCORE_DIRECT_AUTHOR_QUERY = """
+MATCH (p:Person)-[:AUTHORED]->(doc:Document)-[:AFFECTS]->(s:System {name: $system_name})
+RETURN p, count(doc) as direct_author_score
+ORDER BY p.id
+"""
+
+
+def _person_scores_for_system(g, system_name: str) -> list:
+    """
+    Merge per-person component scores for a system (T2/T4 shared helper).
+
+    Ranking weights (story: hands-on work trumps paper authorship):
+      work           x3 — hands-on the system
+      maker          x2 — decisions this person made that shape it
+      evidence_author x2 — authored docs the system's decisions were BASED_ON
+      direct_author   x1 — authored docs that directly AFFECTS the system
+    Deterministic tie-break: expertise DESC, work DESC, last_worked DESC, id ASC.
+    Pure Cypher counts, Python merge only — no LLM anywhere.
+    """
+    scores: dict[str, dict] = {}
+
+    def _upsert(person_node, **kv):
+        d = _node_to_dict(person_node)
+        pid = d.get("id")
+        if not pid:
+            return
+        rec = scores.setdefault(pid, {"person": d, "work_score": 0, "maker_score": 0,
+                                      "ev_author_score": 0, "direct_author_score": 0,
+                                      "last_worked": None})
+        for k, v in kv.items():
+            if isinstance(v, int):
+                rec[k] = rec.get(k, 0) + v
+            if k == "last_worked" and v and (not rec.get("last_worked") or str(v) > str(rec["last_worked"])):
+                rec["last_worked"] = str(v)
+
+    for row in g.query(PEOPLE_SCORE_WORKED_QUERY, {"system_name": system_name}).result_set:
+        _upsert(row[0], work_score=row[1], last_worked=row[2])
+    for row in g.query(PEOPLE_SCORE_MAKER_QUERY, {"system_name": system_name}).result_set:
+        _upsert(row[0], maker_score=row[1])
+    for row in g.query(PEOPLE_SCORE_EVIDENCE_AUTHOR_QUERY, {"system_name": system_name}).result_set:
+        _upsert(row[0], ev_author_score=row[1])
+    for row in g.query(PEOPLE_SCORE_DIRECT_AUTHOR_QUERY, {"system_name": system_name}).result_set:
+        _upsert(row[0], direct_author_score=row[1])
+
+    experts = []
+    for rec in scores.values():
+        expertise = (rec["work_score"] * 3 + rec["maker_score"] * 2
+                     + rec["ev_author_score"] * 2 + rec["direct_author_score"] * 1)
+        if expertise <= 0:
+            continue
+        p = dict(rec["person"])
+        p["work_score"] = rec["work_score"]
+        p["maker_score"] = rec["maker_score"]
+        p["author_score"] = rec["ev_author_score"] + rec["direct_author_score"]
+        p["ev_author_score"] = rec["ev_author_score"]
+        p["direct_author_score"] = rec["direct_author_score"]
+        p["last_worked"] = rec["last_worked"]
+        p["expertise_score"] = expertise
+        experts.append(p)
+
+    experts.sort(key=lambda e: (-e["expertise_score"], -e["work_score"],
+                                _tie_last(e.get("last_worked")), e.get("id", "")))
+    return experts[:10]
+
+
+def _tie_last(v):
+    # last_worked strings may be datetime-str() or None; sorts deterministic
+    return ("" if v is None else str(v))
+
 WHO_KNOWS_TEAM_QUERY = """
 // Also get the team that owns the system for bus-factor context
 MATCH (s:System {name: $system_name})
@@ -116,24 +212,16 @@ RETURN s, t, collect(DISTINCT member) as team_members
 def who_knows(system_name: str, graph_name: str = None) -> dict:
     """
     Find who has real expertise on a system via graph centrality.
-    
-    GRAPH NECESSITY: Centrality calculation over multi-type edges. Each edge type
-    (WORKED_ON, AUTHORED, OWNS) contributes differently. Cannot be done with
+
+    GRAPH NECESSITY: Centrality over multi-type edge families (WORKED_ON,
+    MADE_BY via AFFECTS, AUTHORED via BASED_ON/AFFECTS) merged and ranked
+    deterministically in _person_scores_for_system (T2/T4). Cannot be done with
     keyword/vector search — requires traversal of relationship structure.
     """
     g = _graph(graph_name)
-    experts_result = g.query(WHO_KNOWS_QUERY, {"system_name": system_name})
+    experts = _person_scores_for_system(g, system_name)
     team_result = g.query(WHO_KNOWS_TEAM_QUERY, {"system_name": system_name})
-    
-    experts = []
-    for row in experts_result.result_set:
-        person = _node_to_dict(row[0])
-        person["work_score"] = row[1]
-        person["author_score"] = row[2]
-        person["last_worked"] = str(row[3]) if row[3] else None
-        person["expertise_score"] = row[4]
-        experts.append(person)
-    
+
     team_info = {}
     if team_result.result_set:
         r = team_result.result_set[0]
@@ -142,7 +230,7 @@ def who_knows(system_name: str, graph_name: str = None) -> dict:
                 "team": _node_to_dict(r[1]),
                 "members": [_node_to_dict(m) for m in (r[2] or []) if m]
             }
-    
+
     return {
         "system": system_name,
         "experts": experts,
