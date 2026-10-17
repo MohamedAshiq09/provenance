@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Users, CheckCircle2, ArrowRight, ShieldAlert, Sparkles, Send } from 'lucide-react';
+import { X, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 export default function HandoffPlanModal({ 
   engineer = 'Priya Sharma', 
@@ -13,7 +13,7 @@ export default function HandoffPlanModal({
     {
       phase: 'Phase 1: IAM & Credentials Transfer',
       desc: 'Provision secondary admin keys and production cluster deployment access for Marcus Vance.',
-      eta: 'Day 1 (Immediate)'
+      eta: 'Day 1'
     },
     {
       phase: 'Phase 2: Architectural Deep-Dive',
@@ -26,7 +26,7 @@ export default function HandoffPlanModal({
       eta: 'Day 4'
     },
     {
-      phase: 'Phase 4: Slack & Incident Escalation Announcement',
+      phase: 'Phase 4: Announcement',
       desc: 'Notify #eng-leads that AuthService bus factor is restored from 1 to 2.',
       eta: 'Day 5'
     }
@@ -39,8 +39,7 @@ export default function HandoffPlanModal({
       left: 0,
       right: 0,
       bottom: 0,
-      background: 'rgba(0, 0, 0, 0.78)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(0, 0, 0, 0.6)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -48,75 +47,57 @@ export default function HandoffPlanModal({
       padding: '1rem',
     }} onClick={onClose}>
       <div 
-        className="glass-panel" 
+        className="clean-card" 
         style={{
-          maxWidth: '680px',
+          maxWidth: '560px',
           width: '100%',
-          background: 'rgba(15, 23, 42, 0.98)',
-          border: '1px solid rgba(244, 63, 94, 0.4)',
-          borderRadius: 'var(--radius-lg)',
+          background: 'var(--surface)',
           padding: '1.5rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1rem',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
+          gap: '1.25rem',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.3rem' }}>
-              <span style={{
-                fontSize: '0.68rem',
-                fontWeight: '700',
-                padding: '2px 8px',
-                borderRadius: 'var(--radius-full)',
-                background: 'rgba(244, 63, 94, 0.15)',
-                color: '#fb7185',
-                border: '1px solid rgba(244, 63, 94, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-              }}>
-                <ShieldAlert size={12} /> BUS FACTOR REMEDIATION
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem' }}>
+              <span className="chip-risk" style={{ fontSize: '0.65rem' }}>
+                Bus Factor Risk
               </span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Automated Plan Generation
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                Knowledge Handoff
               </span>
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#ffffff' }}>
-              Knowledge Handoff Plan: {system}
-            </h3>
-            <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>
-              Primary Sole Maintainer: <strong style={{ color: '#ffffff' }}>{engineer}</strong> • Target Secondary: <strong style={{ color: '#38bdf8' }}>Marcus Vance</strong>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text)' }}>
+              Handoff Plan: {system}
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '2px', margin: 0 }}>
+              Sole maintainer: <strong style={{ color: 'var(--text)' }}>{engineer}</strong> • Target secondary: <strong style={{ color: 'var(--text)' }}>Marcus Vance</strong>
             </p>
           </div>
 
           <button
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              padding: '4px',
-            }}
+            className="btn-ghost"
+            style={{ padding: '3px' }}
           >
-            <X size={20} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Steps */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {steps.map((st, i) => (
             <div
               key={i}
               style={{
-                padding: '0.75rem 0.9rem',
+                padding: '0.75rem',
                 borderRadius: 'var(--radius-sm)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--border-subtle)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -124,22 +105,14 @@ export default function HandoffPlanModal({
               }}
             >
               <div>
-                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#ffffff' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text)' }}>
                   {st.phase}
                 </div>
-                <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '2px' }}>
                   {st.desc}
                 </div>
               </div>
-              <span style={{
-                fontSize: '0.68rem',
-                fontWeight: '600',
-                padding: '2px 7px',
-                borderRadius: '4px',
-                background: 'rgba(99, 102, 241, 0.15)',
-                color: '#a5b4fc',
-                whiteSpace: 'nowrap',
-              }}>
+              <span className="chip-off" style={{ fontSize: '0.65rem', whiteSpace: 'nowrap' }}>
                 {st.eta}
               </span>
             </div>
@@ -150,22 +123,14 @@ export default function HandoffPlanModal({
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
-          gap: '0.6rem',
-          marginTop: '0.5rem',
+          gap: '0.5rem',
           paddingTop: '0.75rem',
-          borderTop: '1px solid var(--border-subtle)',
+          borderTop: '1px solid var(--border)',
         }}>
           <button
             onClick={onClose}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: 'var(--radius-sm)',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-            }}
+            className="btn-ghost"
+            style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
           >
             Dismiss
           </button>
@@ -174,23 +139,11 @@ export default function HandoffPlanModal({
               if (onApprovePlan) onApprovePlan();
               onClose();
             }}
-            style={{
-              padding: '0.5rem 1.25rem',
-              borderRadius: 'var(--radius-sm)',
-              background: 'linear-gradient(135deg, #f43f5e, #a855f7)',
-              border: 'none',
-              color: '#ffffff',
-              fontSize: '0.8rem',
-              fontWeight: '700',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              boxShadow: '0 0 15px rgba(244, 63, 94, 0.35)',
-            }}
+            className="btn-primary"
+            style={{ fontSize: '0.8rem', padding: '0.45rem 1rem', gap: '4px' }}
           >
-            <CheckCircle2 size={15} />
-            <span>Submit Proposal to Approvals Hub</span>
+            <CheckCircle2 size={14} />
+            <span>Submit Proposal to Approvals</span>
           </button>
         </div>
       </div>

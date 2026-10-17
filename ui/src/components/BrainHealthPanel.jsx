@@ -8,14 +8,11 @@ import {
   FileWarning, 
   Users, 
   ArrowRight, 
-  Sparkles, 
   CheckCircle2, 
   Clock, 
-  ShieldAlert,
-  ChevronRight,
-  ExternalLink,
-  Flame,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function BrainHealthPanel({ 
@@ -34,12 +31,8 @@ export default function BrainHealthPanel({
       id: 'stale',
       label: 'Stale Decisions',
       count: staleDecisions.length || 3,
-      unit: 'active decisions superseded',
-      status: 'warning',
-      color: '#f59e0b',
-      bg: 'rgba(245, 158, 11, 0.1)',
-      border: 'rgba(245, 158, 11, 0.25)',
-      icon: AlertTriangle,
+      unit: (staleDecisions.length || 3) === 1 ? 'decision stale' : 'decisions stale',
+      status: 'warn', // 'ok' | 'warn' | 'risk' | 'off'
       description: 'Production decisions contradicted by newer RFCs or specs',
       proof: {
         title: 'ADR-004: Mobile Rate Limit 50 rps Stale',
@@ -53,11 +46,7 @@ export default function BrainHealthPanel({
       label: 'Sole-Expert Systems',
       count: 2,
       unit: 'systems with bus factor = 1',
-      status: 'critical',
-      color: '#f43f5e',
-      bg: 'rgba(244, 63, 94, 0.1)',
-      border: 'rgba(244, 63, 94, 0.25)',
-      icon: Users,
+      status: 'risk',
       description: 'Critical services maintained by exactly one engineer',
       proof: {
         title: 'AuthService & PaymentGateway Single Points of Failure',
@@ -71,11 +60,7 @@ export default function BrainHealthPanel({
       label: 'Contradicting Documents',
       count: 2,
       unit: 'conflicting specifications',
-      status: 'warning',
-      color: '#a855f7',
-      bg: 'rgba(168, 85, 247, 0.1)',
-      border: 'rgba(168, 85, 247, 0.25)',
-      icon: FileWarning,
+      status: 'warn',
       description: 'Active design docs with contradictory architectural requirements',
       proof: {
         title: 'Token Revocation vs Distributed Session Specs',
@@ -89,11 +74,7 @@ export default function BrainHealthPanel({
       label: 'Departed Staff Decisions',
       count: 4,
       unit: 'decisions with departed owners',
-      status: 'neutral',
-      color: '#38bdf8',
-      bg: 'rgba(56, 189, 248, 0.1)',
-      border: 'rgba(56, 189, 248, 0.25)',
-      icon: UserX,
+      status: 'off',
       description: 'Architecture decisions authored by engineers who left the firm',
       proof: {
         title: 'Billing Ledger Architecture (Marcus Vance)',
@@ -110,13 +91,9 @@ export default function BrainHealthPanel({
       id: 'pep_alerts',
       label: 'Active Proposals on Retired PEPs',
       count: 27,
-      unit: 'genuine architectural alerts',
-      status: 'warning',
-      color: '#f59e0b',
-      bg: 'rgba(245, 158, 11, 0.1)',
-      border: 'rgba(245, 158, 11, 0.25)',
-      icon: AlertTriangle,
-      description: 'Active or Accepted proposals that depend on or supersede a Superseded, Withdrawn, or Rejected proposal',
+      unit: 'architectural alerts',
+      status: 'warn',
+      description: 'Accepted proposals depending on or superseding retired proposals',
       proof: {
         title: 'PEP 387: Backwards Compatibility Policy',
         path: 'PEP 387 (Active) —[SUPERSEDES]→ PEP 5 (Superseded)',
@@ -129,11 +106,7 @@ export default function BrainHealthPanel({
       label: 'Architectural Proposals',
       count: 745,
       unit: 'proposals evaluated',
-      status: 'neutral',
-      color: '#34d399',
-      bg: 'rgba(52, 211, 153, 0.1)',
-      border: 'rgba(52, 211, 153, 0.25)',
-      icon: FileText,
+      status: 'ok',
       description: 'Complete Python Enhancement Proposal archive from peps.python.org',
       proof: {
         title: 'Python Enhancement Proposal Corpus',
@@ -146,12 +119,8 @@ export default function BrainHealthPanel({
       id: 'pep_chains',
       label: 'Supersession Chains',
       count: 73,
-      unit: 'generational standard links',
-      status: 'neutral',
-      color: '#a855f7',
-      bg: 'rgba(168, 85, 247, 0.1)',
-      border: 'rgba(168, 85, 247, 0.25)',
-      icon: ArrowRight,
+      unit: 'standard lineages',
+      status: 'ok',
       description: 'Multi-generational standards lineages across 25 years of Python evolution',
       proof: {
         title: 'Database API Standards Lineage',
@@ -165,11 +134,7 @@ export default function BrainHealthPanel({
       label: 'Core Authors & Champions',
       count: 356,
       unit: 'unique authors in graph',
-      status: 'neutral',
-      color: '#38bdf8',
-      bg: 'rgba(56, 189, 248, 0.1)',
-      border: 'rgba(56, 189, 248, 0.25)',
-      icon: Users,
+      status: 'off',
       description: 'Python core authors connected via AUTHORED and AFFECTS edges',
       proof: {
         title: 'Guido van Rossum (BDFL / Core Author)',
@@ -187,24 +152,22 @@ export default function BrainHealthPanel({
     {
       id: 'item-1',
       title: 'Mobile Rate Limit Decision Stale',
-      badge: 'Stale Since Doc Spec v2.1',
-      badgeColor: '#f59e0b',
+      badge: 'Stale Decision',
+      status: 'warn',
       summary: 'ADR-004 specifies 50 req/s, but API Gateway Spec v2.1 raised threshold to 200 req/s without updating the architectural record.',
       proofPath: 'Doc: API Gateway Spec v2.1 —[SUPERSEDES]→ ADR-004',
-      impact: 'Gateway rejects valid mobile client traffic during peak hours.',
-      actionLabel: 'See Why',
+      actionLabel: 'Inspect query',
       actionType: 'query',
       query: 'What is the current mobile API rate limit?'
     },
     {
       id: 'item-2',
       title: 'AuthService Maintained Only by Priya Sharma',
-      badge: 'Bus Factor: 1 (Critical)',
-      badgeColor: '#f43f5e',
+      badge: 'Bus Factor = 1',
+      status: 'risk',
       summary: 'Central identity service handling token revocation and OAuth exchanges has zero secondary engineers with active WORKED_ON edges.',
       proofPath: 'Priya Sharma —[WORKED_ON (32 commits)]→ AuthService',
-      impact: 'High outage vulnerability if Priya transitions to another team or departs.',
-      actionLabel: 'Handoff Plan',
+      actionLabel: 'Generate Handoff',
       actionType: 'handoff',
       engineer: 'Priya Sharma',
       system: 'AuthService'
@@ -213,10 +176,9 @@ export default function BrainHealthPanel({
       id: 'item-3',
       title: 'JWT Token Security Vulnerability vs Opaque Tokens',
       badge: 'Historical Reversal',
-      badgeColor: '#a855f7',
+      status: 'off',
       summary: 'Original ADR-001 (JWT) had token revocation flaw discovered during incident SEC-202. ADR-002 reversed to opaque tokens.',
       proofPath: 'Incident SEC-202 —[TRIGGERED]→ ADR-002 —[SUPERSEDES]→ ADR-001',
-      impact: 'Audit compliance requires verified revocation proof trail.',
       actionLabel: 'Trace Origin',
       actionType: 'query',
       query: 'Why did we decide to use opaque tokens instead of JWT?'
@@ -224,12 +186,11 @@ export default function BrainHealthPanel({
     {
       id: 'item-4',
       title: 'HPA Autoscaling Buried 3-Hop Origin in AuthService',
-      badge: 'Origin Hidden in Slack Incident',
-      badgeColor: '#38bdf8',
+      badge: 'Incident Origin',
+      status: 'off',
       summary: 'HPA autoscaling rule was added during Black Friday outage discussion in #eng-incidents, not formal ADR.',
       proofPath: 'Slack #eng-incidents —[PROPOSED_IN]→ INC-402 —[RESULTED_IN]→ HPA Autoscaling',
-      impact: 'New engineers unaware why minimum replica threshold is set to 8.',
-      actionLabel: 'Trace 3-Hop Origin',
+      actionLabel: 'Trace Origin',
       actionType: 'query',
       query: 'What is the true origin of the HPA autoscaling decision in AuthService?'
     }
@@ -240,11 +201,10 @@ export default function BrainHealthPanel({
     {
       id: 'pep-item-1',
       title: 'PEP 248 Database API 1.0 Superseded by PEP 249',
-      badge: 'Superseded Standard',
-      badgeColor: '#f59e0b',
+      badge: 'Superseded',
+      status: 'warn',
       summary: 'PEP 249 replaced PEP 248 to standardize 2.0 connection pool behavior, cursor execution methods, and standard type codes.',
       proofPath: 'PEP 249 (Accepted) —[SUPERSEDES]→ PEP 248 (Superseded)',
-      impact: 'Any database drivers or connectors still referencing DB-API 1.0 specifications are deprecated.',
       actionLabel: 'Trace Supersession',
       actionType: 'query',
       query: 'Which PEP replaced PEP 248?'
@@ -252,11 +212,10 @@ export default function BrainHealthPanel({
     {
       id: 'pep-item-2',
       title: 'PEP 387 Backwards Compatibility Policy Replaced PEP 5',
-      badge: 'Active Policy Alert (27 Alerts Total)',
-      badgeColor: '#f43f5e',
+      badge: 'Active Policy',
+      status: 'risk',
       summary: 'PEP 387 provides the active rules for changing APIs, deprecation warning cycles, and breaking change governance, replacing PEP 5.',
       proofPath: 'PEP 387 (Active) —[SUPERSEDES]→ PEP 5 (Superseded)',
-      impact: 'Standard library changes must provide a 2-release deprecation warning before removing any interface.',
       actionLabel: 'Inspect Policy',
       actionType: 'query',
       query: 'What is the backwards compatibility policy for Python?'
@@ -264,11 +223,10 @@ export default function BrainHealthPanel({
     {
       id: 'pep-item-3',
       title: 'Packaging Metadata Evolution: PEP 241 → 314 → 345 → 566',
-      badge: 'Specification Lineage',
-      badgeColor: '#a855f7',
+      badge: 'Evolution Lineage',
+      status: 'off',
       summary: 'Core Python packaging metadata transitioned from basic title/version in 2001 to rich dependencies and environment markers.',
       proofPath: 'PEP 241 (Metadata 1.0) → PEP 314 (1.1) → PEP 345 (1.2) → PEP 566 (2.1)',
-      impact: 'Build backends (flit, hatch, setuptools) must output metadata 1.2+ compliant PKG-INFO.',
       actionLabel: 'Trace Lineage',
       actionType: 'query',
       query: 'What changed in packaging metadata between 2001 and 2015?'
@@ -277,10 +235,9 @@ export default function BrainHealthPanel({
       id: 'pep-item-4',
       title: 'PEP 484 Type Hints Author Centrality',
       badge: 'Author Centrality',
-      badgeColor: '#38bdf8',
+      status: 'off',
       summary: 'Authored by Guido van Rossum, Jukka Lehtosalo, and Lukasz Langa to define static type annotations for Python 3.5.',
       proofPath: 'Guido van Rossum —[AUTHORED]→ PEP 484 (Accepted)',
-      impact: 'Foundational standard for Python type checkers (mypy, pyright, pyre).',
       actionLabel: 'View Author',
       actionType: 'query',
       query: 'Who authored PEP 484 Type Hints?'
@@ -289,424 +246,323 @@ export default function BrainHealthPanel({
 
   const attentionItems = workspace === 'peps' ? pepsAttention : novatechAttention;
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Top Banner: Context & Guided Start */}
-      <div className="glass-panel" style={{
-        padding: '1.25rem 1.5rem',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(7, 9, 14, 0.95))',
-        border: '1px solid rgba(6, 182, 212, 0.25)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-              <span style={{
-                fontSize: '0.7rem',
-                fontWeight: '700',
-                padding: '2px 8px',
-                borderRadius: 'var(--radius-full)',
-                background: 'rgba(6, 182, 212, 0.15)',
-                color: '#22d3ee',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-              }}>
-                COMPANY BRAIN STATUS
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Audited continuously via FalkorDB graph algorithms
-              </span>
-            </div>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
-              Brain Health & Governance Radar
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.25rem', maxWidth: '750px', lineHeight: '1.5' }}>
-              Provenance maps every architecture decision to its author, code commit, and supporting documentation. 
-              Below are graph-detected risks that require engineering leadership attention today.
-            </p>
-          </div>
+  const getStatusDotColor = (status) => {
+    switch (status) {
+      case 'ok': return 'var(--ok)';
+      case 'warn': return 'var(--warn)';
+      case 'risk': return 'var(--risk)';
+      default: return 'var(--off)';
+    }
+  };
 
-          {/* Quick Action Button to Live Ingest */}
-          <button
-            onClick={() => onNavigateToTab('ingest')}
-            style={{
-              padding: '0.65rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
-              border: 'none',
-              color: '#ffffff',
-              fontSize: '0.82rem',
-              fontWeight: '700',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 0 15px rgba(6, 182, 212, 0.35)',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Sparkles size={16} />
-            <span>Simulate Live Ingest Demo</span>
-          </button>
+  const getChipClass = (status) => {
+    switch (status) {
+      case 'ok': return 'chip-ok';
+      case 'warn': return 'chip-warn';
+      case 'risk': return 'chip-risk';
+      default: return 'chip-off';
+    }
+  };
+
+  return (
+    <div style={{
+      maxWidth: '920px',
+      margin: '0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.75rem',
+      paddingBottom: '3rem',
+    }}>
+      {/* Header section */}
+      <div>
+        <div style={{
+          fontSize: '0.68rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'var(--muted)',
+          marginBottom: '0.35rem',
+        }}>
+          Governance radar
         </div>
+        <h1 style={{
+          fontSize: '1.5rem',
+          fontWeight: '600',
+          color: 'var(--text)',
+          letterSpacing: '-0.02em',
+        }}>
+          Brain Health
+        </h1>
+        <p style={{
+          fontSize: '0.9rem',
+          color: 'var(--muted)',
+          marginTop: '0.35rem',
+          lineHeight: '1.5',
+        }}>
+          Continuous graph auditing of architectural decisions, maintainer continuity, and deprecations.
+        </p>
 
         {/* Guided Scenarios Chips */}
         <div style={{
-          marginTop: '1.1rem',
-          paddingTop: '0.9rem',
-          borderTop: '1px solid var(--border-subtle)',
+          marginTop: '0.9rem',
           display: 'flex',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.5rem',
+          gap: '0.45rem',
         }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Flame size={13} color="#f43f5e" /> {workspace === 'peps' ? 'Try a scenario (Python PEPs Real Data):' : 'Try a scenario (NovaTech Labs):'}
+          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+            Quick scenarios:
           </span>
           {workspace === 'peps' ? (
             <>
               <button
                 onClick={() => onAskQuestion('Which PEP replaced PEP 248?')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(52, 211, 153, 0.1)',
-                  border: '1px solid rgba(52, 211, 153, 0.3)',
-                  color: '#6ee7b7',
-                  cursor: 'pointer',
-                }}
+                className="btn-ghost"
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
               >
-                🔄 PEP 248 → PEP 249 Supersession
+                PEP 248 → 249 Supersession
               </button>
               <button
                 onClick={() => onAskQuestion('Who authored PEP 484 Type Hints?')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(56, 189, 248, 0.1)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
-                  color: '#38bdf8',
-                  cursor: 'pointer',
-                }}
+                className="btn-ghost"
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
               >
-                👤 Guido van Rossum (Author Centrality)
+                Guido van Rossum (Author)
               </button>
               <button
                 onClick={() => onAskQuestion('What changed in packaging metadata between 2001 and 2015?')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(168, 85, 247, 0.1)',
-                  border: '1px solid rgba(168, 85, 247, 0.3)',
-                  color: '#c084fc',
-                  cursor: 'pointer',
-                }}
+                className="btn-ghost"
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
               >
-                ⏳ Packaging Lineage Over Time
+                Packaging Lineage
               </button>
             </>
           ) : (
             <>
               <button
-                onClick={() => onNavigateToTab('ingest')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#e2e8f0',
-                  cursor: 'pointer',
-                }}
-              >
-                ⚡ A doc just changed (Live Ingest)
-              </button>
-              <button
                 onClick={() => onAskQuestion('What happens if Priya leaves the company?')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#e2e8f0',
-                  cursor: 'pointer',
-                }}
+                className="btn-ghost"
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
               >
-                👤 Someone leaves (Bus Factor & Handoff)
+                Priya leaves (Bus Factor)
               </button>
               <button
                 onClick={() => onAskQuestion('Why did we decide to use opaque tokens instead of JWT?')}
-                style={{
-                  fontSize: '0.75rem',
-                  padding: '3px 10px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#e2e8f0',
-                  cursor: 'pointer',
-                }}
+                className="btn-ghost"
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
               >
-                🔍 Why did we decide this? (3-Hop Origin)
+                Why Opaque Tokens?
+              </button>
+              <button
+                onClick={() => onAskQuestion('What is the current mobile API rate limit?')}
+                className="btn-ghost"
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
+              >
+                Mobile Rate Limit (Stale)
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* 4 Health Counter Cards */}
+      {/* 4 Health Counter Cards (Neutral cards, big number, label, 1-line description, colored dot) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '1rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '0.85rem',
       }}>
         {metrics.map((m) => {
-          const Icon = m.icon;
           const isSelected = selectedProof?.id === m.id;
           return (
             <div
               key={m.id}
-              className="glass-panel"
+              className="clean-card"
               onClick={() => setSelectedProof(isSelected ? null : m)}
               style={{
-                padding: '1.1rem 1.25rem',
+                padding: '1.1rem',
                 cursor: 'pointer',
-                background: isSelected ? m.bg : 'var(--bg-card)',
-                border: isSelected ? `1px solid ${m.color}` : `1px solid ${m.border}`,
-                transition: 'all 0.2s ease',
+                borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: '700', color: m.color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  {m.label}
-                </span>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  background: m.bg,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Icon size={17} color={m.color} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    backgroundColor: getStatusDotColor(m.status),
+                    display: 'inline-block',
+                  }} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: '500', color: 'var(--text)' }}>
+                    {m.label}
+                  </span>
                 </div>
+                {isSelected ? <ChevronUp size={14} color="var(--muted)" /> : <ChevronDown size={14} color="var(--muted)" />}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginTop: '0.75rem' }}>
-                <span style={{ fontSize: '2.1rem', fontWeight: '800', color: '#ffffff', lineHeight: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.45rem', marginTop: '0.2rem' }}>
+                <span style={{ fontSize: '1.9rem', fontWeight: '600', color: 'var(--text)', lineHeight: 1 }}>
                   {m.count}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
                   {m.unit}
                 </span>
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.6rem', lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: '1.4', margin: 0 }}>
                 {m.description}
               </p>
-
-              <div style={{
-                marginTop: '0.8rem',
-                paddingTop: '0.6rem',
-                borderTop: '1px solid var(--border-subtle)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: '0.72rem',
-                color: isSelected ? m.color : 'var(--text-muted)',
-                fontWeight: '600',
-              }}>
-                <span>{isSelected ? 'Viewing proof path' : 'Click to see proof path'}</span>
-                <ChevronRight size={14} />
-              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Selected Proof Path Drawer (If Clicked) */}
+      {/* Selected Proof Path Drawer */}
       {selectedProof && (
-        <div className="glass-panel" style={{
-          padding: '1rem 1.25rem',
-          background: 'rgba(15, 23, 42, 0.95)',
-          border: `1px solid ${selectedProof.color}`,
+        <div className="clean-card" style={{
+          padding: '1.1rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.6rem',
+          background: 'var(--surface-2)',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <CheckCircle2 size={16} color={selectedProof.color} />
-              <strong style={{ fontSize: '0.88rem', color: '#ffffff' }}>
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                backgroundColor: getStatusDotColor(selectedProof.status),
+              }} />
+              <strong style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text)' }}>
                 {selectedProof.proof.title}
               </strong>
             </div>
+
             <button
               onClick={() => onAskQuestion(selectedProof.proof.actionQuestion)}
-              style={{
-                fontSize: '0.72rem',
-                padding: '4px 10px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(99, 102, 241, 0.2)',
-                border: '1px solid rgba(99, 102, 241, 0.4)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-              }}
+              className="btn-primary"
+              style={{ fontSize: '0.75rem', padding: '4px 10px', gap: '4px' }}
             >
-              <span>Query Graph in Ask Tab</span>
+              <span>Ask the Brain</span>
               <ArrowRight size={12} />
             </button>
           </div>
 
-          <div style={{
+          <div className="font-mono" style={{
             fontSize: '0.76rem',
             padding: '0.5rem 0.75rem',
-            background: 'rgba(0, 0, 0, 0.35)',
+            background: 'var(--surface)',
             borderRadius: 'var(--radius-sm)',
-            color: '#38bdf8',
-            fontFamily: 'monospace',
+            border: '1px solid var(--border)',
+            color: 'var(--text)',
           }}>
-            <strong>Proof Path:</strong> {selectedProof.proof.path}
+            <span style={{ color: 'var(--muted)', marginRight: '6px' }}>Path:</span>
+            {selectedProof.proof.path}
           </div>
 
-          <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-            <strong>Operational Risk:</strong> {selectedProof.proof.impact}
+          <div style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: '1.4' }}>
+            <strong style={{ color: 'var(--text)' }}>Operational impact:</strong> {selectedProof.proof.impact}
           </div>
         </div>
       )}
 
-      {/* Needs Attention Section */}
-      <div className="glass-panel" style={{ padding: '1.25rem' }}>
+      {/* Active Governance Queue */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '1rem',
         }}>
           <div>
-            <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#ffffff' }}>
-              Active Governance Queue
-            </h3>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Actionable findings requiring review or handoff approvals
+            <h2 style={{ fontSize: '1.05rem', fontWeight: '600', color: 'var(--text)', letterSpacing: '-0.01em' }}>
+              Governance Queue
+            </h2>
+            <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '2px' }}>
+              Findings requiring architectural review or handoff actions
             </p>
           </div>
-          <span style={{
-            fontSize: '0.72rem',
+          <span className="chip-warn" style={{
+            fontSize: '0.68rem',
             fontWeight: '600',
-            padding: '3px 9px',
+            padding: '2px 8px',
             borderRadius: 'var(--radius-full)',
-            background: 'rgba(244, 63, 94, 0.15)',
-            color: '#fb7185',
-            border: '1px solid rgba(244, 63, 94, 0.3)',
           }}>
-            {attentionItems.length} Items Require Action
+            {attentionItems.length} {attentionItems.length === 1 ? 'alert' : 'alerts'}
           </span>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {/* Clean list rows with 1 action button each */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
           {attentionItems.map((item) => (
             <div
               key={item.id}
+              className="clean-card"
               style={{
                 padding: '0.9rem 1.1rem',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '1rem',
                 flexWrap: 'wrap',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                e.currentTarget.style.borderColor = 'var(--border-subtle)';
               }}
             >
-              <div style={{ flex: 1, minWidth: '280px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff' }}>
+              <div style={{ flex: 1, minWidth: '260px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <span style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: getStatusDotColor(item.status),
+                  }} />
+                  <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text)' }}>
                     {item.title}
                   </span>
-                  <span style={{
-                    fontSize: '0.64rem',
-                    fontWeight: '700',
-                    padding: '2px 7px',
+                  <span className={getChipClass(item.status)} style={{
+                    fontSize: '0.62rem',
+                    fontWeight: '600',
+                    padding: '1px 6px',
                     borderRadius: '4px',
-                    background: `${item.badgeColor}20`,
-                    color: item.badgeColor,
-                    border: `1px solid ${item.badgeColor}40`,
                   }}>
                     {item.badge}
                   </span>
                 </div>
-                <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.4' }}>
+
+                <p style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: '1.45', margin: 0 }}>
                   {item.summary}
                 </p>
-                <div style={{
+
+                <div className="font-mono" style={{
                   fontSize: '0.7rem',
-                  color: '#38bdf8',
-                  marginTop: '0.4rem',
-                  fontFamily: 'monospace',
+                  color: 'var(--muted)',
+                  marginTop: '0.35rem',
                 }}>
                   ↳ {item.proofPath}
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {/* Action Button */}
+              <div>
                 {item.actionType === 'handoff' ? (
                   <button
                     onClick={() => onOpenHandoff(item.engineer, item.system)}
-                    style={{
-                      padding: '0.5rem 0.85rem',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'rgba(244, 63, 94, 0.2)',
-                      border: '1px solid rgba(244, 63, 94, 0.4)',
-                      color: '#fb7185',
-                      fontSize: '0.78rem',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      whiteSpace: 'nowrap',
-                    }}
+                    className="btn-primary"
+                    style={{ padding: '0.45rem 0.85rem', fontSize: '0.75rem', gap: '4px' }}
                   >
-                    <span>Generate Handoff Plan</span>
-                    <ArrowRight size={13} />
+                    <span>Handoff Plan</span>
+                    <ArrowRight size={12} />
                   </button>
                 ) : (
                   <button
                     onClick={() => onAskQuestion(item.query)}
-                    style={{
-                      padding: '0.5rem 0.85rem',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'rgba(6, 182, 212, 0.15)',
-                      border: '1px solid rgba(6, 182, 212, 0.35)',
-                      color: '#22d3ee',
-                      fontSize: '0.78rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                      whiteSpace: 'nowrap',
-                    }}
+                    className="btn-ghost"
+                    style={{ padding: '0.45rem 0.85rem', fontSize: '0.75rem', gap: '4px' }}
                   >
                     <span>{item.actionLabel}</span>
-                    <ArrowRight size={13} />
+                    <ArrowRight size={12} />
                   </button>
                 )}
               </div>
