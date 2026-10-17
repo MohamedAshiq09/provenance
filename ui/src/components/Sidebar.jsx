@@ -30,6 +30,8 @@ export default function Sidebar({
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [theme, setTheme] = useState('light');
 
+  const [hoveredNavItem, setHoveredNavItem] = useState(null);
+
   useEffect(() => {
     try {
       const current = document.documentElement.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
@@ -264,59 +266,88 @@ export default function Sidebar({
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
+          const isHovered = hoveredNavItem === item.id;
           return (
-            <button
-              key={item.id}
-              id={`nav-item-${item.id}`}
-              onClick={() => setActiveTab(item.id)}
-              title={item.tooltip}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '7px 10px',
-                borderRadius: 'var(--radius-sm)',
-                background: isActive ? 'var(--surface-2)' : 'transparent',
-                border: '1px solid transparent',
-                borderColor: isActive ? 'var(--border)' : 'transparent',
-                color: isActive ? 'var(--text)' : 'var(--muted)',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.15s ease',
-                width: '100%',
-                fontWeight: isActive ? '600' : '400',
-                fontSize: '0.82rem',
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.color = 'var(--text)';
-                  e.currentTarget.style.background = 'var(--surface-2)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.color = 'var(--muted)';
-                  e.currentTarget.style.background = 'transparent';
-                }
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Icon size={15} color={isActive ? 'var(--accent)' : 'currentColor'} style={{ flexShrink: 0 }} />
-                <span className="sidebar-nav-label">{item.label}</span>
-              </div>
+            <div key={item.id} style={{ position: 'relative', width: '100%' }}>
+              <button
+                id={`nav-item-${item.id}`}
+                onClick={() => setActiveTab(item.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '7px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: isActive ? 'var(--surface-2)' : 'transparent',
+                  border: '1px solid transparent',
+                  borderColor: isActive ? 'var(--border)' : 'transparent',
+                  color: isActive ? 'var(--text)' : 'var(--muted)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.15s ease',
+                  width: '100%',
+                  fontWeight: isActive ? '600' : '400',
+                  fontSize: '0.82rem',
+                }}
+                onMouseEnter={(e) => {
+                  setHoveredNavItem(item.id);
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--text)';
+                    e.currentTarget.style.background = 'var(--surface-2)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredNavItem(null);
+                  if (!isActive) {
+                    e.currentTarget.style.color = 'var(--muted)';
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Icon size={15} color={isActive ? 'var(--accent)' : 'currentColor'} style={{ flexShrink: 0 }} />
+                  <span className="sidebar-nav-label">{item.label}</span>
+                </div>
 
-              {item.badge && (
-                <span className={`chip-${item.badgeType || 'off'} sidebar-nav-label`} style={{
-                  fontSize: '0.65rem',
-                  fontWeight: '600',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  lineHeight: '1.2',
-                }}>
-                  {item.badge}
-                </span>
+                {item.badge && (
+                  <span className={`chip-${item.badgeType || 'off'} sidebar-nav-label`} style={{
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    padding: '1px 6px',
+                    borderRadius: '10px',
+                    lineHeight: '1.2',
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+
+              {/* Tooltip positioned beside item on hover only — NEVER obscures badges below */}
+              {isHovered && (
+                <div 
+                  className="sidebar-tooltip-popover"
+                  style={{
+                    position: 'absolute',
+                    left: '100%',
+                    marginLeft: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '4px 8px',
+                    fontSize: '0.72rem',
+                    color: 'var(--text)',
+                    whiteSpace: 'nowrap',
+                    boxShadow: 'var(--shadow-subtle)',
+                    zIndex: 100,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  {item.tooltip}
+                </div>
               )}
-            </button>
+            </div>
           );
         })}
       </nav>
