@@ -133,7 +133,38 @@ export default function CitationModal({ citation, onClose }) {
         </div>
 
         {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            {citation.url ? (
+              citation.isRealUrl ? (
+                <a
+                  href={citation.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary"
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '5px 12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <ExternalLink size={12} />
+                  <span>Open Official Document</span>
+                </a>
+              ) : (
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="font-mono">{citation.url}</span>
+                  <span style={{ padding: '1px 5px', borderRadius: '4px', background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                    synthetic
+                  </span>
+                </div>
+              )
+            ) : null}
+          </div>
+
           <button
             onClick={onClose}
             className="btn-ghost"

@@ -90,6 +90,7 @@ export default function ChatPanel({
   const isDeclined = Boolean(lastResponse?.is_declined);
   const isAsOf = lastResponse?.tool_used === 'as_of' || lastResponse?.graph_result?.as_of_date;
   const isChangesBetween = lastResponse?.tool_used === 'changes_between' || lastResponse?.graph_result?.changes;
+  const isBusFactor = lastResponse?.tool_used === 'bus_factor' || Boolean(lastResponse?.graph_result?.sole_expert_systems);
 
   const hasSoleExpert = !isDeclined && 
     (lastResponse?.tool_used === 'bus_factor' || lastResponse?.tool_used?.includes('bus_factor')) && 
@@ -155,11 +156,16 @@ export default function ChatPanel({
   };
 
   const formatInline = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`|\[\d+\])/g);
+    if (!text) return '';
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`|\[\d+\])/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.slice(2, -2);
         return <strong key={i} style={{ fontWeight: '600', color: 'var(--text)' }}>{content}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+        const content = part.slice(1, -1);
+        return <em key={i} style={{ fontStyle: 'italic', color: 'var(--text)' }}>{content}</em>;
       }
       if (part.startsWith('`') && part.endsWith('`')) {
         const code = part.slice(1, -1);
@@ -192,7 +198,8 @@ export default function ChatPanel({
           </span>
         );
       }
-      return part;
+      // Strip any lingering stray markdown symbols (like unmatched asterisks or backticks)
+      return part.replace(/[*`_]/g, '');
     });
   };
 
@@ -352,6 +359,20 @@ export default function ChatPanel({
                       >
                         {humanName}
                       </span>
+                      {item.constraint && (
+                        <span style={{
+                          fontSize: '0.68rem',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          color: '#ef4444',
+                          fontWeight: '500',
+                          marginLeft: '3px',
+                        }}>
+                          {item.constraint}
+                        </span>
+                      )}
                     </React.Fragment>
                   );
                 })}
@@ -495,6 +516,86 @@ export default function ChatPanel({
                 </div>
               ))}
             </div>
+          ) : isBusFactor && lastResponse.graph_result?.sole_expert_systems ? (
+            /* Structured Bus Factor Card */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="clean-card" style={{ padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
+                      {lastResponse.graph_result.title || `Bus Factor Risk Analysis: ${lastResponse.graph_result.person_name}`}
+                    </h4>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
+                      {lastResponse.graph_result.impact_summary}
+                    </div>
+                  </div>
+                  <span className={lastResponse.graph_result.status === 'CRITICAL' || lastResponse.graph_result.status === 'HIGH' ? 'chip-warn' : 'chip-ok'} style={{
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                  }}>
+                    Risk: {lastResponse.graph_result.status || 'HIGH'}
+                  </span>
+                </div>
+
+                {lastResponse.graph_result.sole_expert_systems?.length > 0 && (
+                  <div style={{ marginTop: '0.9rem' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.35rem' }}>
+                      Sole-Expert Systems (Bus Factor = 1)
+                    </div>
+                    {lastResponse.graph_result.sole_expert_systems.map((s, idx) => (
+                      <div key={idx} style={{
+                        padding: '0.5rem 0.75rem',
+                        background: 'var(--surface-2)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginTop: '0.35rem',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--text)' }}>{s.name || s.id}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>({s.stack || 'Production service'})</span>
+                        </div>
+                        <span style={{
+                          fontSize: '0.68rem',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          color: '#ef4444',
+                          fontWeight: '500',
+                        }}>
+                          no other engineer has a WORKED_ON edge
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {lastResponse.graph_result.unique_active_decisions?.length > 0 && (
+                  <div style={{ marginTop: '0.9rem' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.35rem' }}>
+                      Sole Architectural Decisions Authored ({lastResponse.graph_result.unique_active_decisions.length})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      {lastResponse.graph_result.unique_active_decisions.slice(0, 5).map((d, idx) => (
+                        <div key={idx} style={{ fontSize: '0.82rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ color: 'var(--accent)' }}>•</span>
+                          <span>{d.title}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>({d.status || 'active'})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             /* General Clean Prose Answer */
             <div className="clean-card" style={{ padding: '1.25rem' }}>
@@ -565,6 +666,10 @@ export default function ChatPanel({
                 {lastResponse.sources.map((s, idx) => {
                   const sourceObj = typeof s === 'string' ? { id: s, title: s } : s;
                   const cleanTitle = sourceObj.title || sourceObj.id;
+                  const url = sourceObj.url || '';
+                  const isRealUrl = url.startsWith('http') && (url.includes('peps.python.org') || url.includes('github.com') || url.includes('python.org') || !url.includes('novatech.io'));
+                  const isSynthetic = !isRealUrl || url.includes('novatech.io');
+
                   return (
                     <div 
                       key={idx}
@@ -573,7 +678,10 @@ export default function ChatPanel({
                         title: cleanTitle,
                         quote: sourceObj.quote || `Verified architectural constraint documented in ${cleanTitle}.`,
                         doc_type: sourceObj.type || sourceObj.doc_type || 'Architecture Document',
-                        valid_from: sourceObj.valid_from || '2025-08-01'
+                        valid_from: sourceObj.valid_from || '2025-08-01',
+                        url: url,
+                        isRealUrl: isRealUrl,
+                        isSynthetic: isSynthetic,
                       })}
                       className="clean-card"
                       style={{
@@ -584,18 +692,51 @@ export default function ChatPanel({
                         gap: '0.35rem',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span className="chip-accent" style={{
-                          fontSize: '0.65rem',
-                          fontWeight: '600',
-                          padding: '1px 6px',
-                          borderRadius: '4px',
-                        }}>
-                          {idx + 1}
-                        </span>
-                        <span style={{ fontSize: '0.88rem', fontWeight: '500', color: 'var(--text)' }}>
-                          {cleanTitle}
-                        </span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span className="chip-accent" style={{
+                            fontSize: '0.65rem',
+                            fontWeight: '600',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                          }}>
+                            {idx + 1}
+                          </span>
+                          <span style={{ fontSize: '0.88rem', fontWeight: '500', color: 'var(--text)' }}>
+                            {cleanTitle}
+                          </span>
+                        </div>
+
+                        {isRealUrl && url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              fontSize: '0.72rem',
+                              color: 'var(--accent)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            <span>Open</span>
+                            <ExternalLink size={11} />
+                          </a>
+                        ) : (
+                          <span style={{
+                            fontSize: '0.68rem',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: 'var(--surface-2)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--muted)',
+                          }}>
+                            synthetic
+                          </span>
+                        )}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.72rem', color: 'var(--muted)' }}>
@@ -604,6 +745,14 @@ export default function ChatPanel({
                         </span>
                         <span>•</span>
                         <span>{sourceObj.valid_from || '2026-02-23'}</span>
+                        {url && (
+                          <>
+                            <span>•</span>
+                            <span className="font-mono" style={{ fontSize: '0.7rem' }}>
+                              {url} {isSynthetic ? '(synthetic)' : ''}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
