@@ -32,6 +32,7 @@ MATCH (d:Decision {id: $decision_id})
 OPTIONAL MATCH (d)-[:MADE_BY]->(maker:Person)
 OPTIONAL MATCH (d)-[:BASED_ON]->(source)
 OPTIONAL MATCH (d)-[:SUPERSEDES]->(old_d:Decision)
+OPTIONAL MATCH (succ:Decision)-[:SUPERSEDES]->(d)
 OPTIONAL MATCH (d)-[:AFFECTS]->(affected)
 OPTIONAL MATCH (old_d)-[:BASED_ON]->(old_source)
 OPTIONAL MATCH (source)<-[:RESOLVES]-(ticket:Ticket)
@@ -42,7 +43,8 @@ RETURN d, maker, collect(DISTINCT source) as sources,
        collect(DISTINCT affected) as affected,
        collect(DISTINCT ticket) as tickets,
        collect(DISTINCT msg) as messages,
-       collect(DISTINCT originator) as originators
+       collect(DISTINCT originator) as originators,
+       succ
 """
 
 def trace_decision(decision_id: str, graph_name: str = None) -> dict:
@@ -68,12 +70,14 @@ def trace_decision(decision_id: str, graph_name: str = None) -> dict:
     tickets = [_node_to_dict(t) for t in (r[6] or []) if t]
     messages = [_node_to_dict(m) for m in (r[7] or []) if m]
     originators = [_node_to_dict(o) for o in (r[8] or []) if o]
+    successor = _node_to_dict(r[9]) if len(r) > 9 and r[9] else None
     
     return {
         "decision": decision,
         "made_by": maker,
         "based_on": sources,
         "supersedes": superseded,
+        "superseded_by": successor,
         "superseded_was_based_on": old_sources,
         "affects": affected,
         "related_tickets": tickets,
@@ -590,6 +594,14 @@ def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) ->
                 
         decisions = filtered
     
+    seen_ids = set()
+    unique_decisions = []
+    for d in decisions:
+        if d.get("id") and d["id"] not in seen_ids:
+            seen_ids.add(d["id"])
+            unique_decisions.append(d)
+    decisions = unique_decisions
+
     # Check if any matching decision is stale on that date
     has_stale_items = any(d.get("is_stale_on_date") for d in decisions)
     
@@ -651,9 +663,19 @@ def changes_between(start_date: str, end_date: str, topic: Optional[str] = None,
         d["superseded_by"] = _node_to_dict(row[5]) if row[5] else None
         changes.append(d)
         
+    seen_ids = set()
+    unique_changes = []
+    for c in changes:
+        if c.get("id") and c["id"] not in seen_ids:
+            seen_ids.add(c["id"])
+            unique_changes.append(c)
+    changes = unique_changes
+
     if topic:
         topic_clean = topic.lower().strip()
         topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "change", "changed"]]
+        if "typing" in topic_words or topic_clean == "typing":
+            topic_words.extend(["type", "hint", "hints"])
         
         filtered = []
         for c in changes:

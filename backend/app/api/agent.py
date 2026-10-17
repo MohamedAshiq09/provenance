@@ -39,10 +39,10 @@ def _resolve_graph(graph_name: Optional[str] = None, workspace: Optional[str] = 
 
 
 @router.post("/ask", response_model=AskResponse)
-def ask(req: AskRequest):
+def ask(req: AskRequest, workspace: Optional[str] = None):
     """Ask the Company Brain a question. Returns answer + graph path + sources."""
     try:
-        resolved_graph = _resolve_graph(req.graph_name, req.workspace)
+        resolved_graph = _resolve_graph(req.graph_name, req.workspace or workspace)
         result = answer(req.question, resolved_graph)
         return result
     except Exception as e:

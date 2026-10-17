@@ -181,6 +181,7 @@ def _deterministic_select_tool(question: str) -> dict:
         elif "rate limit" in q: topic = "rate limit"
         elif "bill" in q: topic = "billing"
         elif "payment" in q: topic = "payments"
+        elif "typing" in q or "type hint" in q or "type" in q or "hint" in q: topic = "typing"
         elif "pep" in q or "package" in q or "metadata" in q: topic = "metadata"
         elif "db" in q or "database" in q: topic = "database"
         
@@ -411,13 +412,18 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
         dec = result.get("decision", {})
         maker = result.get("made_by", {})
         supersedes = result.get("supersedes")
+        superseded_by = result.get("superseded_by")
         lines.append(f"### Decision Provenance: {dec.get('title', 'Unknown')}")
-        lines.append(f"**Decision ID**: `{dec.get('id')}` | **Status**: `{dec.get('status', 'active')}` | **Made at**: {dec.get('made_at', 'unknown')}")
+        lines.append(f"**Decision ID**: `{dec.get('id')}` | **Status**: `{dec.get('status', 'active')}` | **Made at**: {dec.get('made_at', dec.get('valid_from', 'unknown'))}")
         if maker:
             lines.append(f"**Decision Maker**: **{maker.get('name')}** ({maker.get('role', '')})")
         lines.append(f"**Rationale**: {dec.get('rationale', 'N/A')}")
         if supersedes:
             lines.append(f"**Supersedes**: *{supersedes.get('title')}* (ID: `{supersedes.get('id')}`)")
+        if superseded_by:
+            lines.append(f"**Superseded By**: *{superseded_by.get('title')}* (ID: `{superseded_by.get('id')}`)")
+        elif dec.get("stale_reason"):
+            lines.append(f"**Supersession**: {dec.get('stale_reason')}")
         based_on = result.get("based_on", [])
         if based_on:
             lines.append("\n**Based on Artifacts**:")
@@ -900,6 +906,8 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
             path.append({"node": src, "type": "Document", "edge": "BASED_ON", "rel_type": "BASED_ON"})
         if result.get("supersedes"):
             path.append({"node": result["supersedes"], "type": "Decision", "edge": "SUPERSEDES", "rel_type": "SUPERSEDES"})
+        if result.get("superseded_by"):
+            path.append({"node": result["superseded_by"], "type": "Decision", "edge": "SUPERSEDES", "rel_type": "SUPERSEDES"})
         return path
     elif tool_name == "as_of":
         path = []
