@@ -49,7 +49,7 @@ def generate_answer(question: str, graph_context: dict, sources: list) -> str:
     prompt = f"""You are Provenance, a Company Brain assistant that answers engineering questions.
 Answer the following question based ONLY on the provided graph traversal results.
 Do not invent or extrapolate facts. 
-CRITICAL RULE: If the question asks about something not present in the graph context (e.g. personal gossip, pets, unrelated topics, or unrecorded decisions), explicitly state: "I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation." Do NOT guess.
+CRITICAL RULE: If the question asks about something not present in the graph context (e.g. personal gossip, pets, unrelated topics, unrecorded technologies like MongoDB, or unrecorded decisions), explicitly state ONLY: "No record of the requested topic in the graph." Do not invent facts, IDs, status, or citations. Do NOT guess.
 
 QUESTION: {question}
 
