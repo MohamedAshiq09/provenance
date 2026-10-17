@@ -25,7 +25,8 @@ export default function CytoscapeGraph({
   graphPath = [], 
   highlightNodeId = null,
   onNodeSelect,
-  customHeight = '420px' 
+  customHeight = '420px',
+  asOfDate = null
 }) {
   const containerRef = useRef(null);
   const cyRef = useRef(null);
@@ -215,6 +216,38 @@ export default function CytoscapeGraph({
       }
     }
   }, [graphPath, highlightNodeId]);
+
+  // Dynamically recolor decision nodes based on global asOfDate
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy || !asOfDate) return;
+
+    cy.nodes('[type = "Decision"]').forEach(node => {
+      const data = node.data();
+      const validFrom = data.valid_from;
+      const validTo = data.valid_to;
+      let statusOnDate = data.status || 'active';
+
+      if (validFrom && validFrom > asOfDate) {
+        statusOnDate = 'inactive';
+      } else if (validTo && validTo < asOfDate) {
+        statusOnDate = 'superseded';
+      } else if (data.id === 'decision_rate_limit_mobile') {
+        statusOnDate = asOfDate >= '2026-10-16' ? 'stale' : 'active';
+      }
+
+      let color = '#b45309';
+      if (statusOnDate === 'active') {
+        color = '#0f766e'; // teal for active
+      } else if (statusOnDate === 'stale') {
+        color = '#b45309'; // amber for stale
+      } else if (statusOnDate === 'superseded' || statusOnDate === 'inactive') {
+        color = '#6b7280'; // gray for superseded/inactive
+      }
+
+      node.style('background-color', color);
+    });
+  }, [asOfDate]);
 
   // Controls
   const handleZoomIn = () => cyRef.current?.zoom(cyRef.current.zoom() * 1.25);

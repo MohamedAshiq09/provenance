@@ -35,6 +35,7 @@ export default function Home() {
   const [handoffModalData, setHandoffModalData] = useState(null);
 
   const [workspace, setWorkspace] = useState('novatech'); // 'novatech' | 'peps'
+  const [selectedDate, setSelectedDate] = useState('2026-10-17');
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(3);
 
   const currentGraphName = workspace === 'peps' ? 'peps_brain' : 'company_brain';
@@ -44,6 +45,7 @@ export default function Home() {
     checkHealth();
     fetchStats(currentGraphName);
     fetchStale(currentGraphName);
+    setSelectedDate(workspace === 'peps' ? '2015-12-31' : '2026-10-17');
   }, [workspace]);
 
   const checkHealth = async () => {
@@ -168,6 +170,7 @@ export default function Home() {
                   onOpenHandoff={(eng, sys) => setHandoffModalData({ engineer: eng, system: sys })}
                   onProposeRemediation={() => setActiveTab('approvals')}
                   workspace={workspace}
+                  selectedDate={selectedDate}
                   isGraphVisible={isGraphVisible}
                   onToggleGraph={() => setIsGraphVisible(!isGraphVisible)}
                 />
@@ -200,12 +203,14 @@ export default function Home() {
                   <CytoscapeGraph
                     graphPath={highlightPath}
                     highlightNodeId={highlightNodeId}
+                    asOfDate={selectedDate}
                     customHeight="380px"
                   />
 
                   <TimeTravelSlider
+                    currentDate={selectedDate}
                     onDateChange={(date) => {
-                      console.log("Scrubbed to:", date);
+                      setSelectedDate(date);
                     }}
                     workspace={workspace}
                   />
@@ -257,12 +262,14 @@ export default function Home() {
                 <CytoscapeGraph
                   graphPath={highlightPath}
                   highlightNodeId={highlightNodeId}
+                  asOfDate={selectedDate}
                   customHeight="100%"
                 />
               </div>
               <TimeTravelSlider
+                currentDate={selectedDate}
                 onDateChange={(date) => {
-                  console.log("Scrubbed to:", date);
+                  setSelectedDate(date);
                 }}
                 workspace={workspace}
               />

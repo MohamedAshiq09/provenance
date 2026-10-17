@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { History, Calendar } from 'lucide-react';
 
-export default function TimeTravelSlider({ onDateChange, workspace = 'novatech' }) {
+export default function TimeTravelSlider({ onDateChange, workspace = 'novatech', currentDate = null }) {
   const novatechDates = [
     { 
       label: 'Jun 2024', 
@@ -21,9 +21,14 @@ export default function TimeTravelSlider({ onDateChange, workspace = 'novatech' 
       desc: 'ADR-002: Opaque tokens' 
     },
     { 
-      label: 'Present (Oct 2026)', 
-      date: '2026-10-15', 
-      desc: '200 rps active' 
+      label: 'Oct 01, 2026', 
+      date: '2026-10-01', 
+      desc: 'Rate limit 50 active' 
+    },
+    { 
+      label: 'Oct 17, 2026', 
+      date: '2026-10-17', 
+      desc: 'Rate limit 50 stale' 
     },
   ];
 
@@ -57,10 +62,17 @@ export default function TimeTravelSlider({ onDateChange, workspace = 'novatech' 
   const [isRevalidating, setIsRevalidating] = useState(false);
 
   useEffect(() => {
+    if (currentDate) {
+      const idx = dates.findIndex(d => d.date === currentDate);
+      if (idx !== -1) {
+        setSelectedIndex(idx);
+        return;
+      }
+    }
     const defaultIdx = dates.length - 1;
     setSelectedIndex(defaultIdx);
     fetchDecisionsForDate(dates[defaultIdx].date);
-  }, [workspace]);
+  }, [workspace, currentDate]);
 
   useEffect(() => {
     if (dates[selectedIndex]) {
