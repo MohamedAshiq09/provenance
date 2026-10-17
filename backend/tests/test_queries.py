@@ -19,6 +19,7 @@ from app.queries.graph_queries import (
     find_contradiction_candidates,
     get_contradiction_candidates,
     confirm_contradiction,
+    ramp_plan,
 )
 
 
@@ -146,6 +147,25 @@ def test_knowledge_gaps_authorless_docs():
     res = knowledge_gaps()
     assert res["authorless_docs_total"] >= 100
     assert len(res["authorless_docs"]) <= 20  # capped sample
+
+
+def test_ramp_plan_auth_service():
+    """Onboarding pack: real experts + shaped decisions + evidence trail."""
+    res = ramp_plan("AuthService")
+    assert res["counts"]["people"] >= 1
+    assert res["counts"]["decisions"] >= 5
+    assert res["counts"]["docs"] >= 1
+    assert res["people_to_ask"][0].get("name") == "Priya Sharma"
+    assert any(d.get("id") == "decision_use_jwt" for d in res["decisions"])
+    assert any(doc.get("id") == "doc_adr_jwt_reversal" for doc in res["key_docs"])
+    assert len(res["ramp_sequence"]) == (
+        min(3, res["counts"]["people"]) + min(5, res["counts"]["decisions"]) + min(3, res["counts"]["docs"])
+    )
+
+
+def test_ramp_plan_unknown_system():
+    res = ramp_plan("system_that_does_not_exist")
+    assert "error" in res
 
 
 # ─────────────────────────────────────────────────────────────────────────────

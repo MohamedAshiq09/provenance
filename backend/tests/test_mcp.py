@@ -23,6 +23,7 @@ EXPECTED_TOOLS = sorted([
     "decision_timeline",
     "knowledge_gaps",
     "contradiction_candidates",
+    "ramp_plan",
 ])
 
 
@@ -111,6 +112,11 @@ def test_mcp_contradiction_candidates():
     blob = _run(_call("contradiction_candidates", {}))
     assert "candidates" in blob
     assert "UNRESOLVED" in blob  # guarded — nothing auto-applied
+
+
+def test_mcp_ramp_plan():
+    blob = _run(_call("ramp_plan", {"system_name": "AuthService"}))
+    assert "Priya" in blob or "people_to_ask" in blob
 
 
 def test_mcp_unknown_tool_errors():

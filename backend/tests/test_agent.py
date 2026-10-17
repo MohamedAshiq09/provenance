@@ -65,3 +65,11 @@ def test_agent_contradiction_review_queue():
     assert res["tool_used"] == "contradiction_candidates"
     # the queue may be empty on a clean graph — only shape assertions
     assert "review queue" in res["answer"].lower()
+
+
+def test_agent_ramp_plan():
+    """Verify agent composes an onboarding pack for ramp questions."""
+    res = answer("I just joined, where do I start on AuthService?")
+    assert res["tool_used"] == "ramp_plan"
+    assert "Priya" in res["answer"]
+    assert "Ramp Plan" in res["answer"]
