@@ -73,3 +73,10 @@ def test_agent_ramp_plan():
     assert res["tool_used"] == "ramp_plan"
     assert "Priya" in res["answer"]
     assert "Ramp Plan" in res["answer"]
+
+
+def test_agent_team_risk():
+    """Verify agent surfaces company-wide team risk posture."""
+    res = answer("Which team is at risk if someone resigns?")
+    assert res["tool_used"] == "team_risk"
+    assert "sole-expert" in res["answer"].lower() or "risk" in res["answer"].lower()

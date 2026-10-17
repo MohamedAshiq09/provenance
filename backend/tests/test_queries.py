@@ -20,6 +20,7 @@ from app.queries.graph_queries import (
     get_contradiction_candidates,
     confirm_contradiction,
     ramp_plan,
+    team_risk,
 )
 
 
@@ -166,6 +167,20 @@ def test_ramp_plan_auth_service():
 def test_ramp_plan_unknown_system():
     res = ramp_plan("system_that_does_not_exist")
     assert "error" in res
+
+
+def test_team_risk_platform_fields():
+    """Per-team risk: real members, sole-expert systems, honest risk levels."""
+    res = team_risk()
+    assert res["team_count"] >= 5
+    plat = next(t for t in res["teams"] if t["team_name"] == "Platform Engineering")
+    assert plat["member_count"] >= 5
+    assert any(e["name"] == "Priya Sharma" for e in plat["members"])
+    assert any(s["system"] == "AuthService" for s in plat["sole_expert_systems"])
+    assert plat["risk_level"] in ("CRITICAL", "HIGH", "MEDIUM", "LOW")
+    ordered = [t["risk_level"] for t in res["teams"]]
+    rank = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+    assert ordered == sorted(ordered, key=lambda r: rank[r])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
