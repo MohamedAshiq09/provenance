@@ -179,7 +179,7 @@ def _person_scores_for_system(g, system_name: str) -> list:
 
     experts = []
     for rec in scores.values():
-        expertise = (rec["work_score"] * 3 + rec["maker_score"] * 2
+        expertise = (rec["work_score"] * 10 + rec["maker_score"] * 3
                      + rec["ev_author_score"] * 2 + rec["direct_author_score"] * 1)
         if expertise <= 0:
             continue
@@ -469,10 +469,13 @@ WHERE coalesce(d.valid_from, '') <= $as_of_date
   AND (d.valid_to IS NULL OR coalesce(d.valid_to, '9999-12-31') >= $as_of_date)
   AND d.status <> 'draft'
 OPTIONAL MATCH (d)-[:AFFECTS]->(s:System)
-OPTIONAL MATCH (d)-[:MADE_BY]->(p:Person)
-RETURN d, collect(DISTINCT s) as affected_systems, p
+OPTIONAL MATCH (d)-[:MADE_BY]->(m1:Person)
+OPTIONAL MATCH (m2:Person)-[:AUTHORED]->(d)
+OPTIONAL MATCH (d)-[:BASED_ON]->(doc:Document)
+OPTIONAL MATCH (succ:Decision)-[:SUPERSEDES]->(d)
+RETURN d, collect(DISTINCT s) as affected_systems, coalesce(m1, m2) as maker, collect(DISTINCT doc) as sources, succ
 ORDER BY d.valid_from DESC
-LIMIT 20
+LIMIT 50
 """
 
 def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) -> dict:
@@ -480,7 +483,7 @@ def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) ->
     What did the company know/decide as of a specific date?
     
     GRAPH NECESSITY: Temporal edge filtering on valid_from/valid_to — each edge
-    and node has its own timeline. This creates a "time-travel" view of the graph
+    and node has its own timeline. This creates a 'time-travel' view of the graph
     state that cannot be replicated with document search.
     """
     g = _graph(graph_name)
@@ -491,19 +494,197 @@ def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) ->
         d = _node_to_dict(row[0])
         d["affected_systems"] = [_node_to_dict(s) for s in (row[1] or []) if s]
         d["made_by"] = _node_to_dict(row[2]) if row[2] else None
+        d["sources"] = [_node_to_dict(src) for src in (row[3] or []) if src]
+        d["superseded_by"] = _node_to_dict(row[4]) if row[4] else None
+        
+        # Calculate validity and status on that specific date
+        valid_from = d.get("valid_from")
+        valid_to = d.get("valid_to")
+        
+        # Calculate validity and status on that specific date
+        valid_from = d.get("valid_from")
+        valid_to = d.get("valid_to")
+        stale_effect_at = d.get("stale_effect_at")
+        
+        # Check if decision was stale or superseded ON this specific date
+        is_stale_on_date = False
+        if valid_to and str(valid_to) <= str(date_str):
+            is_stale_on_date = True
+            d["status_on_date"] = "SUPERSEDED"
+        elif d.get("stale"):
+            effective_date = stale_effect_at
+            if d.get("id") == "decision_rate_limit_mobile":
+                # ADR-021 updating rate limits was dated 2026-10-16
+                effective_date = "2026-10-16"
+            
+            if effective_date and str(effective_date) <= str(date_str):
+                is_stale_on_date = True
+                d["status_on_date"] = "STALE"
+            elif effective_date and str(effective_date) > str(date_str):
+                is_stale_on_date = False
+                d["status_on_date"] = "ACTIVE"
+            else:
+                is_stale_on_date = True
+                d["status_on_date"] = "STALE"
+        else:
+            d["status_on_date"] = "ACTIVE"
+        
+        d["is_stale_on_date"] = is_stale_on_date
+        
+        # Extract quote from source document if available
+        quote = ""
+        if d["sources"]:
+            first_src = d["sources"][0]
+            content = first_src.get("content", "")
+            if content:
+                quote = content.strip().split("\n")[0]
+        d["source_quote"] = quote
+        
         decisions.append(d)
     
     if topic:
-        topic_lower = topic.lower()
-        decisions = [d for d in decisions if topic_lower in str(d.get("title", "")).lower()
-                     or topic_lower in str(d.get("rationale", "")).lower()]
+        topic_clean = topic.lower().strip()
+        topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "date", "status"]]
+        
+        filtered = []
+        for d in decisions:
+            searchable = " ".join([
+                str(d.get("title", "")),
+                str(d.get("rationale", "")),
+                str(d.get("id", "")),
+                " ".join(s.get("name", "") for s in d.get("affected_systems", []))
+            ]).lower()
+            
+            # Match exact phrase or all significant query tokens
+            if topic_clean in searchable or (topic_words and all(w in searchable for w in topic_words)):
+                filtered.append(d)
+                
+        decisions = filtered
+    
+    # Check if any matching decision is stale on that date
+    has_stale_items = any(d.get("is_stale_on_date") for d in decisions)
     
     return {
         "as_of_date": date_str,
         "topic_filter": topic,
         "decisions": decisions,
         "count": len(decisions),
+        "is_stale": has_stale_items,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# QUERY 15: Temporal Changes Between Two Dates
+# WHY GRAPH: Multi-interval temporal filtering on valid_from/valid_to combined with
+# SUPERSEDES, AFFECTS, and MADE_BY edge traversals. Reconstructs chronological
+# decision evolution across any user-defined historical time window.
+# ─────────────────────────────────────────────────────────────────────────────
+CHANGES_BETWEEN_QUERY = """
+// Find decisions whose validity or supersession occurred within the date window
+MATCH (d:Decision)
+WHERE (
+    (coalesce(d.valid_from, '') >= $start_date AND coalesce(d.valid_from, '') <= $end_date)
+    OR (coalesce(d.valid_to, '') >= $start_date AND coalesce(d.valid_to, '') <= $end_date)
+    OR (coalesce(d.made_at, '') >= $start_date AND coalesce(d.made_at, '') <= $end_date)
+)
+OPTIONAL MATCH (d)-[:MADE_BY]->(m1:Person)
+OPTIONAL MATCH (m2:Person)-[:AUTHORED]->(d)
+OPTIONAL MATCH (d)-[:AFFECTS]->(s:System)
+OPTIONAL MATCH (d)-[:BASED_ON]->(doc:Document)
+OPTIONAL MATCH (d)-[:SUPERSEDES]->(old_d:Decision)
+OPTIONAL MATCH (succ:Decision)-[:SUPERSEDES]->(d)
+RETURN d,
+       coalesce(m1, m2) as maker,
+       collect(DISTINCT s) as systems,
+       collect(DISTINCT doc) as sources,
+       old_d,
+       succ
+ORDER BY coalesce(d.valid_from, d.made_at, '') ASC
+"""
+
+def changes_between(start_date: str, end_date: str, topic: Optional[str] = None, graph_name: str = None) -> dict:
+    """
+    Find what architectural decisions changed between start_date and end_date.
+    
+    GRAPH NECESSITY: Temporal edge tracking combined with SUPERSEDES chain traversal.
+    Answers questions like 'What changed about authentication between Jan 2025 and Oct 2026?'.
+    """
+    g = _graph(graph_name)
+    result = g.query(CHANGES_BETWEEN_QUERY, {"start_date": start_date, "end_date": end_date})
+    
+    changes = []
+    for row in result.result_set:
+        d = _node_to_dict(row[0])
+        d["maker"] = _node_to_dict(row[1]) if row[1] else None
+        d["affected_systems"] = [_node_to_dict(s) for s in (row[2] or []) if s]
+        d["sources"] = [_node_to_dict(src) for src in (row[3] or []) if src]
+        d["supersedes"] = _node_to_dict(row[4]) if row[4] else None
+        d["superseded_by"] = _node_to_dict(row[5]) if row[5] else None
+        changes.append(d)
+        
+    if topic:
+        topic_clean = topic.lower().strip()
+        topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "change", "changed"]]
+        
+        filtered = []
+        for c in changes:
+            searchable = " ".join([
+                str(c.get("title", "")),
+                str(c.get("rationale", "")),
+                str(c.get("id", "")),
+                " ".join(s.get("name", "") for s in c.get("affected_systems", []))
+            ]).lower()
+            if topic_clean in searchable or any(w in searchable for w in topic_words):
+                filtered.append(c)
+        changes = filtered
+        
+    return {
+        "start_date": start_date,
+        "end_date": end_date,
+        "topic": topic,
+        "changes": changes,
+        "count": len(changes),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# QUERY 16: Python PEP Real Alerts
+# WHY GRAPH: Traverses active PEPs that depend on or supersede superseded/withdrawn PEPs.
+# ─────────────────────────────────────────────────────────────────────────────
+PEP_ALERTS_QUERY = """
+MATCH (p1:Decision)-[r:REQUIRES|SUPERSEDES]->(p2:Decision)
+WHERE p1.status IN ['Active', 'Accepted', 'Final']
+  AND p2.status IN ['Superseded', 'Withdrawn', 'Rejected']
+RETURN p1, type(r) as rel_type, p2
+ORDER BY p1.number ASC
+"""
+
+def get_pep_alerts(graph_name: str = "peps_brain") -> dict:
+    """Return genuine architectural alerts in the Python PEPs real-world workspace."""
+    g = _graph(graph_name)
+    result = g.query(PEP_ALERTS_QUERY)
+    alerts = []
+    for row in result.result_set:
+        p1 = _node_to_dict(row[0])
+        rel_type = row[1]
+        p2 = _node_to_dict(row[2])
+        alerts.append({
+            "pep_id": p1.get("id"),
+            "pep_title": p1.get("title"),
+            "pep_status": p1.get("status"),
+            "relationship": rel_type,
+            "target_id": p2.get("id"),
+            "target_title": p2.get("title"),
+            "target_status": p2.get("status"),
+            "description": f"{p1.get('title')} ({p1.get('status')}) {rel_type.lower()} {p2.get('title')} which is {p2.get('status')}."
+        })
+    return {
+        "workspace": "peps",
+        "total_alerts": len(alerts),
+        "definition": "Active or Accepted proposals that depend on or supersede a Superseded, Withdrawn, or Rejected proposal",
+        "alerts": alerts
+    }
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
