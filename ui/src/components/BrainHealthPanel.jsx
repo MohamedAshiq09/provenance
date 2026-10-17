@@ -423,7 +423,7 @@ export default function BrainHealthPanel({
             color: '#fb7185',
             border: '1px solid rgba(244, 63, 94, 0.3)',
           }}>
-            4 Items Require Action
+            {attentionItems.length} Items Require Action
           </span>
         </div>
 

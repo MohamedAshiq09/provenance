@@ -51,6 +51,22 @@ export default function ApprovalsPanel({ onActionCompleted }) {
       idempotencyKey: 'idem_auth_bus_factor_handoff',
     },
     {
+      id: 'prop-103',
+      type: 'contradiction_review',
+      title: 'Contradiction Audit: Token Revocation vs Distributed Session Specs',
+      target: 'RFC-104 (Instant Revocation) vs SPEC-089 (24h Stateless Cache)',
+      proposedBy: 'Provenance Architecture Auditor (Autonomous)',
+      createdAt: '2026-10-16 16:10 UTC',
+      status: 'pending',
+      impact: 'Resolves policy conflict between Security team zero-trust requirements and mobile app session lifetime.',
+      actions: [
+        'Schedule joint architecture review between Security & Mobile Leads',
+        'Insert CONTRADICTS edge between RFC-104 and SPEC-089 in graph',
+        'Draft remediation RFC-105 for hybrid token introspection'
+      ],
+      idempotencyKey: 'idem_token_revocation_spec_contradiction',
+    },
+    {
       id: 'prop-100',
       type: 'policy_update',
       title: 'Security Policy: Deprecate RSA-2048 Signing Certificates',
@@ -98,6 +114,7 @@ export default function ApprovalsPanel({ onActionCompleted }) {
       }
       return p;
     }));
+    if (onActionCompleted) onActionCompleted();
   };
 
   const pendingList = proposals.filter(p => p.status === 'pending');

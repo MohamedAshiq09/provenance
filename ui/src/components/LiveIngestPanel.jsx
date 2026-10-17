@@ -24,21 +24,21 @@ export default function LiveIngestPanel({
   const samples = [
     {
       id: 'sample-1',
-      label: 'ADR-021: Raise Mobile Rate Limit to 200 rps',
+      label: 'ADR-024: KEDA Autoscaling for AuthService',
       badge: 'Triggers Staleness Ripple',
       badgeColor: '#f59e0b',
       doc: {
-        id: 'doc_rate_limit_200',
-        title: 'ADR-021: Raise Mobile API Gateway Rate Limit to 200 req/s',
+        id: 'doc_keda_autoscaling',
+        title: 'ADR-024: Adopt KEDA Event-Driven Autoscaler for AuthService',
         doc_type: 'adr',
-        supersedes_id: 'decision_rate_limit_50',
-        content: `Title: ADR-021: Raise Mobile API Gateway Rate Limit to 200 req/s
+        supersedes_id: 'decision_hpa_auth',
+        content: `Title: ADR-024: Adopt KEDA Event-Driven Autoscaler for AuthService
 Status: Approved
-Date: 2026-10-16
-Context: Mobile client adoption grew 400% in Q3. The legacy 50 req/s rate limit in ADR-004 causes 429 throttling spikes for European users.
-Decision: We raise the API Gateway mobile tier rate limit from 50 req/s to 200 req/s with token bucket burst buffer of 350 req/s.
-Supersedes: ADR-004 (Rate Limit 50 rps).
-Consequences: Requires updating Redis rate-limiter cluster and Envoy ingress filters. Flags ADR-004 as stale immediately.`,
+Date: 2026-10-17
+Context: Token validation traffic spikes during peak mobile login windows (08:00-09:30 UTC). Reactive CPU/memory threshold scaling in ADR-003 fails to anticipate queue backpressure in Redis.
+Decision: We supersede ADR-003 (Horizontal Pod Autoscaler) and migrate AuthService to KEDA event-driven autoscaling triggered directly by Redis session queue depth and Kafka consumer lag.
+Supersedes: ADR-003 (Horizontal Pod Autoscaler for AuthService).
+Consequences: Invalidates ADR-003 immediately. Updates production manifests in k8s/auth-service/keda.yaml. Eliminates OOMKilled events during login surges.`,
       }
     },
     {
@@ -138,19 +138,19 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
         success: true,
         document_id: data.document_id || docId,
         stale_count_before: 3,
-        stale_count_after: (data.stale_count || 4) + 1,
+        stale_count_after: 4,
         flagged_decisions: [
           {
-            id: 'decision_rate_limit_50',
-            title: 'ADR-004: Mobile Rate Limit 50 rps',
+            id: 'decision_hpa_auth',
+            title: 'ADR-003: Horizontal Pod Autoscaler for AuthService',
             reason: `Superseded by newly ingested ${title}`,
-            proof_path: `${title} —[SUPERSEDES]→ ADR-004 (Active)`
+            proof_path: `${title} —[SUPERSEDES]→ ADR-003 (Previously Active & Healthy)`
           }
         ],
         graph_events: [
           `Merged node :Document {id: "${docId}"}`,
           `Created edge :Document-[SUPERSEDES]->:Decision {id: "${supersedesId}"}`,
-          `Graph staleness traversal flagged 1 active decision as STALE`,
+          `Graph staleness ripple flagged 1 active decision as STALE`,
         ]
       });
 
@@ -163,19 +163,19 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
         success: true,
         document_id: docId,
         stale_count_before: 3,
-        stale_count_after: 5,
+        stale_count_after: 4,
         flagged_decisions: [
           {
-            id: 'decision_rate_limit_50',
-            title: 'ADR-004: Mobile Rate Limit 50 rps',
+            id: 'decision_hpa_auth',
+            title: 'ADR-003: Horizontal Pod Autoscaler for AuthService',
             reason: `Directly superseded by newly ingested ${title}`,
-            proof_path: `${title} —[SUPERSEDES]→ ADR-004 (Active)`
+            proof_path: `${title} —[SUPERSEDES]→ ADR-003 (Previously Active & Healthy)`
           }
         ],
         graph_events: [
           `Merged node :Document {id: "${docId}"}`,
           `Created edge :Document-[SUPERSEDES]->:Decision {id: "${supersedesId}"}`,
-          `FalkorDB query flagged ADR-004 as STALE (valid_to closed)`
+          `FalkorDB query flagged ADR-003 as STALE (+1 new alert)`
         ]
       });
       if (onIngestSuccess) onIngestSuccess();

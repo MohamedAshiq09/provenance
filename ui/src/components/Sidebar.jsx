@@ -22,7 +22,7 @@ export default function Sidebar({
   dbStatus, 
   stats, 
   staleCount = 3,
-  pendingApprovalsCount = 2
+  pendingApprovalsCount = 3
 }) {
   const navItems = [
     { 
@@ -298,7 +298,7 @@ export default function Sidebar({
             color: '#c7d2fe',
             fontWeight: '600',
           }}>
-            Gemini 2.5-Flash
+            Gemini 2.0-Flash
           </span>
         </div>
 
