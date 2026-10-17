@@ -87,6 +87,18 @@ def knowledge_gaps() -> dict:
     return run_tool("knowledge_gaps", {}, GRAPH_NAME)
 
 
+@mcp.tool()
+def contradiction_candidates() -> dict:
+    """Guarded contradiction review queue — new documents that may contradict existing decisions or docs. Nothing is applied automatically; a human confirms via REST before any CONTRADICTS edge exists. USE FOR: 'contradictions', 'conflicts', 'review queue', 'pending disagreements'. Graph capability: keyword-overlap candidate nodes with lineage exclusion."""
+    result = run_tool("contradiction_candidates", {}, GRAPH_NAME)
+    candidates = result if isinstance(result, list) else result.get("candidates", [])
+    return {
+        "count": len(candidates),
+        "candidates": candidates,
+        "note": "Candidates are UNRESOLVED — a human must confirm via POST /api/graph/contradictions/confirm to create a CONTRADICTS edge",
+    }
+
+
 # Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
 # (see main.py). Built at module level so `mcp.session_manager` exists before
 # the host lifespan enters `session_manager.run()`.
