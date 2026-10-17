@@ -22,6 +22,7 @@ EXPECTED_TOOLS = sorted([
     "impact_of",
     "decision_timeline",
     "knowledge_gaps",
+    "contradiction_candidates",
 ])
 
 
@@ -104,6 +105,12 @@ def test_mcp_decision_timeline():
 def test_mcp_knowledge_gaps():
     blob = _run(_call("knowledge_gaps", {}))
     assert "authorless_docs_total" in blob
+
+
+def test_mcp_contradiction_candidates():
+    blob = _run(_call("contradiction_candidates", {}))
+    assert "candidates" in blob
+    assert "UNRESOLVED" in blob  # guarded — nothing auto-applied
 
 
 def test_mcp_unknown_tool_errors():

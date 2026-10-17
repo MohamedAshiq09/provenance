@@ -16,6 +16,9 @@ from app.queries.graph_queries import (
     impact_of,
     decision_timeline,
     knowledge_gaps,
+    find_contradiction_candidates,
+    get_contradiction_candidates,
+    confirm_contradiction,
 )
 
 
@@ -143,3 +146,74 @@ def test_knowledge_gaps_authorless_docs():
     res = knowledge_gaps()
     assert res["authorless_docs_total"] >= 100
     assert len(res["authorless_docs"]) <= 20  # capped sample
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# S2 — Guarded contradiction candidates (full arc, self-cleaning)
+# ─────────────────────────────────────────────────────────────────────────────
+_S2_IDS = {"doc_tc_old": "Document", "doc_tc_new": "Document", "decision_tc": "Decision",
+           "decision_tc_seed": "Decision"}
+
+
+@pytest.fixture
+def contradiction_arc():
+    """Seed a temp old doc + decision based on it, then a contradicting new doc."""
+    from app.graph.ingest import upsert_document, upsert_decision, upsert_edge
+    from app.core.db import get_graph
+    g = get_graph()
+    _cleanup_candidates(g)
+    upsert_document({"id": "doc_tc_old", "title": "JWT Tokens For Auth Catastrophe Retro",
+                     "content": "Team reviews JWT rollout", "doc_type": "retro",
+                     "valid_from": "2025-01-01"}, None)
+    upsert_decision({"id": "decision_tc", "title": "Keep JWT For Auth Catastrophe Retro systems",
+                     "rationale": "we liked jwt", "status": "active",
+                     "made_at": "2025-01-02", "valid_from": "2025-01-02"}, None)
+    upsert_edge("decision_tc", "Decision", "doc_tc_old", "Document", "BASED_ON", {},
+                source_id="doc_tc_old", graph_name=None)
+    upsert_document({"id": "doc_tc_new", "title": "Catastrophe Retro JWT reversed",
+                     "content": "We reverse JWT for session cookies", "doc_type": "adr",
+                     "valid_from": "2025-06-01"}, None)
+    yield g
+    _cleanup_candidates(g)
+
+
+def _cleanup_candidates(g):
+    """Remove all temp S2 nodes (docs, decision, candidates) between tests."""
+    g.query("""MATCH (n) WHERE (n:ContradictionCandidate)
+        OR (exists(n.id) AND (n.id STARTS WITH 'doc_tc' OR n.id STARTS WITH 'decision_tc'))
+        DETACH DELETE n""")
+
+
+def test_contradiction_candidates_detected_from_title_keywords(contradiction_arc):
+    """Title-keyword overlap finds the old doc + its decision; lineage exclusion holds."""
+    res = find_contradiction_candidates("doc_tc_new", "Catastrophe Retro JWT reversed")
+    ids = [c["target_id"] for c in res["candidates"]]
+    assert "doc_tc_old" in ids and "decision_tc" in ids
+    for c in res["candidates"]:
+        assert c["verdict"] == "unverified"  # no LLM keys → guarded fallback
+    assert res["candidate_count"] >= 2
+
+
+def test_contradiction_confirm_creates_edge_and_fires_staleness(contradiction_arc):
+    """HUMAN confirm is the ONLY path to a CONTRADICTS edge; radar then fires."""
+    find_contradiction_candidates("doc_tc_new", "Catastrophe Retro JWT reversed")
+    lst = {c["target_id"]: c["id"] for c in get_contradiction_candidates()
+           if c.get("new_doc_id") == "doc_tc_new"}
+    conf = confirm_contradiction(lst["doc_tc_old"], claim="ADR reverses JWT")
+    assert conf["status"] == "contradiction_confirmed"
+    assert conf["edge_relationship"] == "CONTRADICTS"
+    sc = conf["staleness_check"]
+    assert sc["stale_decisions_found"] >= 1
+    assert sc["stale_items"][0]["stale_decision"]["id"] == "decision_tc"
+    # candidate is consumed — re-confirm must fail
+    err = confirm_contradiction(lst["doc_tc_old"])
+    assert "error" in err
+
+
+def test_contradiction_no_auto_edges_without_confirm(contradiction_arc):
+    """Candidates exist but NO CONTRADICTS edge until a human confirms."""
+    find_contradiction_candidates("doc_tc_new", "Catastrophe Retro JWT reversed")
+    pend = [c for c in get_contradiction_candidates() if c.get("new_doc_id") == "doc_tc_new"]
+    assert len(pend) >= 2
+    r = contradiction_arc.query("MATCH ()-[r:CONTRADICTS]->(doc_tc_new) RETURN count(r)")
+    assert r.result_set[0][0] == 0

@@ -57,3 +57,11 @@ def test_agent_knowledge_gaps():
     res = answer("What documentation is missing? What do we not know?")
     assert res["tool_used"] == "knowledge_gaps"
     assert "authorless" in res["answer"].lower() or "gaps" in res["answer"].lower()
+
+
+def test_agent_contradiction_review_queue():
+    """Verify agent routes conflict questions to the GUARDED review queue."""
+    res = answer("Are there any conflicts pending review?")
+    assert res["tool_used"] == "contradiction_candidates"
+    # the queue may be empty on a clean graph — only shape assertions
+    assert "review queue" in res["answer"].lower()
