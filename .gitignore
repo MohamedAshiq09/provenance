@@ -60,3 +60,4 @@ bin/
 
 # Scratch working notes (per AGENTS.md §8 — deleted when ticket completes)
 docs/
+.api_key

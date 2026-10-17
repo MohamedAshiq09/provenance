@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import health, graph, agent, ingest, mcp_router
 from app.core.config import settings
 from app.core.db import init_db
+from app.core.auth import auth_middleware
 from app.tools.mcp_server import mcp, mcp_http_app
 
 
@@ -40,6 +41,10 @@ app.add_middleware(
     # response headers from JS unless CORS exposes them (needed by T3 panel).
     expose_headers=["Mcp-Session-Id"],
 )
+# Basic API-key gate (owner-requested proxy safety): /mcp + /api/* require
+# X-API-Key when backend/.api_key exists; same-origin browser traffic (UI
+# panel) and health/docs stay open. See app/core/auth.py for the contract.
+app.middleware("http")(auth_middleware)
 
 # Routers
 app.include_router(health.router, prefix="/api", tags=["health"])
