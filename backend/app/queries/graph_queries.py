@@ -621,12 +621,21 @@ def remediate_stale_decision(decision_id: str, action_note: str = None, graph_na
 # ─────────────────────────────────────────────────────────────────────────────
 IMPACT_DOWNSTREAM_QUERY = """
 // Things this node impacts: systems/projects it affects or is used by,
-// plus decisions that depend on it (transitively)
+// plus decisions that depend on it (transitively).
+// T3 (live-test 2026-10-17): missing DEPENDS_ON edges made impact_of say
+// 'no downstream' while active decisions name downstream services. The graph
+// already records the co-affected pattern:
+//   (system)<-[:AFFECTS]-(decision)-[:AFFECTS]->(other system)
+// so a decision that touches several systems carries the cross-impact.
+// Match that shape explicitly and report the other systems at depth 2.
 MATCH (n) WHERE n.id = $node_id
 OPTIONAL MATCH p1 = (n)-[:AFFECTS|USES*1..3]->(m1)
 OPTIONAL MATCH p2 = (n)<-[:DEPENDS_ON*1..3]-(m2)
+OPTIONAL MATCH p3 = (n)<-[:AFFECTS]-()-[:AFFECTS]->(m3)
+  WHERE m3 <> n AND id(m3) <> id(n)
 RETURN collect(DISTINCT [m1, length(p1), [r IN relationships(p1) | type(r)], [x IN nodes(p1) | x.id]]) as downstream,
-       collect(DISTINCT [m2, length(p2), [r IN relationships(p2) | type(r)], [x IN nodes(p2) | x.id]]) as dependents
+       collect(DISTINCT [m2, length(p2), [r IN relationships(p2) | type(r)], [x IN nodes(p2) | x.id]]) as dependents,
+       collect(DISTINCT [m3, length(p3), [r IN relationships(p3) | type(r)], [x IN nodes(p3) | x.id]]) as co_affected
 """
 
 IMPACT_REVIEW_QUERY = """
@@ -657,7 +666,7 @@ def impact_of(node_id: str, graph_name: str = None) -> dict:
     # Merge downstream by node id, keeping minimum depth (shortest impact path)
     merged = {}
     for row in down_result.result_set:
-        for entry in (row[0] or []) + (row[1] or []):
+        for entry in (row[0] or []) + (row[1] or []) + (list(row[2]) if len(row) > 2 else []):
             node, depth, via, path = entry[0], entry[1], entry[2], entry[3]
             if node is None:
                 continue
