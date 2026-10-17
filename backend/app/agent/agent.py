@@ -19,6 +19,7 @@ from app.queries.graph_queries import (
     knowledge_gaps,
     get_contradiction_candidates,
     ramp_plan,
+    team_risk,
 )
 
 
@@ -75,6 +76,10 @@ AVAILABLE_TOOLS = {
         "description": "Onboarding pack for one system — people to ask, decisions that shaped it, the evidence trail, and open risks, as an ordered ramp sequence. USE FOR: 'ramp', 'onboard', 'getting started', 'just joined', 'where do I start'",
         "params": ["system_name"],
     },
+    "team_risk": {
+        "description": "Team-level knowledge risk — per team: member decision load, sole-expert systems (one resignation away from outage), stale decision counts. USE FOR: 'team risk', 'which team', 'company health', 'resignation', 'coverage'",
+        "params": [],
+    },
 }
 
 
@@ -118,6 +123,12 @@ def _deterministic_select_tool(question: str) -> dict:
             "tool": "bus_factor",
             "params": {"person_id": person_id},
             "reasoning": f"Identified bus-factor risk question targeting {person_id}",
+        }
+    elif any(k in q for k in ["team risk", "which team is", "company health", "resignation", "knowledge coverage", "team exposure", "people risk", "resigns"]):
+        return {
+            "tool": "team_risk",
+            "params": {},
+            "reasoning": "Identified team-level risk question",
         }
     elif any(k in q for k in ["who knows", "expert on", "who worked on", "who owns", "which team"]):
         system_name = "AuthService"
@@ -404,6 +415,15 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             lines.append("\n**Open risks** — stale decisions to ask about:")
             for d in risks:
                 lines.append(f"- {d.get('title', d.get('id'))} (`{d.get('id')}`)")
+    elif tool_name == "team_risk":
+        lines.append(f"### Team Risk Posture ({result.get('team_count')} teams, {result.get('total_sole_systems')} sole-expert systems, {result.get('total_stale_made')} stale)")
+        for t in result.get("teams", []):
+            lines.append(f"\n**{t['team_name']}** ({t['member_count']} members) — risk: **{t['risk_level']}**")
+            if t["sole_expert_systems"]:
+                for s in t["sole_expert_systems"]:
+                    lines.append(f"  - Sole-expert system: **{s['system']}** — only {', '.join(s['sole_experts'])}")
+            if t["stale_decisions_made"]:
+                lines.append(f"  - Stale decisions made by this team: {t['stale_decisions_made']}")
     else:
         if isinstance(result, list) and len(result) == 0:
             lines.append("I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation.")
@@ -546,6 +566,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "knowledge_gaps": lambda p: knowledge_gaps(graph_name),
         "contradiction_candidates": lambda p: get_contradiction_candidates(graph_name),
         "ramp_plan": lambda p: ramp_plan(p.get("system_name", "AuthService"), graph_name),
+        "team_risk": lambda p: team_risk(graph_name),
         "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
         "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
     }
@@ -662,6 +683,13 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
         path += [{"node": d, "type": "Decision", "edge": "AFFECTS"} for d in result.get("decisions", [])[:5]]
         path += [{"node": doc, "type": "Document", "edge": "BASED_ON"} for doc in result.get("key_docs", [])[:3]]
         return path
+    elif tool_name == "team_risk":
+        path = []
+        for t in result.get("teams", [])[:4]:
+            path.append({"node": {"name": t["team_name"]}, "type": "Team", "edge": "RISK_" + t["risk_level"]})
+            for s in t.get("sole_expert_systems", [])[:2]:
+                path.append({"node": {"name": s["system"]}, "type": "System", "edge": "SOLE_EXPERT"})
+        return path
     return []
 
 
@@ -682,5 +710,6 @@ def _get_query_for_tool(tool_name: str) -> str:
         "knowledge_gaps": graph_queries.GAPS_QUERY,
         "contradiction_candidates": graph_queries.CONTRADICTION_CANDIDATES_QUERY,
         "ramp_plan": graph_queries.RAMP_DECISIONS_QUERY,
+        "team_risk": graph_queries.TEAM_MEMBER_DECISIONS_QUERY,
     }
     return query_map.get(tool_name, "")
