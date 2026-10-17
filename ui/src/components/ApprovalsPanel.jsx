@@ -5,15 +5,8 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   XCircle, 
-  Clock, 
-  AlertTriangle, 
-  Users, 
-  Send, 
   ArrowRight, 
-  FileText,
-  History,
-  Lock,
-  Sparkles
+  Check
 } from 'lucide-react';
 
 export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatech' }) {
@@ -25,7 +18,7 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
       target: 'ADR-004: Mobile Rate Limit 50 rps',
       proposedBy: 'Provenance Staleness Radar (Autonomous)',
       createdAt: '2026-10-16 14:20 UTC',
-      status: 'pending', // 'pending' | 'approved' | 'rejected'
+      status: 'pending',
       impact: 'Enforces alignment between production Envoy rate limits (200 rps) and architecture record.',
       actions: [
         'Post notification to Slack #eng-architecture',
@@ -106,7 +99,7 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
     {
       id: 'pep-prop-202',
       type: 'bus_factor_handoff',
-      title: 'Governance Handoff: PEP 572 Assignment Expressions Steering Council Escalation',
+      title: 'Governance Handoff: PEP 572 Steering Council Escalation',
       target: 'PEP 572 (BDFL Retirement & Steering Council Formation)',
       proposedBy: 'Guido van Rossum (BDFL Emeritus)',
       createdAt: '2018-07-12 18:00 UTC',
@@ -122,7 +115,7 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
     {
       id: 'pep-prop-203',
       type: 'contradiction_review',
-      title: 'Dependency Audit: PEP 484 Type Hints referencing retired PEP 3107 Function Annotations',
+      title: 'Dependency Audit: PEP 484 Type Hints referencing retired PEP 3107',
       target: 'PEP 484 (Type Hints) vs PEP 3107 (Function Annotations)',
       proposedBy: 'Python Typing SIG (Autonomous Auditor)',
       createdAt: '2015-05-20 12:00 UTC',
@@ -159,7 +152,7 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
       return p;
     }));
 
-    setSuccessToast(`Proposal ${id} approved & idempotent graph mutation applied.`);
+    setSuccessToast(`Proposal ${id} approved & graph updated.`);
     setTimeout(() => setSuccessToast(null), 4000);
     if (onActionCompleted) onActionCompleted();
   };
@@ -178,17 +171,20 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
   const auditList = proposals.filter(p => p.status !== 'pending');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{
+      maxWidth: '920px',
+      margin: '0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.75rem',
+      paddingBottom: '3rem',
+    }}>
       {/* Toast Notification */}
       {successToast && (
-        <div style={{
-          padding: '0.75rem 1rem',
+        <div className="chip-ok" style={{
+          padding: '0.65rem 1rem',
           borderRadius: 'var(--radius-sm)',
-          background: 'rgba(16, 185, 129, 0.2)',
-          border: '1px solid rgba(16, 185, 129, 0.5)',
-          color: '#34d399',
           fontSize: '0.82rem',
-          fontWeight: '600',
           display: 'flex',
           alignItems: 'center',
           gap: '0.5rem',
@@ -198,36 +194,35 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
         </div>
       )}
 
-      {/* Top Description */}
-      <div className="glass-panel" style={{
-        padding: '1.25rem 1.5rem',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(7, 9, 14, 0.95))',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
-      }}>
+      {/* Header section */}
+      <div>
+        <div style={{
+          fontSize: '0.68rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'var(--muted)',
+          marginBottom: '0.35rem',
+        }}>
+          Human-in-the-loop governance
+        </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-              <span style={{
-                fontSize: '0.7rem',
-                fontWeight: '700',
-                padding: '2px 8px',
-                borderRadius: 'var(--radius-full)',
-                background: 'rgba(99, 102, 241, 0.2)',
-                color: '#a5b4fc',
-                border: '1px solid rgba(99, 102, 241, 0.35)',
-              }}>
-                HUMAN-IN-THE-LOOP GOVERNANCE
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Idempotent remediation approvals
-              </span>
-            </div>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
+            <h1 style={{
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              color: 'var(--text)',
+              letterSpacing: '-0.02em',
+            }}>
               Approvals & Remediation Hub
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.25rem', maxWidth: '750px', lineHeight: '1.5' }}>
-              Provenance detects architectural drift and sole-maintainer risks, then generates structured proposals. 
-              Engineering leads approve changes before graph edges or team notifications are dispatched.
+            </h1>
+            <p style={{
+              fontSize: '0.9rem',
+              color: 'var(--muted)',
+              marginTop: '0.35rem',
+              lineHeight: '1.5',
+            }}>
+              Review and authorize graph changes and notifications before they are applied.
             </p>
           </div>
 
@@ -235,37 +230,21 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
           <div style={{
             display: 'flex',
             padding: '3px',
-            background: 'rgba(0, 0, 0, 0.35)',
+            background: 'var(--surface-2)',
             borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-subtle)',
+            border: '1px solid var(--border)',
           }}>
             <button
               onClick={() => setActiveTab('pending')}
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: '700',
-                padding: '4px 12px',
-                borderRadius: '4px',
-                background: activeTab === 'pending' ? 'rgba(99, 102, 241, 0.3)' : 'transparent',
-                color: activeTab === 'pending' ? '#ffffff' : 'var(--text-muted)',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+              className={activeTab === 'pending' ? 'btn-primary' : 'btn-ghost'}
+              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
             >
               Pending ({pendingList.length})
             </button>
             <button
               onClick={() => setActiveTab('audit')}
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: '700',
-                padding: '4px 12px',
-                borderRadius: '4px',
-                background: activeTab === 'audit' ? 'rgba(99, 102, 241, 0.3)' : 'transparent',
-                color: activeTab === 'audit' ? '#ffffff' : 'var(--text-muted)',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+              className={activeTab === 'audit' ? 'btn-primary' : 'btn-ghost'}
+              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
             >
               Audit Trail ({auditList.length})
             </button>
@@ -277,16 +256,16 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {activeTab === 'pending' ? (
           pendingList.length === 0 ? (
-            <div className="glass-panel" style={{
+            <div className="clean-card" style={{
               padding: '2.5rem',
               textAlign: 'center',
-              color: 'var(--text-muted)',
+              color: 'var(--muted)',
             }}>
-              <CheckCircle2 size={36} color="#10b981" style={{ margin: '0 auto 0.5rem auto' }} />
-              <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#ffffff' }}>
+              <CheckCircle2 size={32} color="var(--ok)" style={{ margin: '0 auto 0.5rem auto' }} />
+              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
                 All Remediation Proposals Approved
               </div>
-              <p style={{ fontSize: '0.78rem', marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.8rem', marginTop: '0.25rem', margin: 0 }}>
                 No outstanding architectural conflicts or bus-factor remediations require approval.
               </p>
             </div>
@@ -294,62 +273,54 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
             pendingList.map((p) => (
               <div
                 key={p.id}
-                className="glass-panel"
+                className="clean-card"
                 style={{
                   padding: '1.25rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.85rem',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#ffffff' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
                         {p.title}
                       </span>
-                      <span style={{
-                        fontSize: '0.65rem',
-                        fontWeight: '700',
-                        padding: '2px 7px',
-                        borderRadius: '4px',
-                        background: 'rgba(245, 158, 11, 0.15)',
-                        color: '#f59e0b',
-                        border: '1px solid rgba(245, 158, 11, 0.3)',
-                      }}>
-                        PENDING APPROVAL
+                      <span className="chip-warn" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
+                        Pending
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      Proposed by: <strong style={{ color: '#cbd5e1' }}>{p.proposedBy}</strong> • {p.createdAt}
+                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                      Proposed by: <strong style={{ color: 'var(--text)' }}>{p.proposedBy}</strong> • {p.createdAt}
                     </div>
                   </div>
 
-                  <span style={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
-                    Idempotency: <code>{p.idempotencyKey}</code>
+                  <span className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                    {p.idempotencyKey}
                   </span>
                 </div>
 
                 <div style={{
-                  fontSize: '0.78rem',
-                  color: '#e2e8f0',
+                  fontSize: '0.82rem',
+                  color: 'var(--text)',
                   padding: '0.65rem 0.85rem',
-                  background: 'rgba(0, 0, 0, 0.3)',
+                  background: 'var(--surface-2)',
                   borderRadius: 'var(--radius-sm)',
-                  lineHeight: '1.4',
+                  border: '1px solid var(--border)',
+                  lineHeight: '1.5',
                 }}>
-                  <strong>Operational Objective:</strong> {p.impact}
+                  <strong style={{ color: 'var(--text)' }}>Operational Objective:</strong> {p.impact}
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.35rem' }}>
                     Scheduled Remediation Actions
                   </div>
-                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {p.actions.map((act, i) => (
-                      <li key={i} style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                        <ArrowRight size={12} color="#818cf8" />
+                      <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <ArrowRight size={11} color="var(--accent)" />
                         <span>{act}</span>
                       </li>
                     ))}
@@ -358,95 +329,70 @@ export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatec
 
                 {/* Approve / Reject Action Bar */}
                 <div style={{
-                  marginTop: '0.5rem',
+                  marginTop: '0.4rem',
                   paddingTop: '0.75rem',
-                  borderTop: '1px solid var(--border-subtle)',
+                  borderTop: '1px solid var(--border)',
                   display: 'flex',
                   justifyContent: 'flex-end',
-                  gap: '0.6rem',
+                  gap: '0.5rem',
                 }}>
                   <button
                     onClick={() => handleReject(p.id)}
-                    style={{
-                      padding: '0.45rem 0.85rem',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: '1px solid var(--border-subtle)',
-                      color: 'var(--text-secondary)',
-                      fontSize: '0.78rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                    }}
+                    className="btn-ghost"
+                    style={{ fontSize: '0.78rem', padding: '0.4rem 0.85rem', gap: '4px' }}
                   >
-                    <XCircle size={14} />
+                    <XCircle size={13} />
                     <span>Reject</span>
                   </button>
                   <button
                     onClick={() => handleApprove(p.id)}
-                    style={{
-                      padding: '0.45rem 1rem',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
-                      border: 'none',
-                      color: '#ffffff',
-                      fontSize: '0.78rem',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.45rem',
-                      boxShadow: '0 0 12px rgba(6, 182, 212, 0.3)',
-                    }}
+                    className="btn-primary"
+                    style={{ fontSize: '0.78rem', padding: '0.4rem 1rem', gap: '4px' }}
                   >
-                    <CheckCircle2 size={14} />
-                    <span>Approve & Apply to Graph</span>
+                    <Check size={13} />
+                    <span>Approve Proposal</span>
                   </button>
                 </div>
               </div>
             ))
           )
         ) : (
-          auditList.map((p) => (
-            <div
-              key={p.id}
-              className="glass-panel"
-              style={{
-                padding: '1.1rem 1.25rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '0.75rem',
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff' }}>
-                    {p.title}
-                  </span>
-                  <span style={{
-                    fontSize: '0.62rem',
-                    fontWeight: '700',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    background: p.status === 'approved' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)',
-                    color: p.status === 'approved' ? '#34d399' : '#fb7185',
-                  }}>
-                    {p.status.toUpperCase()}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                  Approved by: {p.approvedBy || 'Engineering Lead'} • {p.approvedAt || p.createdAt}
-                </div>
-              </div>
-
-              <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'monospace' }}>
-                Key: {p.idempotencyKey}
-              </div>
+          auditList.length === 0 ? (
+            <div className="clean-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+              No audit trail records yet.
             </div>
-          ))
+          ) : (
+            auditList.map((p) => (
+              <div
+                key={p.id}
+                className="clean-card"
+                style={{
+                  padding: '1.1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.65rem',
+                  opacity: p.status === 'rejected' ? 0.7 : 1,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text)' }}>
+                      {p.title}
+                    </span>
+                    <span className={p.status === 'approved' ? 'chip-ok' : 'chip-risk'} style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
+                      {p.status}
+                    </span>
+                  </div>
+                  <span className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                    {p.approvedAt || p.createdAt}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: 0 }}>
+                  {p.impact}
+                </p>
+              </div>
+            ))
+          )
         )}
       </div>
     </div>

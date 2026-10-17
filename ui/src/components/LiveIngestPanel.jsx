@@ -5,16 +5,12 @@ import {
   Zap, 
   ArrowRight, 
   CheckCircle2, 
-  Sparkles, 
   FileText, 
-  AlertTriangle, 
-  Send, 
+  RefreshCw, 
+  Cpu, 
   Layers, 
-  Clock, 
-  ShieldCheck,
-  RefreshCw,
-  TrendingUp,
-  Cpu
+  TrendingUp, 
+  ShieldCheck 
 } from 'lucide-react';
 
 export default function LiveIngestPanel({ 
@@ -26,8 +22,8 @@ export default function LiveIngestPanel({
     {
       id: 'sample-1',
       label: 'ADR-024: KEDA Autoscaling for AuthService',
-      badge: 'Triggers Staleness Ripple',
-      badgeColor: '#f59e0b',
+      badge: 'Staleness Ripple',
+      status: 'warn',
       doc: {
         id: 'doc_keda_autoscaling',
         title: 'ADR-024: Adopt KEDA Event-Driven Autoscaler for AuthService',
@@ -46,7 +42,7 @@ Consequences: Invalidates ADR-003 immediately. Updates production manifests in k
       id: 'sample-2',
       label: 'SEC-301: Deprecate RSA-2048 for Ed25519 Keys',
       badge: 'Security Policy',
-      badgeColor: '#06b6d4',
+      status: 'off',
       doc: {
         id: 'doc_sec_ed25519',
         title: 'SEC-301: Migration to Ed25519 Service Signing Keys',
@@ -64,7 +60,7 @@ Consequences: Deprecates all existing RSA-2048 public key rotation crons.`,
       id: 'sample-3',
       label: 'INFRA-405: Memory Limit Boost for AuthService',
       badge: 'Infrastructure',
-      badgeColor: '#a855f7',
+      status: 'off',
       doc: {
         id: 'doc_infra_mem_boost',
         title: 'INFRA-405: Double AuthService Pod Memory Allocation to 4Gi',
@@ -110,11 +106,11 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
       const res = await fetch('/api/graph/reset-demo', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        setResetMessage(data.message || 'Demo data successfully reset to baseline.');
+        setResetMessage(data.message || 'Demo data reset to baseline.');
         setIngestResult(null);
         setCurrentStep(0);
         if (onIngestSuccess) onIngestSuccess();
-        setTimeout(() => setResetMessage(null), 5000);
+        setTimeout(() => setResetMessage(null), 4000);
       }
     } catch (e) {
       console.error("Failed to reset demo data:", e);
@@ -129,8 +125,7 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
     setIngestResult(null);
 
     try {
-      // Simulate pipeline progression for rich visual feedback
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 500));
       setCurrentStep(2); // Step 2: Graph Link
 
       const payload = {
@@ -150,11 +145,11 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
         body: JSON.stringify(payload),
       });
 
-      await new Promise(r => setTimeout(r, 700));
+      await new Promise(r => setTimeout(r, 600));
       setCurrentStep(3); // Step 3: Staleness Ripple
 
       const data = await res.json();
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 400));
       setCurrentStep(4); // Done
 
       setIngestResult({
@@ -167,7 +162,7 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
             id: 'decision_hpa_auth',
             title: 'ADR-003: Horizontal Pod Autoscaler for AuthService',
             reason: `Superseded by newly ingested ${title}`,
-            proof_path: `${title} —[SUPERSEDES]→ ADR-003 (Previously Active & Healthy)`
+            proof_path: `${title} —[SUPERSEDES]→ ADR-003`
           }
         ],
         graph_events: [
@@ -180,7 +175,6 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
       if (onIngestSuccess) onIngestSuccess();
     } catch (e) {
       console.error(e);
-      // Fallback realistic simulation for visual demonstration
       setCurrentStep(4);
       setIngestResult({
         success: true,
@@ -192,7 +186,7 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
             id: 'decision_hpa_auth',
             title: 'ADR-003: Horizontal Pod Autoscaler for AuthService',
             reason: `Directly superseded by newly ingested ${title}`,
-            proof_path: `${title} —[SUPERSEDES]→ ADR-003 (Previously Active & Healthy)`
+            proof_path: `${title} —[SUPERSEDES]→ ADR-003`
           }
         ],
         graph_events: [
@@ -208,172 +202,129 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Top Description */}
-      <div className="glass-panel" style={{
-        padding: '1.25rem 1.5rem',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(7, 9, 14, 0.95))',
-        border: '1px solid rgba(6, 182, 212, 0.25)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-          <span style={{
-            fontSize: '0.7rem',
-            fontWeight: '700',
-            padding: '2px 8px',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(6, 182, 212, 0.15)',
-            color: '#22d3ee',
-            border: '1px solid rgba(6, 182, 212, 0.3)',
-          }}>
-            SIGNATURE FEATURE
-          </span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Real-Time Graph Ingestion & Staleness Ripple
-          </span>
+    <div style={{
+      maxWidth: '1080px',
+      margin: '0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.75rem',
+      paddingBottom: '3rem',
+    }}>
+      {/* Top Header */}
+      <div>
+        <div style={{
+          fontSize: '0.68rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'var(--muted)',
+          marginBottom: '0.35rem',
+        }}>
+          Interactive demo
         </div>
-        <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
+        <h1 style={{
+          fontSize: '1.5rem',
+          fontWeight: '600',
+          color: 'var(--text)',
+          letterSpacing: '-0.02em',
+        }}>
           Live Ingestion Studio
-        </h2>
-        <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.25rem', maxWidth: '800px', lineHeight: '1.5' }}>
-          Drop in a new architecture decision record (ADR) or technical specification. 
-          Watch Provenance extract entities, link them into FalkorDB, and compute the cascading staleness ripple across downstream production decisions.
+        </h1>
+        <p style={{
+          fontSize: '0.9rem',
+          color: 'var(--muted)',
+          marginTop: '0.35rem',
+          lineHeight: '1.5',
+        }}>
+          Ingest new architecture documents and compute the real-time staleness ripple across downstream production systems.
         </p>
 
-        {/* 1-Click Sample Selector & Demo Reset */}
+        {/* Sample selector & Reset */}
         <div style={{
-          marginTop: '1.1rem',
-          paddingTop: '0.9rem',
-          borderTop: '1px solid var(--border-subtle)',
+          marginTop: '0.9rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '0.75rem',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-              Load sample document:
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.45rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+              Load sample:
             </span>
             {samples.map((s) => (
               <button
                 key={s.id}
                 onClick={() => handleSelectSample(s)}
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  padding: '4px 10px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: selectedSample.id === s.id ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
-                  border: selectedSample.id === s.id ? '1px solid rgba(99, 102, 241, 0.6)' : '1px solid var(--border-subtle)',
-                  color: selectedSample.id === s.id ? '#ffffff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                }}
+                className={selectedSample.id === s.id ? 'btn-primary' : 'btn-ghost'}
+                style={{ fontSize: '0.75rem', padding: '3px 9px', borderRadius: 'var(--radius-full)' }}
               >
-                <span>{s.label}</span>
-                <span style={{
-                  fontSize: '0.62rem',
-                  padding: '1px 5px',
-                  borderRadius: '4px',
-                  background: `${s.badgeColor}20`,
-                  color: s.badgeColor,
-                }}>
-                  {s.badge}
-                </span>
+                {s.label}
               </button>
             ))}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {resetMessage && (
-              <span style={{
-                fontSize: '0.72rem',
-                color: '#34d399',
-                background: 'rgba(52, 211, 153, 0.1)',
-                border: '1px solid rgba(52, 211, 153, 0.3)',
-                padding: '3px 8px',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <CheckCircle2 size={12} />
+              <span className="chip-ok" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
                 {resetMessage}
               </span>
             )}
             <button
-              id="reset-demo-data-btn"
               onClick={handleResetDemo}
               disabled={isResetting || isProcessing}
-              title="Re-sync the FalkorDB graph to initial seed state so subsequent demos and benchmarks are reproducible"
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: '600',
-                padding: '4px 10px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(239, 68, 68, 0.12)',
-                border: '1px solid rgba(239, 68, 68, 0.35)',
-                color: '#f87171',
-                cursor: isResetting ? 'wait' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                transition: 'all 0.15s ease',
-              }}
+              className="btn-ghost"
+              style={{ fontSize: '0.75rem', padding: '3px 9px', color: 'var(--risk)' }}
             >
               <RefreshCw size={12} className={isResetting ? 'animate-spin' : ''} />
-              <span>{isResetting ? 'Resetting Baseline...' : 'Reset Demo Data'}</span>
+              <span>{isResetting ? 'Resetting...' : 'Reset demo'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Two-Column View: Editor on Left, Live Pipeline on Right */}
+      {/* Main Two-Column View */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1.1fr 1fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
         gap: '1.25rem',
-        alignItems: 'stretch',
+        alignItems: 'start',
       }}>
         {/* Left Column: Document Editor */}
-        <div className="glass-panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+        <div className="clean-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <FileText size={16} color="#38bdf8" />
-              <h3 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff' }}>
-                Document Payload
-              </h3>
-            </div>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-              Target: <code>company_brain</code> graph
+            <h2 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
+              Document Payload
+            </h2>
+            <span className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+              company_brain
             </span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div>
-              <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+              <label style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', marginBottom: '3px' }}>
                 Document ID
               </label>
               <input
                 type="text"
                 value={docId}
                 onChange={(e) => setDocId(e.target.value)}
+                className="font-mono"
                 style={{
                   width: '100%',
                   padding: '0.45rem 0.65rem',
                   borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#ffffff',
-                  fontSize: '0.75rem',
-                  fontFamily: 'monospace',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  fontSize: '0.78rem',
                 }}
               />
             </div>
+
             <div>
-              <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+              <label style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', marginBottom: '3px' }}>
                 Doc Type
               </label>
               <select
@@ -383,22 +334,22 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
                   width: '100%',
                   padding: '0.45rem 0.65rem',
                   borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#ffffff',
-                  fontSize: '0.75rem',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
+                  fontSize: '0.78rem',
                 }}
               >
-                <option value="adr">ADR (Architecture Record)</option>
-                <option value="spec">Technical Specification</option>
-                <option value="rfc">RFC (Request for Comments)</option>
-                <option value="incident">Incident Report</option>
+                <option value="adr">ADR</option>
+                <option value="spec">Specification</option>
+                <option value="rfc">RFC</option>
+                <option value="incident">Incident</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
+            <label style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', marginBottom: '3px' }}>
               Title
             </label>
             <input
@@ -409,55 +360,54 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
                 width: '100%',
                 padding: '0.45rem 0.65rem',
                 borderRadius: 'var(--radius-sm)',
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
-                fontSize: '0.8rem',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
+                fontSize: '0.82rem',
               }}
             />
           </div>
 
           <div>
-            <label style={{ fontSize: '0.7rem', color: '#f59e0b', display: 'block', marginBottom: '3px', fontWeight: '600' }}>
-              Supersedes Decision / Doc ID (Triggers Staleness Cascade)
+            <label style={{ fontSize: '0.72rem', color: 'var(--warn)', display: 'block', marginBottom: '3px', fontWeight: '500' }}>
+              Supersedes Decision ID
             </label>
             <input
               type="text"
               value={supersedesId}
               onChange={(e) => setSupersedesId(e.target.value)}
-              placeholder="e.g. decision_rate_limit_50"
+              placeholder="e.g. decision_hpa_auth"
+              className="font-mono"
               style={{
                 width: '100%',
                 padding: '0.45rem 0.65rem',
                 borderRadius: 'var(--radius-sm)',
-                background: 'rgba(245, 158, 11, 0.08)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
-                color: '#fbbf24',
-                fontSize: '0.75rem',
-                fontFamily: 'monospace',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--warn)',
+                fontSize: '0.78rem',
               }}
             />
           </div>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginBottom: '3px' }}>
-              Document Content
+          <div>
+            <label style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'block', marginBottom: '3px' }}>
+              Content
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={8}
+              rows={7}
+              className="font-mono"
               style={{
                 width: '100%',
-                flex: 1,
                 padding: '0.65rem',
                 borderRadius: 'var(--radius-sm)',
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid var(--border-subtle)',
-                color: '#e2e8f0',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
+                color: 'var(--text)',
                 fontSize: '0.75rem',
-                fontFamily: 'monospace',
-                lineHeight: '1.4',
+                lineHeight: '1.5',
                 resize: 'none',
               }}
             />
@@ -466,251 +416,210 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
           <button
             onClick={handleRunPipeline}
             disabled={isProcessing}
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              background: isProcessing ? 'rgba(99, 102, 241, 0.4)' : 'linear-gradient(135deg, #06b6d4, #6366f1)',
-              border: 'none',
-              color: '#ffffff',
-              fontSize: '0.85rem',
-              fontWeight: '700',
-              cursor: isProcessing ? 'wait' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 0 15px rgba(6, 182, 212, 0.3)',
-              marginTop: '0.5rem',
-            }}
+            className="btn-primary"
+            style={{ width: '100%', padding: '0.65rem', fontSize: '0.85rem', marginTop: '0.25rem' }}
           >
             {isProcessing ? (
               <>
-                <RefreshCw size={16} className="animate-spin" />
-                <span>Running Graph Pipeline...</span>
+                <RefreshCw size={14} className="animate-spin" />
+                <span>Running graph pipeline...</span>
               </>
             ) : (
               <>
-                <Zap size={16} />
+                <Zap size={14} />
                 <span>Ingest & Check Staleness Ripple</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Right Column: 3-Stage Pipeline & Before/After Staleness Visualizer */}
+        {/* Right Column: Execution Stepper & Results */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* 3-Step Live Pipeline Status */}
-          <div className="glass-panel" style={{ padding: '1.25rem' }}>
-            <h3 style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff', marginBottom: '0.85rem' }}>
-              Execution Pipeline Stages
-            </h3>
+          {/* Vertical Stepper */}
+          <div className="clean-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
+              Pipeline Stages
+            </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {/* Step 1 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {/* Stage 1 */}
               <div style={{
-                padding: '0.65rem 0.85rem',
-                borderRadius: 'var(--radius-sm)',
-                background: currentStep >= 1 ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255, 255, 255, 0.02)',
-                border: currentStep === 1 ? '1px solid #06b6d4' : currentStep > 1 ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                padding: '0.65rem 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <Cpu size={15} color={currentStep >= 1 ? '#22d3ee' : '#64748b'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <span style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: currentStep >= 1 ? 'var(--accent)' : 'var(--off)',
+                  }} />
                   <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: '700', color: currentStep >= 1 ? '#ffffff' : 'var(--text-muted)' }}>
-                      Stage 1: Extract Entities & Decisions
+                    <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'var(--text)' }}>
+                      1. Extract Entities & Decisions
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                      JSON schema extraction via Gemini API
+                    <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                      Structured JSON extraction with Gemini
                     </div>
                   </div>
                 </div>
                 {currentStep > 1 ? (
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color="var(--ok)" />
                 ) : currentStep === 1 ? (
-                  <span style={{ fontSize: '0.65rem', color: '#22d3ee', fontWeight: '700' }}>Active...</span>
+                  <RefreshCw size={14} className="animate-spin" color="var(--accent)" />
                 ) : null}
               </div>
 
-              {/* Step 2 */}
+              {/* Stage 2 */}
               <div style={{
-                padding: '0.65rem 0.85rem',
-                borderRadius: 'var(--radius-sm)',
-                background: currentStep >= 2 ? 'rgba(99, 102, 241, 0.12)' : 'rgba(255, 255, 255, 0.02)',
-                border: currentStep === 2 ? '1px solid #6366f1' : currentStep > 2 ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                padding: '0.65rem 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <Layers size={15} color={currentStep >= 2 ? '#818cf8' : '#64748b'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <span style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: currentStep >= 2 ? 'var(--accent)' : 'var(--off)',
+                  }} />
                   <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: '700', color: currentStep >= 2 ? '#ffffff' : 'var(--text-muted)' }}>
-                      Stage 2: Graph Upsert & SUPERSEDES Traversal
+                    <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'var(--text)' }}>
+                      2. Graph Upsert & Traversals
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                      FalkorDB MERGE with valid_from/valid_to edges
+                    <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                      FalkorDB MERGE with temporal validity intervals
                     </div>
                   </div>
                 </div>
                 {currentStep > 2 ? (
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color="var(--ok)" />
                 ) : currentStep === 2 ? (
-                  <span style={{ fontSize: '0.65rem', color: '#818cf8', fontWeight: '700' }}>Active...</span>
+                  <RefreshCw size={14} className="animate-spin" color="var(--accent)" />
                 ) : null}
               </div>
 
-              {/* Step 3 */}
+              {/* Stage 3 */}
               <div style={{
-                padding: '0.65rem 0.85rem',
-                borderRadius: 'var(--radius-sm)',
-                background: currentStep >= 3 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(255, 255, 255, 0.02)',
-                border: currentStep === 3 ? '1px solid #f59e0b' : currentStep > 3 ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                padding: '0.65rem 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <TrendingUp size={15} color={currentStep >= 3 ? '#f59e0b' : '#64748b'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <span style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: currentStep >= 3 ? 'var(--warn)' : 'var(--off)',
+                  }} />
                   <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: '700', color: currentStep >= 3 ? '#ffffff' : 'var(--text-muted)' }}>
-                      Stage 3: Staleness Ripple Propagation
+                    <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'var(--text)' }}>
+                      3. Staleness Ripple Propagation
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                      Detect downstream invalidated architectures
+                    <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                      Traverse SUPERSEDES to flag invalidated nodes
                     </div>
                   </div>
                 </div>
                 {currentStep >= 4 ? (
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color="var(--ok)" />
                 ) : currentStep === 3 ? (
-                  <span style={{ fontSize: '0.65rem', color: '#f59e0b', fontWeight: '700' }}>Evaluating...</span>
+                  <RefreshCw size={14} className="animate-spin" color="var(--warn)" />
                 ) : null}
               </div>
             </div>
           </div>
 
-          {/* Before & After Comparison Card */}
+          {/* Before & After Comparison */}
           {ingestResult ? (
-            <div className="glass-panel" style={{
-              padding: '1.25rem',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(15, 23, 42, 0.95))',
-              border: '1px solid rgba(245, 158, 11, 0.35)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.85rem',
-            }}>
+            <div className="clean-card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#f59e0b', textTransform: 'uppercase' }}>
-                  Staleness Ripple Impact (Before vs After)
+                <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text)' }}>
+                  Staleness Ripple Impact
                 </span>
-                <span style={{
-                  fontSize: '0.65rem',
-                  padding: '2px 7px',
-                  borderRadius: '4px',
-                  background: 'rgba(244, 63, 94, 0.2)',
-                  color: '#fb7185',
-                  fontWeight: '700',
-                }}>
-                  +2 Flagged Decisions
+                <span className="chip-warn" style={{ fontSize: '0.65rem' }}>
+                  +1 Alert Added
                 </span>
               </div>
 
-              {/* Large Before -> After metric counter */}
+              {/* Counts */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '1.5rem',
+                justifyContent: 'space-around',
                 padding: '0.75rem',
-                background: 'rgba(0, 0, 0, 0.3)',
+                background: 'var(--surface-2)',
                 borderRadius: 'var(--radius-sm)',
               }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>BEFORE INGEST</div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#94a3b8' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>Before Ingest</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '600', color: 'var(--text)' }}>
                     {ingestResult.stale_count_before} Stale
                   </div>
                 </div>
-                <ArrowRight size={22} color="#f59e0b" />
+                <ArrowRight size={18} color="var(--muted)" />
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#f59e0b', fontWeight: '700' }}>AFTER RIPPLE</div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#fb7185' }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--warn)' }}>After Ripple</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '600', color: 'var(--warn)' }}>
                     {ingestResult.stale_count_after} Stale
                   </div>
                 </div>
               </div>
 
-              {/* Newly Flagged Decision Path */}
-              <div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
-                  Newly invalidated production decision:
-                </div>
-                {ingestResult.flagged_decisions.map((fd, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      padding: '0.55rem 0.75rem',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'rgba(244, 63, 94, 0.08)',
-                      border: '1px solid rgba(244, 63, 94, 0.25)',
-                    }}
-                  >
-                    <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#ffffff' }}>
-                      {fd.title}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#f87171', marginTop: '2px' }}>
-                      {fd.reason}
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: '#38bdf8', fontFamily: 'monospace', marginTop: '4px' }}>
-                      ↳ {fd.proof_path}
-                    </div>
+              {/* Flagged decision */}
+              {ingestResult.flagged_decisions.map((fd, i) => (
+                <div key={i} style={{ padding: '0.6rem 0.8rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text)' }}>
+                    {fd.title}
                   </div>
-                ))}
-              </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--warn)', marginTop: '2px' }}>
+                    {fd.reason}
+                  </div>
+                  <div className="font-mono" style={{ fontSize: '0.68rem', color: 'var(--muted)', marginTop: '4px' }}>
+                    ↳ {fd.proof_path}
+                  </div>
+                </div>
+              ))}
 
-              {/* Action Button: Route to Approvals */}
               <button
                 onClick={onNavigateToApprovals}
-                style={{
-                  padding: '0.6rem 0.85rem',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(99, 102, 241, 0.2)',
-                  border: '1px solid rgba(99, 102, 241, 0.45)',
-                  color: '#ffffff',
-                  fontSize: '0.78rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.45rem',
-                }}
+                className="btn-primary"
+                style={{ width: '100%', padding: '0.55rem', fontSize: '0.78rem', gap: '5px' }}
               >
-                <ShieldCheck size={14} color="#818cf8" />
-                <span>Propose Notifications to Owners in Approvals Hub</span>
-                <ArrowRight size={13} />
+                <ShieldCheck size={13} />
+                <span>Open in Approvals Hub</span>
               </button>
             </div>
           ) : (
-            <div className="glass-panel" style={{
+            <div className="clean-card" style={{
               padding: '2rem 1.5rem',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.6rem',
-              color: 'var(--text-muted)',
+              gap: '0.5rem',
+              color: 'var(--muted)',
               textAlign: 'center',
             }}>
-              <Zap size={32} color="#64748b" />
-              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8' }}>
-                Ready to Ingest
+              <Zap size={24} color="var(--muted)" />
+              <div style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text)' }}>
+                Awaiting ingestion
               </div>
-              <p style={{ fontSize: '0.75rem', maxWidth: '320px' }}>
-                Click "Ingest & Check Staleness Ripple" on the left to see the graph react in real-time.
+              <p style={{ fontSize: '0.78rem', margin: 0 }}>
+                Click "Ingest & Check Staleness Ripple" to execute the pipeline.
               </p>
             </div>
           )}
