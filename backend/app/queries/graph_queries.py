@@ -350,9 +350,15 @@ def connection_path(node_a_id: str, node_b_id: str, graph_name: str = None) -> d
 # ─────────────────────────────────────────────────────────────────────────────
 AS_OF_DECISIONS_QUERY = """
 // Find decisions that were active on a specific date
+// NOTE (FalkorDB engine quirk, live-test 2026-10-17): a bare comparison
+// `d.valid_from <= $as_of_date` on this INDEXED property mis-evaluates in the
+// WHERE filter (matches every row) even though the identical boolean is
+// correct in a RETURN projection. Wrapping the property in coalesce() forces
+// the runtime string comparison and returns correct rows. Do not "simplify"
+// this back to the bare property comparison.
 MATCH (d:Decision)
-WHERE d.valid_from <= $as_of_date
-  AND (d.valid_to IS NULL OR d.valid_to >= $as_of_date)
+WHERE coalesce(d.valid_from, '') <= $as_of_date
+  AND (d.valid_to IS NULL OR coalesce(d.valid_to, '9999-12-31') >= $as_of_date)
   AND d.status <> 'draft'
 OPTIONAL MATCH (d)-[:AFFECTS]->(s:System)
 OPTIONAL MATCH (d)-[:MADE_BY]->(p:Person)
