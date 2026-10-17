@@ -490,7 +490,7 @@ OPTIONAL MATCH (d)-[:BASED_ON]->(doc:Document)
 OPTIONAL MATCH (succ:Decision)-[:SUPERSEDES]->(d)
 RETURN d, collect(DISTINCT s) as affected_systems, coalesce(m1, m2) as maker, collect(DISTINCT doc) as sources, succ
 ORDER BY d.valid_from DESC
-LIMIT 50
+LIMIT 1000
 """
 
 def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) -> dict:
