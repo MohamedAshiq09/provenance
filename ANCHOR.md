@@ -42,10 +42,19 @@
     - `backend/app/api/`: Added `/api/graph/changes-between`, `/api/graph/alerts`, `/api/graph/reset-demo`, and dynamic `workspace` query parameter resolution (`peps_brain` vs `company_brain`).
     - `ui/`: Full workspace parameter binding (`workspace={workspace}`) across `<Sidebar>` (fixed NaN nodes bug, Gemini 2.5-Flash badge), `<ChatPanel>` (PEPs scenario chips, clean decline card, real Cypher edge types in breadcrumbs, conditional staleness banner), `<TimeTravelSlider>` (historical PEP milestones 2000-2015 vs NovaTech 2024-2026, skeleton pulse loader), `<BrainHealthPanel>` (27 real PEP alerts, 745 proposals, 73 supersession chains, 356 authors), `<ApprovalsPanel>` (workspace-tailored governance actions), `<LiveIngestPanel>` (Reset Demo Data button with live FalkorDB re-sync), and `<BenchmarkPanel>` (reconciled 6 failure explanations matching category table, explicit 12/13 precision and 12/14 recall denominators, end-to-end latency profiling).
     - Verification: 66/66 pytest green (`uv run --directory backend pytest -v` in 153s); Next.js `bun run build` compiled in 2.3s with 0 errors; live probe on the 4 free-text questions verified: MongoDB cleanly declined with zero citations, authentication evolution traced 2025-2026 across 2 milestones with real Cypher edges, and mobile rate limit accurately distinguished as ACTIVE on 2026-10-01 and STALE on 2026-10-17.
+  - Minimalist Cairn-Inspired UI Pass (7 split atomic commits):
+    - 212a5a4 `ui: add Inter typography, zero-flash theme script, and light/dark CSS tokens` (`ui/src/app/globals.css`, `ui/src/app/layout.js`). Added Inter and JetBrains Mono typography, zero-flash head script, and CSS variables for light/dark themes.
+    - 7a30a0d `ui: redesign sidebar with workspace switcher, theme toggle, and clean main page layout` (`ui/src/components/Sidebar.jsx`, `ui/src/app/page.js`). Single-line nav items, tooltips, workspace dropdown at top, connection dot + model + sun/moon toggle in footer, collapsible graph drawer state.
+    - 4248fff `ui: implement centered reading column, prose answers, numbered citations, and collapsible graph in ChatPanel` (`ui/src/components/ChatPanel.jsx`, `ui/src/components/CitationModal.jsx`). Centered 740px reading column, prose markdown renderer, vertical changes timeline, numbered citations, collapsed Cypher query.
+    - 08ce114 `ui: restyle BrainHealthPanel and HandoffModal with neutral 1-card level, status dots, and pluralized alerts` (`ui/src/components/BrainHealthPanel.jsx`, `ui/src/components/HandoffPlanModal.jsx`). Neutral cards with big numbers and status dots, clean governance queue, pluralized alerts ("1 decision stale", "4 alerts").
+    - dcfa98a `ui: restyle Live Ingest pipeline stepper and Approvals hub with clean 1-card system` (`ui/src/components/LiveIngestPanel.jsx`, `ui/src/components/ApprovalsPanel.jsx`). Solid accent primary button, secondary ghost buttons, clean vertical stepper.
+    - bbbaadb `ui: make CytoscapeGraph canvas theme-aware with muted palette and compact TimeTravelSlider` (`ui/src/components/CytoscapeGraph.jsx`, `ui/src/components/TimeTravelSlider.jsx`). Canvas matches surface, non-path nodes dimmed to 15%, no glows/shadows, compact date scrubber.
+    - 9ac9fc5 `ui: update BenchmarkPanel and McpPanel with CSS variables and clean table layout` (`ui/src/components/BenchmarkPanel.jsx`, `ui/src/components/McpPanel.jsx`). Clean table layout with CSS variables and responsive styles.
+    - Verification: Next.js `bun run build` compiled in 2.6s (0 errors); 66/66 pytest green; browser subagent verified visual rendering across both light and dark modes and mobile viewport.
 
 ## (c) In progress right now
 
-- (none). All P0/P1 answer quality, workspace isolation, benchmark reconciliation, and UI coherence tickets verified and closed. Ready for git commit split and push.
+- (none). UI redesign pass completed and split into atomic commits. Ready to push.
 
 ## (g) Tickets filed 2026-10-17 (from live test — do in this order, no silent skips)
 
