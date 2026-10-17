@@ -7,8 +7,11 @@ Each query has a comment explaining:
 Rule: LLM never generates these queries at runtime. They are deterministic.
 """
 from app.core.db import get_graph
+from app.core.config import settings
+from app.core.llm import extract_json
 from datetime import datetime, timezone
 from typing import Optional, Any
+import uuid
 
 
 def _graph(graph_name: str = None):
@@ -704,6 +707,202 @@ def knowledge_gaps(graph_name: str = None) -> dict:
     }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# QUERY 14: Contradiction Candidates (review-gated, never auto-applied)
+# WHY GRAPH: Overlap between a new document and existing knowledge is found
+# by shared keyword + shared SYSTEM context (AFFECTS/BASED_ON traversal).
+# A candidate lives as a node so a reviewer must CONFIRM it before a
+# CONTRADICTS edge exists — nothing enters lineage without human action.
+# ─────────────────────────────────────────────────────────────────────────────
+CONTRADICTION_OVERLAP_QUERY = """
+// Per-keyword overlap: existing Docs/Decisions whose TITLE (the indexing
+// surface) contains a significant word from the new document. Content
+// matching is deliberately excluded — unstructured bodies match generic
+// words ('now', 'auth') and drown the review queue in noise.
+MATCH (existing) WHERE (existing:Document OR existing:Decision)
+  AND existing.id <> $new_doc_id
+  AND toLower(existing.title) CONTAINS toLower($keyword)
+  // lineage pairs (classic SUPERSEDES flow) are NOT contradictions
+  AND NOT (existing)-[:SUPERSEDES]->() AND NOT ()-[:SUPERSEDES]->(existing)
+RETURN existing
+ORDER BY CASE WHEN existing:Decision THEN 0 ELSE 1 END, existing.id
+LIMIT 8
+"""
+
+# Titles dominate: content matches pour in noise (every doc mentions "the").
+_CONTRA_STOPWORDS = {
+    "the", "and", "for", "with", "from", "that", "this", "use", "using",
+    "new", "again", "back", "into", "our", "was", "have", "has", "not",
+    "decision", "decisions", "system", "systems", "document", "doc",
+}
+
+def _contradiction_keywords(text: str, limit: int = 8) -> list:
+    """Significant words from a title/first-line for overlap candidacy."""
+    words = []
+    for w in (text or "").split()[:30]:
+        k = "".join(ch for ch in w.lower() if ch.isalnum())
+        if len(k) >= 3 and k not in _CONTRA_STOPWORDS and k not in words:
+            words.append(k)
+        if len(words) >= limit:
+            break
+    return words
+
+CONTRADICTION_CANDIDATES_QUERY = """
+// Unresolved contradiction candidates, newest first
+MATCH (c:ContradictionCandidate) WHERE c.status = 'candidate'
+OPTIONAL MATCH (c)-[:CANDIDATE_SOURCE]->(source) WHERE source:Document
+RETURN c, source ORDER BY c.detected_at DESC
+"""
+
+CONTRADICTION_CONFIRM_QUERY = """
+// Human confirms a candidate → create the CONTRADICTS edge (new doc → old
+// knowledge) with claim metadata. This is the ONLY path that creates it.
+MATCH (c:ContradictionCandidate {id: $candidate_id})
+WHERE c.status = 'candidate'
+MATCH (c)-[:CANDIDATE_SOURCE]->(source:Document)
+MATCH (c)-[:CANDIDATE_TARGET]->(target) WHERE target:Document OR target:Decision
+CREATE (source)-[r:CONTRADICTS {
+    claim: $claim,
+    valid_from: $now,
+    valid_to: null,
+    ingested_at: $now,
+    source_id: $candidate_id
+}]->(target)
+SET c.status = 'confirmed', c.confirmed_at = $now
+RETURN c, target, source, id(r) as edge_id
+"""
+
+
+def find_contradiction_candidates(new_doc_id: str, new_text: str = None,
+                                  graph_name: str = None) -> dict:
+    """
+    After ingesting a document, find existing knowledge that might contradict it.
+    GUARDED: writes ContradictionCandidate nodes for HUMAN review — never a
+    CONTRADICTS edge. The LLM (if configured) only labels an assessment
+    (contradicts/confirms/neutral); without keys the candidate stays
+    'unverified'. The reviewer decides via confirm_contradiction().
+
+    GRAPH NECESSITY: Overlap is keyword-containment against the existing
+    graph plus lineage exclusion (SUPERSEDES pairs are NOT contradictions) —
+    only a graph knows which pairs are already lineage.
+    """
+    g = _graph(graph_name)
+    now = datetime.now(timezone.utc).isoformat()
+    candidate_root = f"cc_{uuid.uuid4().hex[:8]}"
+
+    keywords = _contradiction_keywords((new_text or "").strip().split("\n")[0])
+
+    persisted = []
+    seen_ids = set()
+    for kw in keywords:
+        rows = g.query(CONTRADICTION_OVERLAP_QUERY, {"new_doc_id": new_doc_id, "keyword": kw}).result_set
+        for row in rows:
+            node = _node_to_dict(row[0])
+            target_id = node.get("id")
+            if not target_id or target_id in seen_ids:
+                continue
+            seen_ids.add(target_id)
+
+            # LLM label if configured; guarded fallback keeps 'unverified'
+            verdict, rationale = "unverified", "No LLM configured — human review required"
+            if settings.GEMINI_API_KEY or settings.OPENAI_API_KEY:
+                try:
+                    verdict_json = extract_json(
+                        f"NEW DOCUMENT:\n{(new_text or '')[:2000]}\n\n"
+                        f"EXISTING {'DECISION' if 'Decision' in node.get('_labels', []) else 'DOCUMENT'}:\n"
+                        f"title: {node.get('title')}\n"
+                        f"text: {(node.get('content') or node.get('rationale') or '')[:2000]}\n\n"
+                        "Does the new document CONTRADICT, CONFIRM, or NEUTRALLY mention the existing one? "
+                        'Return ONLY JSON: {"verdict": "contradicts|confirms|neutral", "reason": "one sentence"}',
+                        {"verdict": "string", "reason": "string"},
+                    )
+                    v = str(verdict_json.get("verdict", "")).lower()
+                    if v in ("contradicts", "confirms", "neutral"):
+                        verdict = v
+                        rationale = verdict_json.get("reason", "")
+                except Exception:
+                    pass  # guarded: LLM failure leaves the candidate unverified
+
+            cc_id = f"{candidate_root}_{target_id}"
+            g.query("""
+                MERGE (cc:ContradictionCandidate {id: $cc_id})
+                SET cc.status = 'candidate', cc.verdict = $verdict, cc.rationale = $rationale,
+                    cc.new_doc_id = $new_doc_id, cc.target_id = $target_id,
+                    cc.target_title = $target_title, cc.target_type = $target_type,
+                    cc.matched_keyword = $keyword, cc.detected_at = $now
+                WITH cc
+                MATCH (src:Document {id: $new_doc_id})
+                MERGE (cc)-[:CANDIDATE_SOURCE]->(src)
+                WITH cc
+                MATCH (t) WHERE t.id = $target_id AND (t:Document OR t:Decision)
+                MERGE (cc)-[:CANDIDATE_TARGET]->(t)
+            """, {"cc_id": cc_id, "verdict": verdict, "rationale": rationale,
+                  "new_doc_id": new_doc_id, "target_id": target_id,
+                  "target_title": node.get("title", ""),
+                  "target_type": "Decision" if "Decision" in node.get("_labels", []) else "Document",
+                  "keyword": kw, "now": now})
+            persisted.append({
+                "candidate_id": cc_id, "target_id": target_id,
+                "target_type": "Decision" if "Decision" in node.get("_labels", []) else "Document",
+                "target_title": node.get("title"), "matched_keyword": kw,
+                "verdict": verdict, "rationale": rationale,
+            })
+
+    return {
+        "new_doc_id": new_doc_id,
+        "candidate_root": candidate_root,
+        "candidates": persisted,
+        "candidate_count": len(persisted),
+    }
+
+
+def get_contradiction_candidates(graph_name: str = None) -> list:
+    """Unresolved contradiction candidates awaiting human review."""
+    g = _graph(graph_name)
+    result = g.query(CONTRADICTION_CANDIDATES_QUERY)
+    items = []
+    for row in result.result_set:
+        c = _node_to_dict(row[0])
+        c["source_doc"] = _node_to_dict(row[1]) if row[1] else None
+        items.append(c)
+    return items
+
+
+def confirm_contradiction(candidate_id: str, claim: str = None, graph_name: str = None) -> dict:
+    """
+    Human CONFIRMS a candidate → the CONTRADICTS edge is created (new doc →
+    old knowledge) — the ONLY graph path to this edge. The staleness radar
+    (detect_staleness) already traverses CONTRADICTS, so marking stale
+    happens on the existing flow, no new staleness logic.
+    """
+    g = _graph(graph_name)
+    now = datetime.now(timezone.utc).isoformat()
+    result = g.query(CONTRADICTION_CONFIRM_QUERY, {
+        "candidate_id": candidate_id,
+        "claim": claim or "Confirmed by reviewer",
+        "now": now,
+    })
+    if not result.result_set:
+        return {"error": f"Candidate '{candidate_id}' not found or already resolved"}
+
+    target = _node_to_dict(result.result_set[0][1])
+    source = _node_to_dict(result.result_set[0][2]) if result.result_set[0][2] else None
+
+    # Staleness radar reacts to the new CONTRADICTS edge via the source doc
+    stale = detect_staleness(source.get("id"), graph_name) if source else {}
+
+    return {
+        "status": "contradiction_confirmed",
+        "candidate": _node_to_dict(result.result_set[0][0]),
+        "target": target,
+        "source": source,
+        "edge_relationship": "CONTRADICTS",
+        "staleness_check": stale,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
