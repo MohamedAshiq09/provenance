@@ -16,6 +16,7 @@ from app.queries.graph_queries import (
     impact_of,
     decision_timeline,
     knowledge_gaps,
+    is_filler_title,
     find_contradiction_candidates,
     get_contradiction_candidates,
     confirm_contradiction,
@@ -196,15 +197,29 @@ def test_knowledge_gaps_structure():
         assert key in res and f"{key}_total" in res
     assert res["total_gaps"] == (
         res["docless_systems_total"] + res["evidenceless_decisions_total"]
-        + res["authorless_docs_total"] + res["unremediated_stale_total"]
+        + res["authorless_docs_total"] + res.get("authorless_docs_filler_total", 0)
+        + res["unremediated_stale_total"]
     )
 
 
 def test_knowledge_gaps_authorless_docs():
     """Seed data leaves most synthetic docs authorless (31 AUTHORED edges / 146 docs)."""
     res = knowledge_gaps()
-    assert res["authorless_docs_total"] >= 100
-    assert len(res["authorless_docs"]) <= 20  # capped sample
+    # T5: real unowned + bucketed filler must still account for every authorless doc
+    assert res["authorless_docs_total"] + res["authorless_docs_filler_total"] >= 100
+    assert res["authorless_docs_filler_total"] >= 100  # word-soup titles are bucketed
+    assert len(res["authorless_docs"]) <= 20  # capped REAL sample
+
+
+def test_is_filler_title():
+    """T5 heuristic: word-soup filler detected; structured/domain titles kept."""
+    assert is_filler_title("Court let analysis hair tough")
+    assert is_filler_title("Step today community name meet know")
+    assert not is_filler_title("ADR-001: Use JWT for stateless authentication")
+    assert not is_filler_title("Module: Garbage collection internals.")  # colon
+    assert not is_filler_title("PEP 1 – PEP Purpose and Guidelines")    # digits
+    assert not is_filler_title("Migrate AuthService to session tokens")  # domain vocab
+    assert not is_filler_title("")
 
 
 def test_ramp_plan_auth_service():
