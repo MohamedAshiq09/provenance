@@ -22,7 +22,8 @@ export default function Sidebar({
   dbStatus, 
   stats, 
   staleCount = 3,
-  pendingApprovalsCount = 3
+  pendingApprovalsCount = 3,
+  workspace = 'novatech'
 }) {
   const navItems = [
     { 
@@ -131,18 +132,20 @@ export default function Sidebar({
           justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-            <Building2 size={13} color="#94a3b8" />
-            <span style={{ fontSize: '0.72rem', fontWeight: '600', color: '#e2e8f0' }}>NovaTech Labs</span>
+            <Building2 size={13} color={workspace === 'peps' ? '#34d399' : '#94a3b8'} />
+            <span style={{ fontSize: '0.72rem', fontWeight: '600', color: '#e2e8f0' }}>
+              {workspace === 'peps' ? 'Python PEPs Standards' : 'NovaTech Labs'}
+            </span>
           </div>
           <span style={{
             fontSize: '0.62rem',
             padding: '1px 5px',
             borderRadius: '4px',
-            background: 'rgba(99, 102, 241, 0.2)',
-            color: '#a5b4fc',
+            background: workspace === 'peps' ? 'rgba(52, 211, 153, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+            color: workspace === 'peps' ? '#34d399' : '#a5b4fc',
             fontWeight: '600',
           }}>
-            Synthetic
+            {workspace === 'peps' ? 'Real World' : 'Synthetic'}
           </span>
         </div>
       </div>
@@ -273,7 +276,10 @@ export default function Sidebar({
               color: dbStatus === 'connected' ? '#34d399' : '#fbbf24',
               fontSize: '0.7rem' 
             }}>
-              {stats?.Person ? `${stats.Person + stats.Decision + stats.System + stats.Document} nodes` : 'Connected'}
+              {(() => {
+                const total = (stats?.Person || 0) + (stats?.Decision || 0) + (stats?.System || 0) + (stats?.Document || 0);
+                return total > 0 ? `${total.toLocaleString()} nodes` : 'Connected';
+              })()}
             </span>
           </div>
         </div>
@@ -298,7 +304,7 @@ export default function Sidebar({
             color: '#c7d2fe',
             fontWeight: '600',
           }}>
-            Gemini 2.0-Flash
+            Gemini 2.5-Flash
           </span>
         </div>
 

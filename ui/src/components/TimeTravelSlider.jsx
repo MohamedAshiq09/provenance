@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, History, Sparkles, Check, ChevronRight, Layers, FileCheck } from 'lucide-react';
 
-export default function TimeTravelSlider({ onDateChange }) {
-  const dates = [
+export default function TimeTravelSlider({ onDateChange, workspace = 'novatech' }) {
+  const novatechDates = [
     { 
       label: 'Jun 2024 (JWT Era)', 
       date: '2024-06-01', 
@@ -27,72 +27,57 @@ export default function TimeTravelSlider({ onDateChange }) {
     },
   ];
 
-  const baselineDecisions = {
-    '2024-06-01': [
-      { id: 'decision_use_jwt', title: 'ADR-001: Adopt Stateless JWT Tokens', status: 'active' },
-      { id: 'decision_postgres_billing', title: 'ADR-002: PostgreSQL for Billing', status: 'active' },
-      { id: 'decision_monolith_repo', title: 'ADR-000: Monorepo Architecture', status: 'active' },
-      { id: 'decision_rest_internal', title: 'ADR-006: REST for Internal RPC', status: 'active' }
-    ],
-    '2025-01-01': [
-      { id: 'decision_use_jwt', title: 'ADR-001: Adopt Stateless JWT Tokens (Flagged Drift)', status: 'active' },
-      { id: 'decision_postgres_billing', title: 'ADR-002: PostgreSQL for Billing', status: 'active' },
-      { id: 'decision_hpa_auth', title: 'ADR-003: Horizontal Pod Autoscaler for AuthService', status: 'active' },
-      { id: 'decision_rate_limit_mobile', title: 'ADR-004: Mobile Rate Limit 50 rps', status: 'active' },
-      { id: 'decision_monolith_repo', title: 'ADR-000: Monorepo Architecture', status: 'active' },
-      { id: 'decision_rest_internal', title: 'ADR-006: REST for Internal RPC', status: 'active' },
-      { id: 'decision_s3_storage', title: 'ADR-007: S3 Blob Storage', status: 'active' },
-      { id: 'decision_redis_session', title: 'ADR-008: Redis Session Cache', status: 'active' }
-    ],
-    '2025-08-01': [
-      { id: 'decision_opaque_tokens', title: 'ADR-002: Adopt Opaque Tokens (Supersedes JWT)', status: 'active' },
-      { id: 'decision_postgres_billing', title: 'ADR-002: PostgreSQL for Billing', status: 'active' },
-      { id: 'decision_hpa_auth', title: 'ADR-003: Horizontal Pod Autoscaler for AuthService', status: 'active' },
-      { id: 'decision_rate_limit_mobile', title: 'ADR-004: Mobile Rate Limit 50 rps', status: 'active' },
-      { id: 'decision_cockroach_billing', title: 'ADR-005: CockroachDB Multi-Region Billing', status: 'active' },
-      { id: 'decision_grpc_internal', title: 'ADR-009: gRPC for Service Mesh', status: 'active' },
-      { id: 'decision_s3_storage', title: 'ADR-007: S3 Blob Storage', status: 'active' }
-    ],
-    '2026-10-15': [
-      { id: 'decision_opaque_tokens', title: 'ADR-002: Adopt Opaque Tokens', status: 'active' },
-      { id: 'decision_cockroach_billing', title: 'ADR-005: CockroachDB for Multi-Region Billing', status: 'active' },
-      { id: 'decision_hpa_auth', title: 'ADR-003: Horizontal Pod Autoscaler for AuthService', status: 'active' },
-      { id: 'decision_rate_limit_200', title: 'ADR-021: Mobile Gateway Rate Limit 200 rps', status: 'active' },
-      { id: 'decision_grpc_internal', title: 'ADR-009: gRPC for Service Mesh', status: 'active' },
-      { id: 'decision_ed25519_certs', title: 'SEC-301: Ed25519 Signing Keys', status: 'active' }
-    ]
-  };
+  const pepsDates = [
+    {
+      label: 'May 2000 (DB-API 1.0)',
+      date: '2000-05-01',
+      desc: 'PEP 248 adopted: Python Database API Specification 1.0'
+    },
+    {
+      label: 'Apr 2001 (DB-API 2.0 Supersedes)',
+      date: '2001-04-12',
+      desc: 'PEP 249 adopted: Database API 2.0 supersedes PEP 248'
+    },
+    {
+      label: 'Apr 2005 (Metadata Standard)',
+      date: '2005-04-28',
+      desc: 'PEP 345 adopted: Core packaging metadata specification'
+    },
+    {
+      label: 'Sep 2015 (Type Hints Era)',
+      date: '2015-09-13',
+      desc: 'PEP 484 adopted: Type hints and static analysis specification'
+    },
+  ];
 
-  const baselineCounts = {
-    '2024-06-01': 4,
-    '2025-01-01': 8,
-    '2025-08-01': 14,
-    '2026-10-15': 20,
-  };
+  const dates = workspace === 'peps' ? pepsDates : novatechDates;
 
-  const [selectedIndex, setSelectedIndex] = useState(3);
-  const [activeDecisions, setActiveDecisions] = useState(baselineDecisions['2026-10-15']);
+  const [selectedIndex, setSelectedIndex] = useState(dates.length - 1);
+  const [activeDecisions, setActiveDecisions] = useState([]);
   const [isRevalidating, setIsRevalidating] = useState(false);
 
   useEffect(() => {
-    fetchDecisionsForDate(dates[selectedIndex].date);
+    // Reset to last milestone on workspace switch
+    const defaultIdx = dates.length - 1;
+    setSelectedIndex(defaultIdx);
+    fetchDecisionsForDate(dates[defaultIdx].date);
+  }, [workspace]);
+
+  useEffect(() => {
+    if (dates[selectedIndex]) {
+      fetchDecisionsForDate(dates[selectedIndex].date);
+    }
   }, [selectedIndex]);
 
   const fetchDecisionsForDate = async (dateStr) => {
     setIsRevalidating(true);
-    // Instant optimistic render from verified baseline
-    if (baselineDecisions[dateStr]) {
-      setActiveDecisions(baselineDecisions[dateStr]);
-    }
     try {
-      const res = await fetch(`/api/graph/as-of?date=${dateStr}`);
+      const res = await fetch(`/api/graph/as-of?date=${dateStr}&workspace=${workspace}`);
       if (res.ok) {
         const data = await res.json();
         const list = data.decisions || [];
-        if (list.length > 0) {
-          setActiveDecisions(list);
-          if (onDateChange) onDateChange(dateStr, list);
-        }
+        setActiveDecisions(list);
+        if (onDateChange) onDateChange(dateStr, list);
       }
     } catch (e) {
       console.warn("Time-travel as-of fetch background warning:", e);
@@ -112,10 +97,6 @@ export default function TimeTravelSlider({ onDateChange }) {
     if (d.id === 'decision_postgres_billing') return 'ADR-002: Postgres Billing';
     return d.id.replace(/^decision_/, '').replace(/_/g, ' ');
   };
-
-  const displayCount = activeDecisions.length > 0 
-    ? activeDecisions.length 
-    : (baselineCounts[dates[selectedIndex].date] || 20);
 
   return (
     <div className="glass-panel" style={{ padding: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -175,7 +156,18 @@ export default function TimeTravelSlider({ onDateChange }) {
             <span>Active decisions under temporal edge filters (valid_from ≤ date &lt; valid_to):</span>
           </span>
           <strong style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span>{displayCount} Active Decisions</span>
+            {isRevalidating && activeDecisions.length === 0 ? (
+              <span style={{
+                display: 'inline-block',
+                width: '110px',
+                height: '14px',
+                borderRadius: '4px',
+                background: 'rgba(52, 211, 153, 0.25)',
+                animation: 'pulse 1.5s infinite',
+              }} />
+            ) : (
+              <span>{activeDecisions.length} Active Decisions</span>
+            )}
             {isRevalidating && (
               <span style={{ 
                 fontSize: '0.62rem', 
@@ -192,7 +184,7 @@ export default function TimeTravelSlider({ onDateChange }) {
         </div>
 
         {/* Live decision tags active on this date */}
-        {activeDecisions.length > 0 && (
+        {activeDecisions.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.2rem' }}>
             {activeDecisions.slice(0, 5).map((d, i) => (
               <span
@@ -215,7 +207,13 @@ export default function TimeTravelSlider({ onDateChange }) {
               </span>
             )}
           </div>
-        )}
+        ) : isRevalidating ? (
+          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.2rem' }}>
+            <span style={{ width: '90px', height: '18px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)' }} />
+            <span style={{ width: '110px', height: '18px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)' }} />
+            <span style={{ width: '80px', height: '18px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)' }} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

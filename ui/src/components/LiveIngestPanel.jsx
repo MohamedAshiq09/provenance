@@ -19,7 +19,8 @@ import {
 
 export default function LiveIngestPanel({ 
   onIngestSuccess, 
-  onNavigateToApprovals 
+  onNavigateToApprovals,
+  workspace = 'novatech'
 }) {
   const samples = [
     {
@@ -88,6 +89,8 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0); // 0=idle, 1=extract, 2=link, 3=ripple, 4=done
   const [ingestResult, setIngestResult] = useState(null);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState(null);
 
   const handleSelectSample = (s) => {
     setSelectedSample(s);
@@ -98,6 +101,26 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
     setContent(s.doc.content);
     setIngestResult(null);
     setCurrentStep(0);
+  };
+
+  const handleResetDemo = async () => {
+    setIsResetting(true);
+    setResetMessage(null);
+    try {
+      const res = await fetch('/api/graph/reset-demo', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setResetMessage(data.message || 'Demo data successfully reset to baseline.');
+        setIngestResult(null);
+        setCurrentStep(0);
+        if (onIngestSuccess) onIngestSuccess();
+        setTimeout(() => setResetMessage(null), 5000);
+      }
+    } catch (e) {
+      console.error("Failed to reset demo data:", e);
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleRunPipeline = async () => {
@@ -216,49 +239,94 @@ Decision: Increase pod memory limit from 2Gi to 4Gi in production k8s manifests 
           Watch Provenance extract entities, link them into FalkorDB, and compute the cascading staleness ripple across downstream production decisions.
         </p>
 
-        {/* 1-Click Sample Selector */}
+        {/* 1-Click Sample Selector & Demo Reset */}
         <div style={{
           marginTop: '1.1rem',
           paddingTop: '0.9rem',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '0.5rem',
+          gap: '0.75rem',
         }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-            Load sample document:
-          </span>
-          {samples.map((s) => (
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+              Load sample document:
+            </span>
+            {samples.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => handleSelectSample(s)}
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: selectedSample.id === s.id ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                  border: selectedSample.id === s.id ? '1px solid rgba(99, 102, 241, 0.6)' : '1px solid var(--border-subtle)',
+                  color: selectedSample.id === s.id ? '#ffffff' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+              >
+                <span>{s.label}</span>
+                <span style={{
+                  fontSize: '0.62rem',
+                  padding: '1px 5px',
+                  borderRadius: '4px',
+                  background: `${s.badgeColor}20`,
+                  color: s.badgeColor,
+                }}>
+                  {s.badge}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {resetMessage && (
+              <span style={{
+                fontSize: '0.72rem',
+                color: '#34d399',
+                background: 'rgba(52, 211, 153, 0.1)',
+                border: '1px solid rgba(52, 211, 153, 0.3)',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <CheckCircle2 size={12} />
+                {resetMessage}
+              </span>
+            )}
             <button
-              key={s.id}
-              onClick={() => handleSelectSample(s)}
+              id="reset-demo-data-btn"
+              onClick={handleResetDemo}
+              disabled={isResetting || isProcessing}
+              title="Re-sync the FalkorDB graph to initial seed state so subsequent demos and benchmarks are reproducible"
               style={{
                 fontSize: '0.75rem',
                 fontWeight: '600',
                 padding: '4px 10px',
                 borderRadius: 'var(--radius-sm)',
-                background: selectedSample.id === s.id ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
-                border: selectedSample.id === s.id ? '1px solid rgba(99, 102, 241, 0.6)' : '1px solid var(--border-subtle)',
-                color: selectedSample.id === s.id ? '#ffffff' : 'var(--text-secondary)',
-                cursor: 'pointer',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                color: '#f87171',
+                cursor: isResetting ? 'wait' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
+                transition: 'all 0.15s ease',
               }}
             >
-              <span>{s.label}</span>
-              <span style={{
-                fontSize: '0.62rem',
-                padding: '1px 5px',
-                borderRadius: '4px',
-                background: `${s.badgeColor}20`,
-                color: s.badgeColor,
-              }}>
-                {s.badge}
-              </span>
+              <RefreshCw size={12} className={isResetting ? 'animate-spin' : ''} />
+              <span>{isResetting ? 'Resetting Baseline...' : 'Reset Demo Data'}</span>
             </button>
-          ))}
+          </div>
         </div>
       </div>
 

@@ -23,16 +23,17 @@ export default function BrainHealthPanel({
   onAskQuestion,
   onOpenHandoff,
   onProposeRemediation,
-  staleDecisions = []
+  staleDecisions = [],
+  workspace = 'novatech'
 }) {
   const [selectedProof, setSelectedProof] = useState(null);
 
-  // Health metric counters
-  const metrics = [
+  // Health metric counters for NovaTech (Synthetic)
+  const novatechMetrics = [
     {
       id: 'stale',
       label: 'Stale Decisions',
-      count: 3,
+      count: staleDecisions.length || 3,
       unit: 'active decisions superseded',
       status: 'warning',
       color: '#f59e0b',
@@ -103,8 +104,86 @@ export default function BrainHealthPanel({
     },
   ];
 
-  // Needs Attention items
-  const attentionItems = [
+  // Real Architectural Alerts for Python PEPs (Public Data)
+  const pepsMetrics = [
+    {
+      id: 'pep_alerts',
+      label: 'Active Proposals on Retired PEPs',
+      count: 27,
+      unit: 'genuine architectural alerts',
+      status: 'warning',
+      color: '#f59e0b',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      border: 'rgba(245, 158, 11, 0.25)',
+      icon: AlertTriangle,
+      description: 'Active or Accepted proposals that depend on or supersede a Superseded, Withdrawn, or Rejected proposal',
+      proof: {
+        title: 'PEP 387: Backwards Compatibility Policy',
+        path: 'PEP 387 (Active) —[SUPERSEDES]→ PEP 5 (Superseded)',
+        impact: 'Tooling still citing legacy PEP 5 guidelines must be updated to PEP 387',
+        actionQuestion: 'What is the backwards compatibility policy for Python?'
+      }
+    },
+    {
+      id: 'pep_total',
+      label: 'Architectural Proposals',
+      count: 745,
+      unit: 'proposals evaluated',
+      status: 'neutral',
+      color: '#34d399',
+      bg: 'rgba(52, 211, 153, 0.1)',
+      border: 'rgba(52, 211, 153, 0.25)',
+      icon: FileText,
+      description: 'Complete Python Enhancement Proposal archive from peps.python.org',
+      proof: {
+        title: 'Python Enhancement Proposal Corpus',
+        path: 'PEP 1 (Active) —[GOVERNS]→ 745 Architectural Standards',
+        impact: 'Covers core language syntax, library APIs, and packaging infrastructure',
+        actionQuestion: 'What is the backwards compatibility policy for Python?'
+      }
+    },
+    {
+      id: 'pep_chains',
+      label: 'Supersession Chains',
+      count: 73,
+      unit: 'generational standard links',
+      status: 'neutral',
+      color: '#a855f7',
+      bg: 'rgba(168, 85, 247, 0.1)',
+      border: 'rgba(168, 85, 247, 0.25)',
+      icon: ArrowRight,
+      description: 'Multi-generational standards lineages across 25 years of Python evolution',
+      proof: {
+        title: 'Database API Standards Lineage',
+        path: 'PEP 248 (DB-API 1.0) ←[SUPERSEDES]— PEP 249 (DB-API 2.0)',
+        impact: 'PEP 249 remains the authoritative database connector contract',
+        actionQuestion: 'Which PEP replaced PEP 248?'
+      }
+    },
+    {
+      id: 'pep_authors',
+      label: 'Core Authors & Champions',
+      count: 356,
+      unit: 'unique authors in graph',
+      status: 'neutral',
+      color: '#38bdf8',
+      bg: 'rgba(56, 189, 248, 0.1)',
+      border: 'rgba(56, 189, 248, 0.25)',
+      icon: Users,
+      description: 'Python core authors connected via AUTHORED and AFFECTS edges',
+      proof: {
+        title: 'Guido van Rossum (BDFL / Core Author)',
+        path: 'Guido van Rossum —[AUTHORED]→ PEP 484 Type Hints',
+        impact: 'Highest centrality across core language typing proposals',
+        actionQuestion: 'Who authored PEP 484 Type Hints?'
+      }
+    },
+  ];
+
+  const metrics = workspace === 'peps' ? pepsMetrics : novatechMetrics;
+
+  // Needs Attention items for NovaTech
+  const novatechAttention = [
     {
       id: 'item-1',
       title: 'Mobile Rate Limit Decision Stale',
@@ -155,6 +234,60 @@ export default function BrainHealthPanel({
       query: 'What is the true origin of the HPA autoscaling decision in AuthService?'
     }
   ];
+
+  // Needs Attention items for Python PEPs
+  const pepsAttention = [
+    {
+      id: 'pep-item-1',
+      title: 'PEP 248 Database API 1.0 Superseded by PEP 249',
+      badge: 'Superseded Standard',
+      badgeColor: '#f59e0b',
+      summary: 'PEP 249 replaced PEP 248 to standardize 2.0 connection pool behavior, cursor execution methods, and standard type codes.',
+      proofPath: 'PEP 249 (Accepted) —[SUPERSEDES]→ PEP 248 (Superseded)',
+      impact: 'Any database drivers or connectors still referencing DB-API 1.0 specifications are deprecated.',
+      actionLabel: 'Trace Supersession',
+      actionType: 'query',
+      query: 'Which PEP replaced PEP 248?'
+    },
+    {
+      id: 'pep-item-2',
+      title: 'PEP 387 Backwards Compatibility Policy Replaced PEP 5',
+      badge: 'Active Policy Alert (27 Alerts Total)',
+      badgeColor: '#f43f5e',
+      summary: 'PEP 387 provides the active rules for changing APIs, deprecation warning cycles, and breaking change governance, replacing PEP 5.',
+      proofPath: 'PEP 387 (Active) —[SUPERSEDES]→ PEP 5 (Superseded)',
+      impact: 'Standard library changes must provide a 2-release deprecation warning before removing any interface.',
+      actionLabel: 'Inspect Policy',
+      actionType: 'query',
+      query: 'What is the backwards compatibility policy for Python?'
+    },
+    {
+      id: 'pep-item-3',
+      title: 'Packaging Metadata Evolution: PEP 241 → 314 → 345 → 566',
+      badge: 'Specification Lineage',
+      badgeColor: '#a855f7',
+      summary: 'Core Python packaging metadata transitioned from basic title/version in 2001 to rich dependencies and environment markers.',
+      proofPath: 'PEP 241 (Metadata 1.0) → PEP 314 (1.1) → PEP 345 (1.2) → PEP 566 (2.1)',
+      impact: 'Build backends (flit, hatch, setuptools) must output metadata 1.2+ compliant PKG-INFO.',
+      actionLabel: 'Trace Lineage',
+      actionType: 'query',
+      query: 'What changed in packaging metadata between 2001 and 2015?'
+    },
+    {
+      id: 'pep-item-4',
+      title: 'PEP 484 Type Hints Author Centrality',
+      badge: 'Author Centrality',
+      badgeColor: '#38bdf8',
+      summary: 'Authored by Guido van Rossum, Jukka Lehtosalo, and Lukasz Langa to define static type annotations for Python 3.5.',
+      proofPath: 'Guido van Rossum —[AUTHORED]→ PEP 484 (Accepted)',
+      impact: 'Foundational standard for Python type checkers (mypy, pyright, pyre).',
+      actionLabel: 'View Author',
+      actionType: 'query',
+      query: 'Who authored PEP 484 Type Hints?'
+    }
+  ];
+
+  const attentionItems = workspace === 'peps' ? pepsAttention : novatechAttention;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -226,50 +359,99 @@ export default function BrainHealthPanel({
           gap: '0.5rem',
         }}>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Flame size={13} color="#f43f5e" /> Try a scenario (synthetic company):
+            <Flame size={13} color="#f43f5e" /> {workspace === 'peps' ? 'Try a scenario (Python PEPs Real Data):' : 'Try a scenario (NovaTech Labs):'}
           </span>
-          <button
-            onClick={() => onNavigateToTab('ingest')}
-            style={{
-              fontSize: '0.75rem',
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: '#e2e8f0',
-              cursor: 'pointer',
-            }}
-          >
-            ⚡ A doc just changed (Live Ingest)
-          </button>
-          <button
-            onClick={() => onAskQuestion('What happens if Priya leaves the company?')}
-            style={{
-              fontSize: '0.75rem',
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: '#e2e8f0',
-              cursor: 'pointer',
-            }}
-          >
-            👤 Someone leaves (Bus Factor & Handoff)
-          </button>
-          <button
-            onClick={() => onAskQuestion('Why did we decide to use opaque tokens instead of JWT?')}
-            style={{
-              fontSize: '0.75rem',
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--border-subtle)',
-              color: '#e2e8f0',
-              cursor: 'pointer',
-            }}
-          >
-            🔍 Why did we decide this? (3-Hop Origin)
-          </button>
+          {workspace === 'peps' ? (
+            <>
+              <button
+                onClick={() => onAskQuestion('Which PEP replaced PEP 248?')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(52, 211, 153, 0.1)',
+                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                  color: '#6ee7b7',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 PEP 248 → PEP 249 Supersession
+              </button>
+              <button
+                onClick={() => onAskQuestion('Who authored PEP 484 Type Hints?')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38bdf8',
+                  cursor: 'pointer',
+                }}
+              >
+                👤 Guido van Rossum (Author Centrality)
+              </button>
+              <button
+                onClick={() => onAskQuestion('What changed in packaging metadata between 2001 and 2015?')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(168, 85, 247, 0.1)',
+                  border: '1px solid rgba(168, 85, 247, 0.3)',
+                  color: '#c084fc',
+                  cursor: 'pointer',
+                }}
+              >
+                ⏳ Packaging Lineage Over Time
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onNavigateToTab('ingest')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border-subtle)',
+                  color: '#e2e8f0',
+                  cursor: 'pointer',
+                }}
+              >
+                ⚡ A doc just changed (Live Ingest)
+              </button>
+              <button
+                onClick={() => onAskQuestion('What happens if Priya leaves the company?')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border-subtle)',
+                  color: '#e2e8f0',
+                  cursor: 'pointer',
+                }}
+              >
+                👤 Someone leaves (Bus Factor & Handoff)
+              </button>
+              <button
+                onClick={() => onAskQuestion('Why did we decide to use opaque tokens instead of JWT?')}
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border-subtle)',
+                  color: '#e2e8f0',
+                  cursor: 'pointer',
+                }}
+              >
+                🔍 Why did we decide this? (3-Hop Origin)
+              </button>
+            </>
+          )}
         </div>
       </div>
 

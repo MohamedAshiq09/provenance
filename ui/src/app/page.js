@@ -139,8 +139,9 @@ export default function Home() {
         setActiveTab={setActiveTab}
         dbStatus={dbStatus}
         stats={stats}
-        staleCount={staleDecisions.length || 3}
+        staleCount={staleDecisions.length || (workspace === 'peps' ? 27 : 3)}
         pendingApprovalsCount={pendingApprovalsCount}
+        workspace={workspace}
       />
 
       {/* Main Workspace Column */}
@@ -328,6 +329,7 @@ export default function Home() {
               onOpenHandoff={(engineer, system) => setHandoffModalData({ engineer, system })}
               onProposeRemediation={(item) => setActiveTab('approvals')}
               staleDecisions={staleDecisions}
+              workspace={workspace}
             />
           )}
 
@@ -347,6 +349,7 @@ export default function Home() {
                   onSelectPathNode={(nodeId) => setHighlightNodeId(nodeId)}
                   onOpenHandoff={(eng, sys) => setHandoffModalData({ engineer: eng, system: sys })}
                   onProposeRemediation={() => setActiveTab('approvals')}
+                  workspace={workspace}
                 />
               </div>
 
@@ -360,6 +363,7 @@ export default function Home() {
                   onDateChange={(date) => {
                     console.log("Scrubbed to:", date);
                   }}
+                  workspace={workspace}
                 />
               </div>
             </div>
@@ -374,6 +378,7 @@ export default function Home() {
                 setPendingApprovalsCount(p => p + 1);
               }}
               onNavigateToApprovals={() => setActiveTab('approvals')}
+              workspace={workspace}
             />
           )}
 
@@ -384,6 +389,7 @@ export default function Home() {
                 fetchStale();
                 setPendingApprovalsCount(p => Math.max(0, p - 1));
               }}
+              workspace={workspace}
             />
           )}
 
@@ -401,6 +407,7 @@ export default function Home() {
                 onDateChange={(date) => {
                   console.log("Scrubbed to:", date);
                 }}
+                workspace={workspace}
               />
             </div>
           )}
@@ -456,7 +463,7 @@ export default function Home() {
               </div>
 
               {underTheHoodSubTab === 'benchmark' ? (
-                <BenchmarkPanel />
+                <BenchmarkPanel workspace={workspace} />
               ) : (
                 <McpPanel />
               )}

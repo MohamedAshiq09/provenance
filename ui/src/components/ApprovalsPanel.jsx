@@ -16,8 +16,8 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function ApprovalsPanel({ onActionCompleted }) {
-  const [proposals, setProposals] = useState([
+export default function ApprovalsPanel({ onActionCompleted, workspace = 'novatech' }) {
+  const novatechProposals = [
     {
       id: 'prop-101',
       type: 'stale_remediation',
@@ -84,7 +84,64 @@ export default function ApprovalsPanel({ onActionCompleted }) {
       approvedAt: '2026-10-15 11:30 UTC',
       approvedBy: 'Alex Rivera (VP Eng)',
     }
-  ]);
+  ];
+
+  const pepsProposals = [
+    {
+      id: 'pep-prop-201',
+      type: 'stale_remediation',
+      title: 'Supersession Alignment: PEP 3105 superseded by PEP 3112',
+      target: 'PEP 3105: Make print a function (Superseded)',
+      proposedBy: 'Python Language Summit / Steering Council',
+      createdAt: '2006-11-05 10:00 UTC',
+      status: 'pending',
+      impact: 'Updates Py3k standard library semantics and marks PEP 3105 status as historical.',
+      actions: [
+        'Mark PEP 3105 status = SUPERSEDED in FalkorDB',
+        'Add link [SUPERSEDES] from PEP 3112 to PEP 3105',
+        'Verify standard library tests against Python 3.0 specification'
+      ],
+      idempotencyKey: 'idem_pep_3105_supersession',
+    },
+    {
+      id: 'pep-prop-202',
+      type: 'bus_factor_handoff',
+      title: 'Governance Handoff: PEP 572 Assignment Expressions Steering Council Escalation',
+      target: 'PEP 572 (BDFL Retirement & Steering Council Formation)',
+      proposedBy: 'Guido van Rossum (BDFL Emeritus)',
+      createdAt: '2018-07-12 18:00 UTC',
+      status: 'pending',
+      impact: 'Transfers final decision authority on syntax proposals to 5-member elected Steering Council.',
+      actions: [
+        'Enact PEP 13 (Python Language Governance Model)',
+        'Create GOVERNS edges in FalkorDB from Steering Council members to core Python systems',
+        'Publish ratified PEP 572 specification'
+      ],
+      idempotencyKey: 'idem_pep_572_governance',
+    },
+    {
+      id: 'pep-prop-203',
+      type: 'contradiction_review',
+      title: 'Dependency Audit: PEP 484 Type Hints referencing retired PEP 3107 Function Annotations',
+      target: 'PEP 484 (Type Hints) vs PEP 3107 (Function Annotations)',
+      proposedBy: 'Python Typing SIG (Autonomous Auditor)',
+      createdAt: '2015-05-20 12:00 UTC',
+      status: 'pending',
+      impact: 'Ensures type hint grammar preserves runtime annotation semantics while extending static analysis.',
+      actions: [
+        'Validate syntax backward-compatibility across Python 3.5 runtime',
+        'Link PEP 484 -[EXTENDS]-> PEP 3107 in knowledge graph',
+        'Ratify typing module in Python standard library'
+      ],
+      idempotencyKey: 'idem_pep_typing_grammar_audit',
+    }
+  ];
+
+  const [proposals, setProposals] = useState(workspace === 'peps' ? pepsProposals : novatechProposals);
+
+  React.useEffect(() => {
+    setProposals(workspace === 'peps' ? pepsProposals : novatechProposals);
+  }, [workspace]);
 
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'audit'
   const [successToast, setSuccessToast] = useState(null);
