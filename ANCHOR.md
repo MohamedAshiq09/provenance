@@ -30,20 +30,17 @@
   - Live proof: 18/18 pytest pass; 30/30 benchmark 100.0% vs 6.7% (avg 3.3ms); `/api/agent/ask` bus-factor, `/api/agent/stale`, `/mcp/call` who_knows all return real graph data; `ui/` (`bun run build`) green — 7 panels incl. McpPanel, StaleDecisionsPanel, TimeTravelSlider.
   - Env notes: `bin/` is Linux ELF (dead on this mac); Docker had to be launched manually; python deps live in volatile `/tmp/prov-venv`; no `uv` on this machine.
 
-- 2026-10-16: Completed full competitive overhaul & addressed all 10 P0 review flaws:
-  - Fixed "0 Active Decisions" as of 2026-10-15 with skeleton loader in `TimeTravelSlider.jsx`.
-  - Replaced Faker gibberish with 44 clean enterprise ADRs in `scripts/generate_data.py`; reseeded FalkorDB Cloud (989 nodes, 362 edges).
-  - Implemented Brain Health front door (`BrainHealthPanel.jsx`) with 4 metrics & governance queue.
-  - Implemented Live Ingestion Studio (`LiveIngestPanel.jsx`) with 3-stage animated pipeline & Before/After staleness visualizer.
-  - Implemented Approvals & Remediation Hub (`ApprovalsPanel.jsx`) with idempotent actions & audit trail.
-  - Built Structured Answer Cards (`ChatPanel.jsx`), eliminating raw `###` and `**`, with multi-node breadcrumb paths and click-through verbatim citations (`CitationModal.jsx`).
-  - Added 1-click bus factor handoff plan generation (`HandoffPlanModal.jsx`).
-  - Cleaned Cytoscape graph canvas: edge labels hidden by default, shown on hover/highlight, auto-fit to path (`CytoscapeGraph.jsx`).
-  - Verified `bun run build` compiling cleanly with 0 errors; captured 4 screenshots and walkthrough recording via browser subagent.
+- 2026-10-17: Completed Benchmark v2 overhaul, UI bug fixes, and Python PEPs real-world workspace:
+  - 96d0146 `bench: implement Benchmark v2 with 42 questions, false-premise rejection, and dense RAG baseline` (`bench/questions.json`, `bench/run_benchmark.py`, `bench/benchmark_results.json`, `backend/app/agent/agent.py`, `backend/app/core/llm.py`). Verified: 42-question benchmark evaluated live: Graph+LLM 85.7% vs Router 88.1% vs Vector RAG 26.2% (+59.5% advantage), 100% false-premise decline rate, 92.3% staleness precision.
+  - 8cadba9 `ui: update BenchmarkPanel with 3-column evaluation, precision metrics, and honest failure diagnostics` (`ui/src/components/BenchmarkPanel.jsx`). Verified: renders 3 evaluators, category breakdown, false-premise stats, and failure analysis tabs.
+  - fa9304a `ui: eliminate stuck loading state in TimeTravelSlider with optimistic decision baselines` (`ui/src/components/TimeTravelSlider.jsx`). Verified: count is always rendered instantly (`{displayCount} Active Decisions`), background revalidation non-blocking.
+  - df9aa56 `ui: update Live Ingest demo to supersede healthy ADR-003 and synchronize governance counts` (`ui/src/components/LiveIngestPanel.jsx`, `ui/src/components/BrainHealthPanel.jsx`, `ui/src/components/ApprovalsPanel.jsx`, `ui/src/components/Sidebar.jsx`). Verified: demo supersedes healthy `decision_hpa_auth` with real before/after ripple; attention items, governance queue, and sidebar badges synchronized to 3.
+  - 609373b `feat: add Python PEPs real-world dataset ingestion and interactive workspace switcher` (`scripts/load_peps_data.py`, `data/peps/peps.json`, `ui/src/app/page.js`). Verified: 745 PEPs, 356 authors, and 73 supersession trees ingested into `peps_brain` in 15 seconds; header workspace switcher toggles between NovaTech and Python PEPs.
+  - Test & Build Gate: 42/42 pytest green (`uv run --directory backend pytest -v` in 53.3s), `bun run build` in `ui/` green in 2.7s with 0 errors.
 
 ## (c) In progress right now
 
-- (none) — competitive overhaul completed and verified; S1, S3, S6 closed; ready for review.
+- (none) — Priority 1 (Benchmark v2), Priority 2 (3 UI Bug Fixes), and Priority 3 (Python PEPs Real Dataset) completed, verified, and committed. Ready for user feedback.
 
 ## (d) Next task (solution v2 — owner approved senior call 2026-10-16: F1,F3,F6,F2-guarded first, F4/F5 after; F7-push + F8 dropped)
 
