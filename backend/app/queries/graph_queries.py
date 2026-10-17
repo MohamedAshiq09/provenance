@@ -1000,6 +1000,102 @@ def ramp_plan(system_name: str, graph_name: str = None) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# QUERY 16: Team Risk ("which teams are one resignation away from outage?")
+# WHY GRAPH: Sole-expert systems require counting DISTINCT other PEOPLE per
+# WORKED_ON edge — a centrality-over-people pattern, not a text search. Team
+# risk aggregates two edge families (MEMBER_OF x WORKED_ON, MEMBER_OF x
+# MADE_BY) that only exist as typed relationships.
+# ─────────────────────────────────────────────────────────────────────────────
+TEAM_MEMBER_DECISIONS_QUERY = """
+// Per team member: decisions made / active / stale
+MATCH (t:Team)
+OPTIONAL MATCH (p:Person)-[:MEMBER_OF]->(t)
+OPTIONAL MATCH (d:Decision)-[:MADE_BY]->(p)
+WITH t, p,
+     count(DISTINCT d) as made,
+     count(DISTINCT CASE WHEN d.status <> 'superseded' THEN d END) as active,
+     count(DISTINCT CASE WHEN d.stale = true THEN d END) as stale_made
+RETURN t, p, made, active, stale_made
+"""
+
+TEAM_SOLE_SYSTEMS_QUERY = """
+// Systems where a team member is the ONLY person still WORKED_ON
+MATCH (t:Team)<-[:MEMBER_OF]-(p:Person)-[:WORKED_ON]->(s:System)
+OPTIONAL MATCH (other:Person)-[:WORKED_ON]->(s) WHERE other <> p
+WITH t, p, s, count(DISTINCT other) as others
+WHERE others = 0
+WITH t, s, collect(DISTINCT p) as sole_experts
+WITH t, collect(
+    {system: s.name, sole_experts: [e IN sole_experts | e.name]}
+) as sole_list
+RETURN t, sole_list
+"""
+
+
+def team_risk(graph_name: str = None) -> dict:
+    """
+    Per-team risk posture: members with their decision load, systems only
+    the team (single person!) keeps working, and stale decision counts.
+
+    GRAPH NECESSITY: sole-expert detection = "count the OTHER people on each
+    WORKED_ON edge" — only the graph holds that multiplicity.
+    """
+    g = _graph(graph_name)
+
+    members_by_team = {}
+    for row in g.query(TEAM_MEMBER_DECISIONS_QUERY).result_set:
+        team = _node_to_dict(row[0])
+        tid = team.get("name") or team.get("id")
+        if not tid:
+            continue
+        p = _node_to_dict(row[1])
+        if p.get("id"):
+            members_by_team.setdefault(tid, {"team": team, "members": {}, "sole": []})
+            members_by_team[tid]["members"][p["id"]] = {
+                "person": p, "made": row[2], "active": row[3], "stale": row[4],
+            }
+    for tid in members_by_team:
+        members_by_team[tid]["members"] = list(members_by_team[tid]["members"].values())
+
+    for row in g.query(TEAM_SOLE_SYSTEMS_QUERY).result_set:
+        team = _node_to_dict(row[0])
+        tid = team.get("name") or team.get("id")
+        if tid in members_by_team:
+            members_by_team[tid]["sole"] = row[1] or []
+
+    teams = []
+    for tid, data in members_by_team.items():
+        members = data["members"]
+        sole = data["sole"]
+        stale_total = sum(m["stale"] for m in members)
+        made_total = sum(m["made"] for m in members)
+        risk = "CRITICAL" if len(sole) >= 2 or stale_total >= 2 else (
+            "HIGH" if sole or stale_total else ("MEDIUM" if made_total else "LOW")
+        )
+        teams.append({
+            "team_name": tid,
+            "member_count": len(members),
+            "members": [
+                {"name": m["person"].get("name"), "role": m["person"].get("role"),
+                 "decisions_made": m["made"], "active": m["active"], "stale": m["stale"]}
+                for m in members
+            ],
+            "sole_expert_systems": sole,
+            "stale_decisions_made": stale_total,
+            "risk_level": risk,
+        })
+
+    teams.sort(key=lambda t: {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}[t["risk_level"]])
+
+    return {
+        "teams": teams,
+        "team_count": len(teams),
+        "total_sole_systems": sum(len(t["sole_expert_systems"]) for t in teams),
+        "total_stale_made": sum(t["stale_decisions_made"] for t in teams),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # QUERY 9: Graph statistics
 # ─────────────────────────────────────────────────────────────────────────────
 STATS_QUERY = """
