@@ -40,9 +40,11 @@
 
 ## (c) In progress right now
 
-- (none) — S5 closed 2026-10-17. All six filed solution tickets (S1,S3,S6,S2,S4,S5) DONE — feature-complete set, ready for demo polish / deploy call.
+- API-key gate DONE 2026-10-17 (see (d) item 7). 2026-10-17. All six filed solution tickets (S1,S3,S6,S2,S4,S5) DONE — feature-complete set, ready for demo polish / deploy call.
 
 ## (d) Next task
+
+7. AUTH gate DONE 2026-10-17 — e59e284 core+main+gitignore + fef8f73 test. Owner-minted key `openssl rand -hex 24` stored gitignored chmod600 backend/.api_key (NEVER committed/echoed). Gate: /mcp + /api/* require X-API-Key or Bearer; exemptions /docs /api/health OPTIONS + same-origin browser Origin header (DEMO-level convenience — forgeable, documented; treat as basic proxy safety, not security). AUTH_DISABLED=1 (or missing key file) turns the gate off — local dev & pytest run key-off via tests/conftest.py autouse. Gate verified live BEFORE commit: no/wrong key → 401 (/mcp and /api), real key → 200, health 200, Origin-exempt 200, Inspector CLI with --header "X-API-Key" → tool call 200. 58/58 pytest. known: path bug parents[2] found+fixed during live check (first boot silently gate-off; lesson: verify the 401 path itself).
 
 1. S1 DONE 2026-10-16 — 2757c22 graph + e6c6e25 agent + a8975bb mcp + a2001d2 api + 08ee4aa test. Gate (BEFORE commit, local FalkorDB): 33/33 pytest; benchmark 30/30 100%-vs-6.7% no regression; impact_of 2–11 ms; REST + Inspector + /ask routing live-verified. impact_of(sys_auth) review=11 (matches 11 AFFECTS edges), downstream=0 honest (no USES/DEPENDS_ON edges in synthetic data).
 2. S3 DONE 2026-10-16 — c96cd50 graph + 0fe463d agent + 70d2066 mcp + c659f13 api + b748ce5 test. Gate (BEFORE commit, local): 38/38 pytest; benchmark 30/30 no regression; timeline 10.2 ms, exact order [use_jwt → opaque_tokens] both directions; REST + Inspector (cockroach chain live) + /ask routing verified.
