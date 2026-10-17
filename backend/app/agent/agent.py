@@ -18,6 +18,7 @@ from app.queries.graph_queries import (
     decision_timeline,
     knowledge_gaps,
     get_contradiction_candidates,
+    ramp_plan,
 )
 
 
@@ -69,6 +70,10 @@ AVAILABLE_TOOLS = {
     "contradiction_candidates": {
         "description": "Guarded contradiction review queue — new documents that may contradict existing decisions or docs; a human must confirm before any CONTRADICTS edge is created. USE FOR: 'contradict', 'conflict', 'disagree', 'review queue', 'candidates'",
         "params": [],
+    },
+    "ramp_plan": {
+        "description": "Onboarding pack for one system — people to ask, decisions that shaped it, the evidence trail, and open risks, as an ordered ramp sequence. USE FOR: 'ramp', 'onboard', 'getting started', 'just joined', 'where do I start'",
+        "params": ["system_name"],
     },
 }
 
@@ -163,6 +168,18 @@ def _deterministic_select_tool(question: str) -> dict:
     # NOTE: plain 'contradict' intentionally stays on the rate-limit branch
     # above (benchmark phrasing "does ADR X contradict Y" → staleness run);
     # the review-queue route matches conflict/disagreement/review phrasing.
+    elif any(k in q for k in ["ramp", "onboard", "getting started", "just joined", "where do i start", "starting on"]):
+        system_name = "AuthService"
+        for token, sname in [("auth", "AuthService"), ("payment", "Payments"), ("bill", "BillingService"),
+                             ("deploy", "DeploymentPipeline"), ("notific", "NotificationService")]:
+            if token in q:
+                system_name = sname
+                break
+        return {
+            "tool": "ramp_plan",
+            "params": {"system_name": system_name},
+            "reasoning": "Identified onboarding/ramp question",
+        }
     elif any(k in q for k in ["conflict", "disagree", "dispute", "review queue", "pending contradiction", "contradiction candidates"]):
         return {
             "tool": "contradiction_candidates",
@@ -370,6 +387,23 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             )
         if cands:
             lines.append("\n*Confirm via `POST /api/graph/contradictions/confirm` — a human decision creates the CONTRADICTS edge.*")
+    elif tool_name == "ramp_plan":
+        counts = result.get("counts", {})
+        lines.append(f"### Ramp Plan: {result.get('system')} ({counts.get('people', 0)} people, {counts.get('decisions', 0)} decisions, {counts.get('docs', 0)} docs, {counts.get('stale', 0)} stale)")
+        lines.append("\n**People to ask**:")
+        for p in result.get("people_to_ask", []):
+            lines.append(f"- **{p.get('name', p.get('id'))}** (expertise {p.get('expertise_score', '?')}, last worked {p.get('last_worked') or '?'})")
+        team = (result.get("team") or {}).get("team")
+        if team:
+            lines.append(f"- Team context: **{team.get('name', team.get('id'))}**")
+        lines.append("\n**The ramp sequence** (in order):")
+        for i, step in enumerate(result.get("ramp_sequence", []), 1):
+            lines.append(f"{i}. {step}")
+        risks = result.get("open_risks", [])
+        if risks:
+            lines.append("\n**Open risks** — stale decisions to ask about:")
+            for d in risks:
+                lines.append(f"- {d.get('title', d.get('id'))} (`{d.get('id')}`)")
     else:
         if isinstance(result, list) and len(result) == 0:
             lines.append("I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation.")
@@ -511,6 +545,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
         "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), graph_name),
         "knowledge_gaps": lambda p: knowledge_gaps(graph_name),
         "contradiction_candidates": lambda p: get_contradiction_candidates(graph_name),
+        "ramp_plan": lambda p: ramp_plan(p.get("system_name", "AuthService"), graph_name),
         "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
         "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
     }
@@ -622,6 +657,11 @@ def _extract_path(tool_name: str, params: dict, result: dict) -> list:
     elif tool_name == "contradiction_candidates":
         cands = result if isinstance(result, list) else result.get("candidates", [])
         return [{"node": c, "type": "ContradictionCandidate", "edge": "AWAITING_REVIEW"} for c in cands[:6]]
+    elif tool_name == "ramp_plan":
+        path = [{"node": p, "type": "Person", "edge": "ASK_FIRST"} for p in result.get("people_to_ask", [])[:3]]
+        path += [{"node": d, "type": "Decision", "edge": "AFFECTS"} for d in result.get("decisions", [])[:5]]
+        path += [{"node": doc, "type": "Document", "edge": "BASED_ON"} for doc in result.get("key_docs", [])[:3]]
+        return path
     return []
 
 
@@ -641,5 +681,6 @@ def _get_query_for_tool(tool_name: str) -> str:
         "decision_timeline": graph_queries.TIMELINE_QUERY,
         "knowledge_gaps": graph_queries.GAPS_QUERY,
         "contradiction_candidates": graph_queries.CONTRADICTION_CANDIDATES_QUERY,
+        "ramp_plan": graph_queries.RAMP_DECISIONS_QUERY,
     }
     return query_map.get(tool_name, "")
