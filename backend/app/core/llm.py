@@ -66,10 +66,23 @@ Format your answer with clean headings and bullet points. Never display raw inte
 def _gemini(prompt: str, schema: Optional[dict], temperature: float) -> str:
     import google.generativeai as genai
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel(settings.GEMINI_MODEL)
     config = genai.GenerationConfig(temperature=temperature)
-    response = model.generate_content(prompt, generation_config=config)
-    return response.text
+
+    # Try configured model, fallback to 2.0-flash or 1.5-flash if 429 quota exceeded
+    models_to_try = [settings.GEMINI_MODEL, "gemini-2.0-flash", "gemini-1.5-flash"]
+    last_err = None
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt, generation_config=config)
+            return response.text
+        except Exception as e:
+            last_err = e
+            err_str = str(e).lower()
+            if "429" in err_str or "quota" in err_str or "404" in err_str or "not found" in err_str or "not available" in err_str:
+                continue
+            raise
+    raise last_err
 
 
 def _openai(prompt: str, schema: Optional[dict], temperature: float) -> str:

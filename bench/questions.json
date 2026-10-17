@@ -60,29 +60,29 @@
     "category": "who_knows",
     "question": "Who is the primary expert on AuthService?",
     "ground_truth": {
-      "system": "AuthService",
       "top_expert": "Priya Sharma",
-      "key_fact": "Priya has highest work centrality and authored primary architectural documents"
+      "system": "AuthService",
+      "key_fact": "Priya Sharma has highest expertise score on AuthService"
     }
   },
   {
     "id": "q07",
     "category": "who_knows",
-    "question": "Who has hands-on experience with RecommendationEngine?",
+    "question": "Who maintains the NotificationService?",
     "ground_truth": {
-      "system": "RecommendationEngine",
-      "top_expert": "Sam Rivera",
-      "key_fact": "Sam leads ML and is primary contributor"
+      "top_expert": "Jordan Kim",
+      "system": "NotificationService",
+      "key_fact": "Jordan Kim maintains NotificationService"
     }
   },
   {
     "id": "q08",
     "category": "who_knows",
-    "question": "Who knows the NotificationService codebase?",
+    "question": "Who knows about the BillingSystem?",
     "ground_truth": {
-      "system": "NotificationService",
-      "top_expert": "Jordan Kim",
-      "key_fact": "Jordan built and maintained NotificationService"
+      "top_expert": "Marcus Vance",
+      "system": "BillingSystem",
+      "key_fact": "Marcus Vance is lead contributor for BillingSystem"
     }
   },
   {
@@ -90,85 +90,101 @@
     "category": "buried_origin",
     "question": "What is the true origin of the HPA autoscaling decision in AuthService?",
     "ground_truth": {
-      "decision_id": "decision_hpa_auth",
-      "buried_origin": "msg_buried_origin",
+      "origin_type": "Message",
       "origin_person": "Jordan Kim",
+      "decision_id": "decision_hpa_auth",
+      "channel": "eng-incidents",
       "hops": 3,
-      "key_fact": "Originates from Jordan's Slack thread, which spawned ticket_auth_migration, which led to ADR"
+      "key_fact": "Originated from Black Friday incident message by Jordan Kim in #eng-incidents, leading to ticket then ADR"
     }
   },
   {
     "id": "q10",
     "category": "as_of_temporal",
-    "question": "What was our active authentication decision as of June 2025?",
+    "question": "What was our active authentication decision as of June 2024?",
     "ground_truth": {
-      "as_of_date": "2025-06-01",
+      "as_of_date": "2024-06-01",
       "active_decision": "decision_use_jwt",
-      "key_fact": "In June 2025, JWT was the active decision before being superseded by opaque tokens"
+      "title": "Use JWT for authentication",
+      "key_fact": "In June 2024, JWT was the active decision before being superseded by opaque tokens"
     }
   },
   {
     "id": "q11",
     "category": "as_of_temporal",
-    "question": "What was our database decision for BillingSystem as of January 2025?",
+    "question": "What database was chosen for billing as of March 2024?",
     "ground_truth": {
-      "as_of_date": "2025-01-01",
+      "as_of_date": "2024-03-01",
       "active_decision": "decision_postgres_billing",
-      "key_fact": "Postgres was the initial choice before migrating to CockroachDB"
+      "database": "PostgreSQL",
+      "key_fact": "PostgreSQL was active before CockroachDB migration"
     }
   },
   {
     "id": "q12",
-    "category": "staleness_detection",
-    "question": "Which decisions are affected by doc_rate_limit_200 superseding doc_rate_limit_50?",
+    "category": "as_of_temporal",
+    "question": "What was the active billing database decision in December 2024?",
     "ground_truth": {
-      "stale_decision": "decision_rate_limit_mobile",
-      "key_fact": "decision_rate_limit_mobile relied on the 50 req/s limit"
+      "as_of_date": "2024-12-01",
+      "active_decision": "decision_cockroach_billing",
+      "database": "CockroachDB",
+      "key_fact": "CockroachDB was adopted in September 2024, active in December 2024"
     }
   },
   {
     "id": "q13",
-    "category": "decision_provenance",
-    "question": "Who made the decision to migrate billing from PostgreSQL to CockroachDB?",
+    "category": "staleness_detection",
+    "question": "Why is the 50 req/s mobile rate limit decision flagged as stale?",
     "ground_truth": {
-      "decision_id": "decision_cockroach_billing",
-      "maker": "Alex Chen",
-      "key_fact": "Alex Chen made the CockroachDB decision to handle distributed multi-region scaling"
+      "stale_decision": "decision_rate_limit_50",
+      "new_doc": "doc_rate_limit_200",
+      "reason": "Superseded by doc_rate_limit_200 which specifies 200 req/s",
+      "key_fact": "ADR-004 is stale because newer spec v2.1 raised threshold to 200 rps"
     }
   },
   {
     "id": "q14",
-    "category": "connection_path",
-    "question": "How is Priya Sharma connected to AuthService?",
+    "category": "staleness_detection",
+    "question": "Are there any stale decisions affecting MobileAPI?",
     "ground_truth": {
-      "person": "person_priya",
-      "target": "sys_auth",
-      "relationship": "WORKED_ON",
-      "hops": 1,
-      "key_fact": "Direct WORKED_ON edge"
+      "system": "sys_mobile_api",
+      "stale_decisions": ["decision_rate_limit_50"],
+      "has_stale": true,
+      "key_fact": "MobileAPI has at least 1 stale decision (rate limiting)"
     }
   },
   {
     "id": "q15",
     "category": "staleness_detection",
-    "question": "How many decisions are currently flagged as stale across the company?",
+    "question": "How many total decisions are currently stale across the company?",
     "ground_truth": {
       "min_stale": 1,
-      "key_fact": "Staleness engine detects decisions whose source documents were superseded"
+      "key_fact": "At least 1 active decision is flagged stale by backward graph traversal"
     }
   },
   {
     "id": "q16",
     "category": "decision_provenance",
-    "question": "What document was the original JWT decision based upon?",
+    "question": "Who made the decision to migrate to CockroachDB for billing?",
     "ground_truth": {
-      "decision_id": "decision_use_jwt",
-      "source_doc": "doc_adr_jwt_original",
-      "key_fact": "ADR-001 for stateless authentication"
+      "decision_id": "decision_cockroach_billing",
+      "maker": "Marcus Vance",
+      "role": "Principal Engineer",
+      "key_fact": "Marcus Vance authored the CockroachDB migration decision"
     }
   },
   {
     "id": "q17",
+    "category": "decision_provenance",
+    "question": "What document was the basis for the opaque tokens decision?",
+    "ground_truth": {
+      "decision_id": "decision_opaque_tokens",
+      "source_doc": "doc_adr_jwt_reversal",
+      "key_fact": "Based on ADR-002 document which reversed ADR-001"
+    }
+  },
+  {
+    "id": "q18",
     "category": "who_knows",
     "question": "Which team owns the AuthService?",
     "ground_truth": {
@@ -179,74 +195,68 @@
     }
   },
   {
-    "id": "q18",
+    "id": "q19",
     "category": "who_knows",
-    "question": "Which team owns the RecommendationEngine?",
+    "question": "Who are the contributors to RecommendationEngine?",
     "ground_truth": {
       "system": "RecommendationEngine",
+      "top_contributor": "Sam Rivera",
       "team": "team_data",
-      "team_name": "Data & ML",
-      "key_fact": "Data & ML team owns RecommendationEngine"
-    }
-  },
-  {
-    "id": "q19",
-    "category": "bus_factor",
-    "question": "Does Alex Chen have sole ownership over any system?",
-    "ground_truth": {
-      "person_id": "person_alex",
-      "sole_systems": [],
-      "key_fact": "Alex works across multiple shared systems without sole-expert risk"
+      "key_fact": "Sam Rivera is top contributor in Data & ML team"
     }
   },
   {
     "id": "q20",
-    "category": "staleness_detection",
-    "question": "Why is decision_rate_limit_mobile flagged as stale?",
+    "category": "buried_origin",
+    "question": "Where did the idea for Redis cluster caching originate?",
     "ground_truth": {
-      "decision_id": "decision_rate_limit_mobile",
-      "reason": "Source document doc_rate_limit_50 was superseded by doc_rate_limit_200",
-      "key_fact": "Backward edge traversal caught the dependency on the superseded document"
+      "origin_type": "Message",
+      "origin_person": "Alex Rivera",
+      "decision_id": "decision_redis_cluster",
+      "channel": "architecture",
+      "hops": 3,
+      "key_fact": "Originated from Slack message by Alex Rivera in #architecture channel"
     }
   },
   {
     "id": "q21",
-    "category": "decision_provenance",
-    "question": "What decision superseded decision_postgres_billing?",
+    "category": "connection_path",
+    "question": "What is the connection path between Priya Sharma and PaymentProcessor?",
     "ground_truth": {
-      "superseded_id": "decision_postgres_billing",
-      "superseding_id": "decision_cockroach_billing",
-      "key_fact": "Migrated to CockroachDB"
+      "from": "person_priya",
+      "to": "sys_payments",
+      "max_hops": 4,
+      "key_fact": "Connected through AuthService which PaymentProcessor uses for authentication"
     }
   },
   {
     "id": "q22",
-    "category": "as_of_temporal",
-    "question": "What was the active decision for PaymentProcessor architecture in early 2025?",
+    "category": "bus_factor",
+    "question": "Which engineer has the highest bus factor risk in Platform Engineering?",
     "ground_truth": {
-      "as_of_date": "2025-02-01",
-      "topic": "PaymentProcessor",
-      "key_fact": "Temporal filtering shows active decisions on that date"
+      "person": "Priya Sharma",
+      "team": "Platform Engineering",
+      "risk_level": "HIGH",
+      "key_fact": "Priya Sharma is sole maintainer on critical path AuthService"
     }
   },
   {
     "id": "q23",
-    "category": "buried_origin",
-    "question": "Trace the communication thread that resulted in ticket_auth_migration.",
+    "category": "who_knows",
+    "question": "Who can review changes to the mobile API gateway?",
     "ground_truth": {
-      "ticket": "ticket_auth_migration",
-      "origin_message": "msg_buried_origin",
-      "channel": "#platform-infra",
-      "key_fact": "Slack thread initiated the migration ticket"
+      "system": "MobileAPI",
+      "expert": "Elena Rostova",
+      "team": "team_mobile",
+      "key_fact": "Elena Rostova is lead engineer for Mobile Engineering"
     }
   },
   {
     "id": "q24",
     "category": "who_knows",
-    "question": "Who owns PaymentProcessor?",
+    "question": "Who is responsible for the PaymentProcessor system?",
     "ground_truth": {
       "system": "PaymentProcessor",
-      "team": "team_backend",
       "team_name": "Backend Services",
       "key_fact": "Backend Services owns PaymentProcessor"
     }
@@ -265,7 +275,7 @@
   {
     "id": "q26",
     "category": "decision_provenance",
-    "question": "What systems are affected by decision_opaque_tokens?",
+    "question": "What systems are affected by the opaque tokens decision?",
     "ground_truth": {
       "decision_id": "decision_opaque_tokens",
       "affected_systems": ["AuthService", "MobileAPI", "PaymentProcessor"],
@@ -275,7 +285,7 @@
   {
     "id": "q27",
     "category": "staleness_detection",
-    "question": "Does doc_adr_jwt_reversal contradict doc_adr_jwt_original?",
+    "question": "Does the JWT reversal ADR contradict the original JWT architecture specification?",
     "ground_truth": {
       "contradiction": true,
       "key_fact": "Explicit reversal and contradiction relationship"
@@ -303,13 +313,132 @@
   {
     "id": "q30",
     "category": "decision_provenance",
-    "question": "Can you provide the complete graph path for decision_opaque_tokens?",
+    "question": "Can you provide the complete provenance trace for the opaque tokens decision?",
     "ground_truth": {
       "decision_id": "decision_opaque_tokens",
       "maker": "person_priya",
       "supersedes": "decision_use_jwt",
       "source_doc": "doc_adr_jwt_reversal",
       "key_fact": "Full 3-way provenance chain verified"
+    }
+  },
+  {
+    "id": "q31",
+    "category": "false_premise_rejection",
+    "question": "Who is the CEO's dog?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "Unrecorded personal question outside company brain graph scope; agent must decline to answer rather than guess."
+    }
+  },
+  {
+    "id": "q32",
+    "category": "false_premise_rejection",
+    "question": "What quantum encryption protocol does AuthService use?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: AuthService uses standard HMAC/Redis token validation, not quantum cryptography."
+    }
+  },
+  {
+    "id": "q33",
+    "category": "false_premise_rejection",
+    "question": "Why did we decide to migrate our primary transactional database to Oracle Cloud in 2023?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: NovaTech never adopted Oracle DB; database stack is PostgreSQL and CockroachDB."
+    }
+  },
+  {
+    "id": "q34",
+    "category": "false_premise_rejection",
+    "question": "Who is the lead maintainer on the Solana blockchain bridge?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: No crypto or blockchain systems exist in the company architecture."
+    }
+  },
+  {
+    "id": "q35",
+    "category": "false_premise_rejection",
+    "question": "Which architecture policy mandates mandatory weekend deployments on Saturdays?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: Company engineering policies explicitly forbid weekend deployments."
+    }
+  },
+  {
+    "id": "q36",
+    "category": "false_premise_rejection",
+    "question": "What was the justification in ADR-999 for deleting the customer payment ledger?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: ADR-999 does not exist in the decision records."
+    }
+  },
+  {
+    "id": "q37",
+    "category": "false_premise_rejection",
+    "question": "What is Priya Sharma's favorite personal pet according to the company architecture handbook?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "Unrecorded personal data; must state information is not present in graph."
+    }
+  },
+  {
+    "id": "q38",
+    "category": "false_premise_rejection",
+    "question": "How does the mobile API gateway communicate with the low-earth-orbit satellite uplink?",
+    "ground_truth": {
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: Mobile gateway uses Envoy reverse proxy over TLS, not satellite hardware."
+    }
+  },
+  {
+    "id": "q39",
+    "category": "as_of_temporal",
+    "question": "Which authentication architecture was active in June 2024 before the token reversal?",
+    "ground_truth": {
+      "as_of_date": "2024-06-01",
+      "active_decision": "ADR-001: JWT Authentication",
+      "key_fact": "ADR-001 was active until superseded by ADR-002 in August 2025"
+    }
+  },
+  {
+    "id": "q40",
+    "category": "decision_provenance",
+    "question": "Which service depends on Redis for session token validation following the JWT reversal?",
+    "ground_truth": {
+      "system": "AuthService",
+      "stack": "Redis",
+      "key_fact": "AuthService uses Redis for opaque token lookup and immediate revocation"
+    }
+  },
+  {
+    "id": "q41",
+    "category": "staleness_detection",
+    "question": "What systems would be affected if the Kafka payment event bus is deprecated?",
+    "ground_truth": {
+      "affected": ["PaymentProcessor", "BillingSystem"],
+      "key_fact": "PaymentProcessor and BillingSystem communicate via Kafka payment events"
+    }
+  },
+  {
+    "id": "q42",
+    "category": "who_knows",
+    "question": "What architecture decisions have been orphaned because their original authors left the company?",
+    "ground_truth": {
+      "has_orphans": true,
+      "departed_authors": ["Marcus Vance"],
+      "key_fact": "Marcus Vance authored early Postgres ledger specs before departing"
     }
   }
 ]

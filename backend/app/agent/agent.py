@@ -344,7 +344,13 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
             for s in sample:
                 lines.append(f"- **{s.get('title', s.get('id'))}** (`{s.get('id')}`)")
     else:
-        lines.append(f"Found {len(result) if isinstance(result, list) else 1} relevant graph records.")
+        if isinstance(result, list) and len(result) == 0:
+            lines.append("I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation.")
+        elif isinstance(result, dict) and not result:
+            lines.append("I could not find information about this in the company brain graph. The graph only indexes verified people, engineering decisions, systems, and source documentation.")
+        else:
+            count = len(result) if isinstance(result, list) else 1
+            lines.append(f"Found {count} relevant graph records.")
 
     if sources:
         lines.append("\n**Sources Cited**:")
