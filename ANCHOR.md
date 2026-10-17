@@ -51,10 +51,25 @@
     - bbbaadb `ui: make CytoscapeGraph canvas theme-aware with muted palette and compact TimeTravelSlider` (`ui/src/components/CytoscapeGraph.jsx`, `ui/src/components/TimeTravelSlider.jsx`). Canvas matches surface, non-path nodes dimmed to 15%, no glows/shadows, compact date scrubber.
     - 9ac9fc5 `ui: update BenchmarkPanel and McpPanel with CSS variables and clean table layout` (`ui/src/components/BenchmarkPanel.jsx`, `ui/src/components/McpPanel.jsx`). Clean table layout with CSS variables and responsive styles.
     - Verification: Next.js `bun run build` compiled in 2.6s (0 errors); 66/66 pytest green; browser subagent verified visual rendering across both light and dark modes and mobile viewport.
+  - Stage 1: Correctness and Grounding Pass (6 split atomic commits):
+    - 97691d5 `data: audit decision citations and set valid_to on superseded decisions` (`data/synthetic/company.json`, `scripts/generate_data.py`). Audited all 50 decisions to link semantically valid documents, specifically connecting distributed Redis rate limiting (`decision_27704f0f`) to `doc_1f2be6c5` (`SPEC-025: Redis Cluster Topology...`), and set `valid_to: '2026-10-16'` on `decision_rate_limit_mobile`.
+    - 62ced51 `graph: return structured JSON for as_of, who_knows, bus_factor and enforce superseding valid_to` (`backend/app/queries/graph_queries.py`). Enhanced queries to return structured JSON (`title`, `status`, `interval`, `owner`, `quote`, `path`) and ensured superseded decisions set `valid_to` to superseding date (never `"present"`).
+    - 2f5737b `agent: clean prose synthesis without stray markdown and grounded decline text` (`backend/app/agent/agent.py`, `backend/app/core/llm.py`). Eliminated stray markdown, single asterisks, and backticks in deterministic synthesis; restricted entity grounding refuse to exact `"No record of X in the graph."` with zero IDs, status, or citations; ensured `changes_between` path returns only actually traversed graph edges.
+    - 9a03b25 `ui: fix sidebar tooltip overlay bug with right-positioned hover popover` (`ui/src/components/Sidebar.jsx`). Tooltips rendered as right-positioned popovers on hover only, preventing overlap on nav buttons and Brain Health badge.
+    - 19921ec `ui: connect global date to graph node status recoloring and time travel` (`ui/src/app/page.js`, `ui/src/components/CytoscapeGraph.jsx`, `ui/src/components/TimeTravelSlider.jsx`). Global `selectedDate` state synchronizes Cytoscape node colors by status on that date (`#0f766e` active, `#b45309` stale, `#6b7280` superseded), `TimeTravelSlider`, and answer panel.
+    - d151626 `ui: render structured bus factor card, constraint chip, real and synthetic links` (`ui/src/components/ChatPanel.jsx`, `ui/src/components/CitationModal.jsx`). Displays `[no other engineer has a WORKED_ON edge]` badge in reasoning paths, structured bus factor card, and distinguishes real URLs with external link button from labeled `(synthetic)` sources.
+    - Verification: 66/66 pytest pass in 111s; `bun run build` in 3.6s with 0 errors; live API queries for Priya bus factor, mobile rate limit (2026-10-01 vs 2026-10-17), authentication changes (2025-2026), and MongoDB refusal verified.
 
 ## (c) In progress right now
 
-- (none). UI redesign pass completed and split into atomic commits. Ready to push.
+- (none). Stage 1 completed. Ready for Stage 2 (PEPs verification and FalkorDB repos workspace).
+
+## (d) Next task
+
+- Stage 2: PEPs verification and the FalkorDB repos workspace
+  1. Verify PEPs workspace end-to-end with 4 questions and screenshots.
+  2. Implement `scripts/load_github.py` for 3 FalkorDB repos (FalkorDB, falkordb-py, falkordb-browser) caching to `data/github/`.
+  3. Wire `falkordb_repos` graph workspace through all endpoints and UI.
 
 ## (g) Tickets filed 2026-10-17 (from live test — do in this order, no silent skips)
 
