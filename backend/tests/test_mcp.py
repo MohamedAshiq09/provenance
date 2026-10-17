@@ -79,6 +79,16 @@ def test_mcp_connection_path():
     assert "person_priya" in blob or "Priya" in blob
 
 
+def test_mcp_connection_path_cross_type():
+    """T8: non-adjacent pairscientist reachable through WORKED_ON edges."""
+    blob = _run(_call(
+        "connection_path",
+        {"node_a_id": "person_sam", "node_b_id": "sys_ml"},
+    ))
+    assert "sys_ml" in blob
+    assert "found" in blob
+
+
 def test_mcp_as_of():
     blob = _run(_call("as_of", {"date_str": "2025-06-01", "topic": "JWT"}))
     assert "2025" in blob
