@@ -105,6 +105,12 @@ def ramp_plan(system_name: str) -> dict:
     return run_tool("ramp_plan", {"system_name": system_name}, GRAPH_NAME)
 
 
+@mcp.tool()
+def team_risk() -> dict:
+    """Team-level knowledge risk — per team: member decision load, sole-expert systems (one resignation away from outage), stale decision counts. USE FOR: 'team risk', 'which team is at risk', 'company health', 'resignation'. Graph capability: distinct-other-people counting over WORKED_ON edges per MEMBER_OF team."""
+    return run_tool("team_risk", {}, GRAPH_NAME)
+
+
 # Starlette sub-app serving Streamable HTTP. Mounted by the host FastAPI app
 # (see main.py). Built at module level so `mcp.session_manager` exists before
 # the host lifespan enters `session_manager.run()`.

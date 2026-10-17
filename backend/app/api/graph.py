@@ -8,6 +8,7 @@ from app.queries.graph_queries import (
     impact_of, decision_timeline, knowledge_gaps,
     get_contradiction_candidates, confirm_contradiction,
     ramp_plan,
+    team_risk,
 )
 
 router = APIRouter()
@@ -94,3 +95,9 @@ def confirm(req: ConfirmContradictionRequest, graph_name: str = "company_brain")
 def ramp(system_name: str, graph_name: str = "company_brain"):
     """Onboarding pack for one system: people, decisions, evidence, risks."""
     return ramp_plan(system_name, graph_name)
+
+
+@router.get("/team-risk")
+def team_risk_endpoint(graph_name: str = "company_brain"):
+    """Per-team knowledge risk posture across the whole company."""
+    return team_risk(graph_name)
