@@ -364,3 +364,27 @@ def test_lineage_conflict_sweep_detects_declared_supersedes(contradiction_arc, t
         g.query("""MATCH (n) WHERE (n:ContradictionCandidate)
             OR (exists(n.id) AND (n.id STARTS WITH 'doc_tc_404'))
             DETACH DELETE n""")
+
+
+def test_falkordb_repos_isolation():
+    """Verify falkordb_repos graph contains zero synthetic or PEP node IDs (strict workspace isolation)."""
+    from app.core.db import get_graph
+    g = get_graph("falkordb_repos")
+    nodes = g.query("MATCH (n) RETURN labels(n), n.id").result_set
+    assert len(nodes) >= 100, f"Expected populated falkordb_repos, found {len(nodes)} nodes"
+
+    contaminated = []
+    for lbl, nid in nodes:
+        nid_str = str(nid)
+        if (
+            nid_str.startswith("doc_")
+            or nid_str.startswith("pep_")
+            or nid_str.startswith("sys_")
+            or "jwt" in nid_str
+            or "priya" in nid_str
+            or "jordan" in nid_str
+        ):
+            contaminated.append(nid_str)
+
+    assert len(contaminated) == 0, f"Found contaminated synthetic or PEP nodes in falkordb_repos: {contaminated}"
+

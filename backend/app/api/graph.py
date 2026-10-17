@@ -17,10 +17,12 @@ router = APIRouter()
 
 
 def _resolve_graph(graph_name: Optional[str] = None, workspace: Optional[str] = None) -> str:
-    """Resolve workspace alias ('peps' -> 'peps_brain', 'novatech' -> 'company_brain')."""
+    """Resolve workspace alias ('peps' -> 'peps_brain', 'falkordb' -> 'falkordb_repos', 'novatech' -> 'company_brain')."""
     val = (workspace or graph_name or "company_brain").lower().strip()
     if val in ["peps", "peps_brain", "python"]:
         return "peps_brain"
+    elif val in ["falkordb", "falkordb_repos", "repos", "github"]:
+        return "falkordb_repos"
     return "company_brain"
 
 
@@ -71,6 +73,14 @@ def alerts_endpoint(graph_name: str = "company_brain", workspace: str = None):
     resolved = _resolve_graph(graph_name, workspace)
     if resolved == "peps_brain":
         return get_pep_alerts(resolved)
+    elif resolved == "falkordb_repos":
+        stale = get_stale_decisions(resolved)
+        return {
+            "workspace": "falkordb_repos",
+            "total_alerts": len(stale),
+            "definition": "Pull requests superseded or reverted by newer changes or dependency bumps",
+            "alerts": stale
+        }
     else:
         stale = get_stale_decisions(resolved)
         return {

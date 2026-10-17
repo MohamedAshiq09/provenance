@@ -259,6 +259,12 @@ def _deterministic_select_tool(question: str) -> dict:
             person_id = "person_jordan"
         elif "alex" in q:
             person_id = "person_alex"
+        elif "avi" in q or "aviavni" in q:
+            person_id = "person_aviavni"
+        elif "swilly" in q or "roi" in q:
+            person_id = "person_swilly22"
+        elif "dvir" in q or "dvirdukhan" in q:
+            person_id = "person_dvirdukhan"
         return {
             "tool": "bus_factor",
             "params": {"person_id": person_id},
@@ -286,6 +292,14 @@ def _deterministic_select_tool(question: str) -> dict:
             system_name = "MobileAPI"
         elif "search" in q:
             system_name = "SearchEngine"
+        elif "core engine" in q or "engine" in q or "falkordb core" in q or "graphblas" in q:
+            system_name = "FalkorDB Core Engine (src/)"
+        elif "python client" in q or "falkordb-py" in q or "sdk" in q or "client core" in q:
+            system_name = "Python Client Core (falkordb/)"
+        elif "web canvas" in q or "browser" in q or "falkordb-browser" in q or "canvas" in q or "web ui" in q:
+            system_name = "Web Canvas UI (src/)"
+        elif "cypher test" in q or "tests/" in q:
+            system_name = "Cypher Test Suite (tests/)"
         return {
             "tool": "who_knows",
             "params": {"system_name": system_name},

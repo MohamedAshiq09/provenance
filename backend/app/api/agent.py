@@ -35,6 +35,8 @@ def _resolve_graph(graph_name: Optional[str] = None, workspace: Optional[str] = 
     val = (workspace or graph_name or "company_brain").lower().strip()
     if val in ["peps", "peps_brain", "python"]:
         return "peps_brain"
+    elif val in ["falkordb", "falkordb_repos", "repos", "github"]:
+        return "falkordb_repos"
     return "company_brain"
 
 
