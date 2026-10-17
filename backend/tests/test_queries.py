@@ -124,6 +124,22 @@ def test_impact_decision_downstream():
     assert res["downstream_count"] >= 1
 
 
+def test_impact_system_co_affected():
+    """T3 regression: co-affected systems via shared decisions must show.
+
+    Live-test evidence: impact_of(sys_auth) said '0 downstream' while the
+    active opaque-tokens decision names PaymentProcessor and MobileAPI.
+    The co-affected pattern (system)<-AFFECTS-(decision)-AFFECTS->(system)
+    must surface them at depth 2.
+    """
+    res = impact_of("sys_auth")
+    ids = [i["node"].get("id") for i in res["downstream"]]
+    assert "sys_payments" in ids
+    assert "sys_mobile_api" in ids
+    entry = next(i for i in res["downstream"] if i["node"].get("id") == "sys_payments")
+    assert entry["via"] == ["AFFECTS", "AFFECTS"]
+
+
 def test_who_knows_scores_differentiate():
     """T4 regression: expertise scores must not saturate into one flat value."""
     res = who_knows("AuthService")
