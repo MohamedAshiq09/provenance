@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Saturn — Company Brain powered by FalkorDB",
+  title: "Saturn",
   description: "A self-auditing knowledge graph that proves every answer through graph traversal and detects stale decisions as organizational knowledge evolves.",
   keywords: ["FalkorDB", "Graph Hacks", "Knowledge Graph", "Company Brain", "AI Agent", "MCP Server", "Decision Provenance"],
 };
