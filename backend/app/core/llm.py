@@ -68,8 +68,8 @@ def _gemini(prompt: str, schema: Optional[dict], temperature: float) -> str:
     genai.configure(api_key=settings.GEMINI_API_KEY)
     config = genai.GenerationConfig(temperature=temperature)
 
-    # Try configured model, fallback to 2.0-flash or 1.5-flash if 429 quota exceeded
-    models_to_try = [settings.GEMINI_MODEL, "gemini-2.0-flash", "gemini-1.5-flash"]
+    # Try active Gemini models, fallback if 429 quota or 404 encountered
+    models_to_try = ["gemini-3.1-flash-lite-preview", "gemini-flash-latest", "gemini-3.8-flash", settings.GEMINI_MODEL]
     last_err = None
     for model_name in models_to_try:
         try:

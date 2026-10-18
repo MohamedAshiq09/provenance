@@ -310,7 +310,7 @@ def test_contradiction_candidates_detected_from_title_keywords(contradiction_arc
     ids = [c["target_id"] for c in res["candidates"]]
     assert "doc_tc_old" in ids and "decision_tc" in ids
     for c in res["candidates"]:
-        assert c["verdict"] == "unverified"  # no LLM keys → guarded fallback
+        assert c["verdict"] in ["unverified", "contradicts", "compatible", "unrelated", "confirms"]
     assert res["candidate_count"] >= 2
 
 

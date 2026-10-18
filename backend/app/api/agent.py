@@ -11,6 +11,7 @@ class AskRequest(BaseModel):
     question: str
     graph_name: Optional[str] = "company_brain"
     workspace: Optional[str] = None
+    router_mode: Optional[bool] = False
 
 
 class AskResponse(BaseModel):
@@ -45,7 +46,7 @@ def ask(req: AskRequest, workspace: Optional[str] = None):
     """Ask the Company Brain a question. Returns answer + graph path + sources."""
     try:
         resolved_graph = _resolve_graph(req.graph_name, req.workspace or workspace)
-        result = answer(req.question, resolved_graph)
+        result = answer(req.question, resolved_graph, router_mode=bool(req.router_mode))
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

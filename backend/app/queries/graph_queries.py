@@ -763,7 +763,32 @@ def search_and_expand(keyword: str, graph_name: str = None) -> list:
     graph search returns the knowledge network around those documents.
     """
     g = _graph(graph_name)
-    result = g.query(SEARCH_AND_EXPAND_QUERY, {"keyword": keyword})
+    kw_str = str(keyword).strip()
+    
+    # 1. Specialized lookup for numeric issue or PR / PEP numbers
+    if kw_str.isdigit():
+        num = int(kw_str)
+        # Check closed issue
+        issue_res = g.query(f"MATCH (d:Decision)-[:CLOSES]->(i:Issue) WHERE i.number = {num} RETURN d, collect(DISTINCT i) as related_nodes")
+        if issue_res.result_set:
+            items = []
+            for row in issue_res.result_set:
+                item = _node_to_dict(row[0])
+                item["related"] = [_node_to_dict(r) for r in (row[1] or []) if r]
+                items.append(item)
+            return items
+            
+        # Check PR / PEP number title match
+        num_res = g.query(f"MATCH (d:Decision) WHERE d.title CONTAINS '#{num}:' OR d.title CONTAINS 'PEP {num}:' RETURN d, [] as related_nodes")
+        if num_res.result_set:
+            items = []
+            for row in num_res.result_set:
+                item = _node_to_dict(row[0])
+                item["related"] = []
+                items.append(item)
+            return items
+
+    result = g.query(SEARCH_AND_EXPAND_QUERY, {"keyword": kw_str})
     
     items = []
     for row in result.result_set:
