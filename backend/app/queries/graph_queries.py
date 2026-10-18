@@ -323,13 +323,13 @@ def who_knows(system_name: str, graph_name: str = None) -> dict:
 STALENESS_QUERY = """
 // Find decisions that are now potentially stale because a new document
 // supersedes or contradicts their source documents.
-// Traverses: new_doc → contradicts → old_doc ← BASED_ON ← Decision → DEPENDS_ON → more_decisions
+// Traverses: new_doc → contradicts/supersedes → old_doc ← BASED_ON ← Decision → AFFECTS → System ← AFFECTS ← co-affected decisions
 MATCH (new_doc:Document {id: $new_doc_id})
 MATCH (new_doc)-[:SUPERSEDES|CONTRADICTS]->(old_doc:Document)
 MATCH (d:Decision)-[:BASED_ON]->(old_doc)
 WHERE d.status <> 'superseded'
-OPTIONAL MATCH (d)<-[:DEPENDS_ON*1..3]-(downstream:Decision)
-WHERE downstream.status <> 'superseded'
+OPTIONAL MATCH (d)-[:AFFECTS]->(s:System)<-[:AFFECTS]-(downstream:Decision)
+WHERE downstream.id <> d.id AND downstream.status <> 'superseded'
 RETURN d as stale_decision,
        old_doc as stale_source,
        new_doc as new_source,
@@ -463,7 +463,11 @@ def bus_factor(person_id: str, graph_name: str = None) -> dict:
     sys_noun = "system" if sys_count == 1 else "systems"
     dec_noun = "decision" if dec_count == 1 else "decisions"
     
-    person_name = "Priya Sharma" if "priya" in person_id.lower() else person_id.replace("person_", "").replace("_", " ").title()
+    person_res = g.query("MATCH (p:Person {id: $person_id}) RETURN p.name", {"person_id": person_id})
+    if person_res.result_set and person_res.result_set[0][0]:
+        person_name = person_res.result_set[0][0]
+    else:
+        person_name = person_id.replace("person_", "").replace("_", " ").title()
     risk = "CRITICAL" if len(sole_systems) >= 3 else "HIGH" if sole_systems else "LOW"
 
     return {
@@ -557,7 +561,8 @@ OPTIONAL MATCH (d)-[:MADE_BY]->(m1:Person)
 OPTIONAL MATCH (m2:Person)-[:AUTHORED]->(d)
 OPTIONAL MATCH (d)-[:BASED_ON]->(doc:Document)
 OPTIONAL MATCH (succ:Decision)-[:SUPERSEDES]->(d)
-RETURN d, collect(DISTINCT s) as affected_systems, coalesce(m1, m2) as maker, collect(DISTINCT doc) as sources, succ
+OPTIONAL MATCH (new_doc:Document)-[:SUPERSEDES]->(doc)
+RETURN d, collect(DISTINCT s) as affected_systems, coalesce(m1, m2) as maker, collect(DISTINCT doc) as sources, succ, collect(DISTINCT new_doc) as superseding_docs
 ORDER BY d.valid_from DESC
 LIMIT 1000
 """
@@ -580,6 +585,8 @@ def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) ->
         d["made_by"] = _node_to_dict(row[2]) if row[2] else None
         d["sources"] = [_node_to_dict(src) for src in (row[3] or []) if src]
         d["superseded_by"] = _node_to_dict(row[4]) if row[4] else None
+        superseding_docs = [_node_to_dict(nd) for nd in (row[5] or []) if nd]
+        d["superseding_docs"] = superseding_docs
         
         # Calculate validity and status on that specific date
         valid_from = d.get("valid_from")
@@ -595,10 +602,12 @@ def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) ->
             d["valid_to"] = succ_date
 
         # When superseded or made stale by a newer policy/document
-        effective_date = stale_effect_at
-        if d.get("id") == "decision_rate_limit_mobile":
-            # Policy v2 took effect on 2026-10-16
-            effective_date = "2026-10-16"
+        # Dynamically derive the effect date from the superseding document's valid_from/made_at
+        doc_succ_date = None
+        if superseding_docs:
+            doc_succ_date = superseding_docs[0].get("valid_from") or superseding_docs[0].get("made_at")
+        
+        effective_date = stale_effect_at or doc_succ_date
             
         if effective_date and (not valid_to or str(valid_to) > str(effective_date)):
             if d.get("stale") or (valid_to and str(valid_to) <= str(date_str)):
@@ -964,27 +973,24 @@ def remediate_stale_decision(decision_id: str, action_note: str = None, graph_na
 # ─────────────────────────────────────────────────────────────────────────────
 # QUERY 11: Impact Simulation ("what breaks if we change X?")
 # WHY GRAPH: Blast-radius analysis is forward/backward traversal over typed
-# edges. Downstream: what the node impacts (AFFECTS/USES out, DEPENDS_ON
-# dependents). Review set: what would need re-review if the node changes
+# edges. Downstream: what the node impacts (AFFECTS/USES out, co-affected
+# topologies). Review set: what would need re-review if the node changes
 # (decisions AFFECTing a system, decisions BASED_ON a document). A flat
 # store cannot walk these chains; each hop changes the answer set.
 # ─────────────────────────────────────────────────────────────────────────────
 IMPACT_DOWNSTREAM_QUERY = """
 // Things this node impacts: systems/projects it affects or is used by,
-// plus decisions that depend on it (transitively).
-// T3 (live-test 2026-10-17): missing DEPENDS_ON edges made impact_of say
-// 'no downstream' while active decisions name downstream services. The graph
-// already records the co-affected pattern:
+// plus cross-system impacts via co-affected AFFECTS topologies.
+// The graph records the co-affected pattern:
 //   (system)<-[:AFFECTS]-(decision)-[:AFFECTS]->(other system)
 // so a decision that touches several systems carries the cross-impact.
 // Match that shape explicitly and report the other systems at depth 2.
 MATCH (n) WHERE n.id = $node_id
 OPTIONAL MATCH p1 = (n)-[:AFFECTS|USES*1..3]->(m1)
-OPTIONAL MATCH p2 = (n)<-[:DEPENDS_ON*1..3]-(m2)
 OPTIONAL MATCH p3 = (n)<-[:AFFECTS]-()-[:AFFECTS]->(m3)
   WHERE m3 <> n AND id(m3) <> id(n)
 RETURN collect(DISTINCT [m1, length(p1), [r IN relationships(p1) | type(r)], [x IN nodes(p1) | x.id]]) as downstream,
-       collect(DISTINCT [m2, length(p2), [r IN relationships(p2) | type(r)], [x IN nodes(p2) | x.id]]) as dependents,
+       [] as dependents,
        collect(DISTINCT [m3, length(p3), [r IN relationships(p3) | type(r)], [x IN nodes(p3) | x.id]]) as co_affected
 """
 
@@ -1002,7 +1008,7 @@ def impact_of(node_id: str, graph_name: str = None) -> dict:
     the review set (decisions/docs that assumed the current state).
 
     GRAPH NECESSITY: Direction-aware multi-hop traversal. Downstream walks
-    AFFECTS/USES out and DEPENDS_ON backwards; the review set walks AFFECTS/
+    AFFECTS/USES out and co-affected topologies; the review set walks AFFECTS/
     BASED_ON in reverse. Depth and via-path are computed per impacted node.
     """
     g = _graph(graph_name)
