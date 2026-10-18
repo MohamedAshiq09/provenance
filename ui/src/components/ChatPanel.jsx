@@ -253,7 +253,6 @@ export default function ChatPanel({
       {messagesToRender.length === 0 && !isLoading ? (
         /* Empty State (Minimalist Focused Layout) */
         <div style={{
-          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -261,27 +260,7 @@ export default function ChatPanel({
           padding: '2.5rem 1rem 1rem 1rem',
           gap: '1.5rem',
         }}>
-          {/* Subtle Ambient Watermark Logo in Background */}
-          <div style={{
-            position: 'absolute',
-            top: '42%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '340px',
-            height: '340px',
-            pointerEvents: 'none',
-            zIndex: 0,
-            opacity: 0.06,
-            userSelect: 'none',
-          }}>
-            <img 
-              src="/saturn-logo.png" 
-              alt="" 
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
-            />
-          </div>
-
-          <div style={{ position: 'relative', zIndex: 1 }}>
+          <div>
             <h1 style={{
               fontSize: '1.6rem',
               fontWeight: '600',
