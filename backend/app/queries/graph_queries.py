@@ -19,6 +19,32 @@ def _graph(graph_name: str = None):
     return get_graph(graph_name)
 
 
+CURATED_TOPIC_ALIASES = {
+    "typing": [
+        r"\btyping\b",
+        r"\btype\s+hints?\b",
+        r"\btype\s+annotations?\b",
+        r"\bpep\s*(?:482|483|484|526)\b"
+    ],
+    "database": [
+        r"\bdatabase\s+api\b",
+        r"\bdb-api\b",
+        r"\bdbapi\b",
+        r"\bpep\s*(?:248|249)\b"
+    ],
+    "authentication": [
+        r"\bauthentication\b",
+        r"\bjwt\b",
+        r"\bopaque\s+(?:session\s+)?tokens?\b"
+    ],
+    "auth": [
+        r"\bauthentication\b",
+        r"\bjwt\b",
+        r"\bopaque\s+(?:session\s+)?tokens?\b"
+    ]
+}
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # QUERY 1: Decision Trace
 # WHY GRAPH: Follows multi-hop BASED_ON → SUPERSEDES chains that are impossible
@@ -122,6 +148,10 @@ LIMIT 10
 # _person_scores_for_system; ramp_plan and who_knows share the ranking.
 PEOPLE_SCORE_WORKED_QUERY = """
 MATCH (s:System {name: $system_name})<-[w:WORKED_ON]-(p:Person)
+WHERE coalesce(p.is_bot, false) = false
+  AND NOT toLower(p.name) CONTAINS 'bot'
+  AND NOT toLower(coalesce(p.username, '')) CONTAINS 'bot'
+  AND NOT toLower(p.name) CONTAINS 'copilot'
 RETURN p,
        count(w) as work_score,
        max(coalesce(w.to, '')) as last_worked
@@ -129,16 +159,37 @@ ORDER BY p.id
 """
 PEOPLE_SCORE_MAKER_QUERY = """
 MATCH (p:Person)<-[:MADE_BY]-(d:Decision)-[:AFFECTS]->(s:System {name: $system_name})
+WHERE coalesce(p.is_bot, false) = false
+  AND NOT toLower(p.name) CONTAINS 'bot'
+  AND NOT toLower(coalesce(p.username, '')) CONTAINS 'bot'
+  AND NOT toLower(p.name) CONTAINS 'copilot'
 RETURN p, count(d) as maker_score
+ORDER BY p.id
+"""
+PEOPLE_SCORE_REVIEWED_QUERY = """
+MATCH (p:Person)-[r:REVIEWED]->(d:PR)-[:AFFECTS]->(s:System {name: $system_name})
+WHERE coalesce(p.is_bot, false) = false
+  AND NOT toLower(p.name) CONTAINS 'bot'
+  AND NOT toLower(coalesce(p.username, '')) CONTAINS 'bot'
+  AND NOT toLower(p.name) CONTAINS 'copilot'
+RETURN p, count(r) as reviewed_score
 ORDER BY p.id
 """
 PEOPLE_SCORE_EVIDENCE_AUTHOR_QUERY = """
 MATCH (p:Person)-[:AUTHORED]->(doc:Document)<-[:BASED_ON]-(d:Decision)-[:AFFECTS]->(s:System {name: $system_name})
+WHERE coalesce(p.is_bot, false) = false
+  AND NOT toLower(p.name) CONTAINS 'bot'
+  AND NOT toLower(coalesce(p.username, '')) CONTAINS 'bot'
+  AND NOT toLower(p.name) CONTAINS 'copilot'
 RETURN p, count(doc) as ev_author_score
 ORDER BY p.id
 """
 PEOPLE_SCORE_DIRECT_AUTHOR_QUERY = """
 MATCH (p:Person)-[:AUTHORED]->(doc:Document)-[:AFFECTS]->(s:System {name: $system_name})
+WHERE coalesce(p.is_bot, false) = false
+  AND NOT toLower(p.name) CONTAINS 'bot'
+  AND NOT toLower(coalesce(p.username, '')) CONTAINS 'bot'
+  AND NOT toLower(p.name) CONTAINS 'copilot'
 RETURN p, count(doc) as direct_author_score
 ORDER BY p.id
 """
@@ -148,11 +199,12 @@ def _person_scores_for_system(g, system_name: str) -> list:
     """
     Merge per-person component scores for a system (T2/T4 shared helper).
 
-    Ranking weights (story: hands-on work trumps paper authorship):
-      work           x3 — hands-on the system
-      maker          x2 — decisions this person made that shape it
-      evidence_author x2 — authored docs the system's decisions were BASED_ON
-      direct_author   x1 — authored docs that directly AFFECTS the system
+    Ranking weights (story: hands-on work & reviews trump passive authorship):
+      work            x10 — hands-on maintenance/commits on the system
+      reviewed        x5  — code reviews on PRs affecting the system
+      maker           x3  — decisions this person made that shape it
+      evidence_author x2  — authored docs the system's decisions were BASED_ON
+      direct_author   x1  — authored docs that directly AFFECTS the system
     Deterministic tie-break: expertise DESC, work DESC, last_worked DESC, id ASC.
     Pure Cypher counts, Python merge only — no LLM anywhere.
     """
@@ -163,7 +215,11 @@ def _person_scores_for_system(g, system_name: str) -> list:
         pid = d.get("id")
         if not pid:
             return
+        # Strict bot filtering to exclude dependabot[bot], Copilot, renovate, etc.
+        if d.get("is_bot") or "bot" in pid.lower() or "copilot" in pid.lower() or "bot" in d.get("name", "").lower() or "copilot" in d.get("name", "").lower():
+            return
         rec = scores.setdefault(pid, {"person": d, "work_score": 0, "maker_score": 0,
+                                      "reviewed_score": 0,
                                       "ev_author_score": 0, "direct_author_score": 0,
                                       "last_worked": None})
         for k, v in kv.items():
@@ -176,6 +232,11 @@ def _person_scores_for_system(g, system_name: str) -> list:
         _upsert(row[0], work_score=row[1], last_worked=row[2])
     for row in g.query(PEOPLE_SCORE_MAKER_QUERY, {"system_name": system_name}).result_set:
         _upsert(row[0], maker_score=row[1])
+    try:
+        for row in g.query(PEOPLE_SCORE_REVIEWED_QUERY, {"system_name": system_name}).result_set:
+            _upsert(row[0], reviewed_score=row[1])
+    except Exception:
+        pass
     for row in g.query(PEOPLE_SCORE_EVIDENCE_AUTHOR_QUERY, {"system_name": system_name}).result_set:
         _upsert(row[0], ev_author_score=row[1])
     for row in g.query(PEOPLE_SCORE_DIRECT_AUTHOR_QUERY, {"system_name": system_name}).result_set:
@@ -183,12 +244,13 @@ def _person_scores_for_system(g, system_name: str) -> list:
 
     experts = []
     for rec in scores.values():
-        expertise = (rec["work_score"] * 10 + rec["maker_score"] * 3
+        expertise = (rec["work_score"] * 10 + rec["reviewed_score"] * 5 + rec["maker_score"] * 3
                      + rec["ev_author_score"] * 2 + rec["direct_author_score"] * 1)
         if expertise <= 0:
             continue
         p = dict(rec["person"])
         p["work_score"] = rec["work_score"]
+        p["reviewed_score"] = rec["reviewed_score"]
         p["maker_score"] = rec["maker_score"]
         p["author_score"] = rec["ev_author_score"] + rec["direct_author_score"]
         p["ev_author_score"] = rec["ev_author_score"]
@@ -357,6 +419,9 @@ BUS_FACTOR_QUERY = """
 MATCH (p:Person {id: $person_id})
 MATCH (s:System)
 MATCH (s)<-[:WORKED_ON]-(expert:Person)
+WHERE coalesce(expert.is_bot, false) = false
+  AND NOT toLower(expert.name) CONTAINS 'bot'
+  AND NOT toLower(expert.name) CONTAINS 'copilot'
 WITH s, collect(DISTINCT expert) as experts, p
 WHERE size(experts) = 1 AND experts[0].id = p.id
 RETURN s as sole_system, experts
@@ -577,19 +642,21 @@ def as_of(date_str: str, topic: Optional[str] = None, graph_name: str = None) ->
     
     if topic:
         topic_clean = topic.lower().strip()
-        topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "date", "status"]]
-        
         filtered = []
+        if topic_clean in CURATED_TOPIC_ALIASES:
+            patterns = CURATED_TOPIC_ALIASES[topic_clean]
+        else:
+            topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "date", "status"]]
+            patterns = [rf"\b{re.escape(w)}\b" for w in topic_words] if topic_words else [rf"\b{re.escape(topic_clean)}\b"]
+        
         for d in decisions:
             searchable = " ".join([
                 str(d.get("title", "")),
                 str(d.get("rationale", "")),
                 str(d.get("id", "")),
                 " ".join(s.get("name", "") for s in d.get("affected_systems", []))
-            ]).lower()
-            
-            # Match exact phrase or all significant query tokens
-            if topic_clean in searchable or (topic_words and all(w in searchable for w in topic_words)):
+            ])
+            if any(re.search(pat, searchable, re.I) for pat in patterns):
                 filtered.append(d)
                 
         decisions = filtered
@@ -673,19 +740,25 @@ def changes_between(start_date: str, end_date: str, topic: Optional[str] = None,
 
     if topic:
         topic_clean = topic.lower().strip()
-        topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "change", "changed"]]
-        if "typing" in topic_words or topic_clean == "typing":
-            topic_words.extend(["type", "hint", "hints"])
-        
         filtered = []
+        if topic_clean in CURATED_TOPIC_ALIASES:
+            patterns = CURATED_TOPIC_ALIASES[topic_clean]
+        else:
+            topic_words = [w for w in re.split(r'[\s\-_,]+', topic_clean) if len(w) > 2 and w not in ["what", "when", "how", "why", "the", "for", "and", "about", "change", "changed"]]
+            patterns = [rf"\b{re.escape(w)}\b" for w in topic_words] if topic_words else [rf"\b{re.escape(topic_clean)}\b"]
+        
         for c in changes:
             searchable = " ".join([
                 str(c.get("title", "")),
                 str(c.get("rationale", "")),
                 str(c.get("id", "")),
                 " ".join(s.get("name", "") for s in c.get("affected_systems", []))
-            ]).lower()
-            if topic_clean in searchable or any(w in searchable for w in topic_words):
+            ])
+            supersedes_title = (c.get("supersedes") or {}).get("title", "")
+            superseded_by_title = (c.get("superseded_by") or {}).get("title", "")
+            chain_text = f"{searchable} {supersedes_title} {superseded_by_title}"
+
+            if any(re.search(pat, chain_text, re.I) for pat in patterns):
                 filtered.append(c)
         changes = filtered
         
@@ -705,7 +778,7 @@ def changes_between(start_date: str, end_date: str, topic: Optional[str] = None,
 PEP_ALERTS_QUERY = """
 MATCH (p1:Decision)-[r:REQUIRES|SUPERSEDES]->(p2:Decision)
 WHERE p1.status IN ['Active', 'Accepted', 'Final']
-  AND p2.status IN ['Superseded', 'Withdrawn', 'Rejected']
+  AND p2.status IN ['Superseded', 'Withdrawn']
 RETURN p1, type(r) as rel_type, p2
 ORDER BY p1.number ASC
 """
@@ -732,7 +805,7 @@ def get_pep_alerts(graph_name: str = "peps_brain") -> dict:
     return {
         "workspace": "peps",
         "total_alerts": len(alerts),
-        "definition": "Active or Accepted proposals that depend on or supersede a Superseded, Withdrawn, or Rejected proposal",
+        "definition": "Active, Accepted, or Final proposals that supersede or require an obsolete proposal whose status is Superseded or Withdrawn",
         "alerts": alerts
     }
 

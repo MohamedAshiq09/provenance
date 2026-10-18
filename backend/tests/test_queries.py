@@ -388,3 +388,28 @@ def test_falkordb_repos_isolation():
 
     assert len(contaminated) == 0, f"Found contaminated synthetic or PEP nodes in falkordb_repos: {contaminated}"
 
+
+def test_changes_between_authentication_milestones():
+    """
+    Prompt A (3): changes_between for 'authentication' from 2025-01-01 to 2026-10-17
+    must return three milestones, including the 2026-08-17 reversal, using aliases and AFFECTS edges.
+    """
+    from app.queries.graph_queries import changes_between
+    res = changes_between("2025-01-01", "2026-10-17", "authentication", "company_brain")
+    assert res["count"] == 3, f"Expected 3 authentication milestones, got {res['count']}"
+    ids = [c["id"] for c in res["changes"]]
+    assert ids == ["decision_use_jwt", "decision_c5a145c2", "decision_opaque_tokens"]
+    reversal = next(c for c in res["changes"] if c["id"] == "decision_opaque_tokens")
+    assert reversal["valid_from"] == "2026-08-17"
+
+
+def test_pep_alerts_canonical_count():
+    """
+    Prompt B (6): Active/Accepted proposals requiring/superseding obsolete proposals
+    yields canonical count of 27.
+    """
+    from app.queries.graph_queries import get_pep_alerts
+    res = get_pep_alerts("peps_brain")
+    assert res["total_alerts"] == 27, f"Expected canonical 27 PEP alerts, got {res['total_alerts']}"
+    assert "Superseded or Withdrawn" in res["definition"]
+
