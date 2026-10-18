@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.agent.agent import answer
@@ -20,7 +20,7 @@ class AskResponse(BaseModel):
     tool_used: str
     tool_params: dict
     tool_reasoning: str
-    graph_result: Optional[dict] = None
+    graph_result: Optional[Any] = None
     graph_path: list
     sources: list
     cypher_query: str
