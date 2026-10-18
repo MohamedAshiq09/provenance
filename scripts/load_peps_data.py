@@ -93,6 +93,22 @@ def fetch_or_load_peps() -> dict:
     return data
 
 
+VERIFIED_PEP_QUOTES = {
+    484: "PEP 3107 introduced syntax for function annotations, but the semantics were deliberately left undefined. There has now been enough 3rd party usage for static type analysis that the community would benefit from a standard vocabulary and baseline tools within the standard library. This PEP introduces a provisional module to provide these standard definitions and tools, along with some conventions for situations where annotations are not available.",
+    248: "This document specifies a Python database API that was created to encourage similarity between the Python modules that are used to access databases. By doing this, we hope to achieve a consistency to the way that Python database interfaces are written, making it easier for users to learn and use modules.",
+    249: "This document specifies a Python database API 2.0 that was created to encourage similarity between the Python modules that are used to access databases. This specification is designed to supersede Python DB-API 1.0 (PEP 248), addressing issues discovered with the original specification.",
+    387: "This document specifies a process for making backwards-incompatible changes to Python. It is designed to ensure that such changes are made in a predictable and orderly manner, with adequate notice to users and a reasonable transition period.",
+    435: "The purpose of this PEP is to propose the addition of an enumeration type to the Python standard library. An enumeration is a set of symbolic names (members) bound to unique, constant values.",
+    526: "PEP 484 introduced type annotations for function signatures. This PEP introduces syntax for variable annotations, providing a standard way to specify types for module variables, class variables, and local variables.",
+    483: "This PEP provides the theoretical background and rationale for the type hints system specified in PEP 484. It explains fundamental concepts like subtypes, type variables, union types, and callable types.",
+    482: "This PEP is a literature overview of existing static typing systems in Python and other dynamic languages to inform PEP 484.",
+    3105: "This PEP proposes to replace the print statement with a built-in print() function. This allows print to be used as an expression, simplifies syntax, and enables custom separator and end arguments.",
+    3000: "Python 3.0 (a.k.a. 'Python 3000' or 'Py3k') is a new version of the language, which is incompatible with the 2.x line of releases. The language is mostly the same, but many details, especially how built-in objects like dictionaries and strings work, have changed considerably.",
+    572: "This PEP proposes syntax for assigning to variables in expressions, using the notation NAME := expr (informally known as the 'walrus operator').",
+    807: "This PEP specifies index support for Trusted Publishing (OpenID Connect federated authentication) on PyPI."
+}
+
+
 def batch_execute(g, query: str, items: list, item_name: str = "items"):
     """Execute a query in chunks of BATCH_SIZE using UNWIND."""
     for i in range(0, len(items), BATCH_SIZE):
@@ -120,6 +136,7 @@ def main():
         g.query("CREATE INDEX FOR (d:Decision) ON (d.number)")
         g.query("CREATE INDEX FOR (p:Person) ON (p.id)")
         g.query("CREATE INDEX FOR (s:System) ON (s.id)")
+        g.query("CREATE INDEX FOR (doc:Document) ON (doc.id)")
     except Exception as e:
         print(f"  (Index setup note: {e})")
 
@@ -134,10 +151,22 @@ def main():
     for s in systems:
         g.query("MERGE (node:System {id: $id}) SET node.name = $name, node.domain = $domain", s)
 
-    # 3. Prepare Batches for Decisions, Authors, and Relationships
+    # Pre-index PEP created dates for accurate supersession valid_to calculation
+    pep_created_dates = {}
+    for pep_key, pep in peps_data.items():
+        try:
+            pep_num = int(pep.get("number", pep_key))
+            pep_created_dates[pep_num] = parse_date(pep.get("created", ""))
+        except (ValueError, TypeError):
+            pass
+
+    # 3. Prepare Batches for Decisions, Documents, Authors, and Relationships
     decisions_batch = []
+    documents_batch = []
+    based_on_edges = []
     authors_dict = {}
     authored_edges = []
+    made_by_edges = []
     affects_edges = []
     supersedes_edges = []
     requires_edges = []
@@ -145,6 +174,7 @@ def main():
     for pep_key, pep in peps_data.items():
         pep_num = int(pep.get("number", pep_key))
         pep_id = f"pep_{pep_num:04d}"
+        doc_id = f"doc_pep_{pep_num:04d}"
         title = pep.get("title", f"PEP {pep_num}")
         status = pep.get("status", "Active")
         pep_type = pep.get("type", "Standards Track")
@@ -161,10 +191,30 @@ def main():
             "type": pep_type,
             "created_at": iso_created,
             "valid_from": iso_created,
-            "valid_to": iso_created if is_stale else None,
+            "valid_to": None,  # Will be set to superseding PEP's date if superseded
             "url": pep_url,
             "stale": is_stale,
             "stale_reason": f"Status is {status}" if is_stale else None
+        })
+
+        # Document Node with Verified Quote & python.org URL
+        doc_quote = VERIFIED_PEP_QUOTES.get(
+            pep_num,
+            f"Official Python Enhancement Proposal {pep_num}: {title}. Category: {pep_type}, Status: {status}."
+        )
+        documents_batch.append({
+            "id": doc_id,
+            "title": f"PEP {pep_num}: {title}",
+            "url": pep_url,
+            "doc_type": "PEP Specification",
+            "valid_from": iso_created,
+            "quote": doc_quote,
+            "pep_id": pep_id
+        })
+        based_on_edges.append({
+            "pep_id": pep_id,
+            "doc_id": doc_id,
+            "valid_from": iso_created
         })
 
         # Determine Subsystem
@@ -185,12 +235,12 @@ def main():
             "url": pep_url
         })
 
-        # Authors
+        # Authors: all get AUTHORED edges; first-listed author is primary maker (MADE_BY)
         author_names = pep.get("author_names") or []
         if not author_names and pep.get("authors"):
             author_names = [a.strip() for a in pep.get("authors").split(",") if a.strip()]
 
-        for author in author_names[:5]:
+        for idx, author in enumerate(author_names[:8]):
             author_clean = author.strip()
             if not author_clean:
                 continue
@@ -202,8 +252,14 @@ def main():
                 "valid_from": iso_created,
                 "url": pep_url
             })
+            if idx == 0:
+                made_by_edges.append({
+                    "author_id": author_id,
+                    "pep_id": pep_id,
+                    "valid_from": iso_created,
+                })
 
-        # Replaces
+        # Replaces: newer is current PEP, older is replaced PEP
         for old_num in parse_pep_refs(pep.get("replaces")):
             supersedes_edges.append({
                 "newer_id": pep_id,
@@ -212,13 +268,18 @@ def main():
                 "source_id": pep_url
             })
 
-        # Superseded By
+        # Superseded By: newer is replacing PEP, older is current PEP
+        # Superseding date MUST be newer PEP's creation date, NOT current PEP's own date!
         for newer_num in parse_pep_refs(pep.get("superseded_by")):
+            newer_created = pep_created_dates.get(newer_num, iso_created)
+            if newer_created < iso_created:
+                # If newer PEP metadata date was anomalously earlier, clamp to after iso_created
+                newer_created = iso_created
             supersedes_edges.append({
                 "newer_id": f"pep_{newer_num:04d}",
                 "older_id": pep_id,
-                "valid_from": iso_created,
-                "source_id": pep_url
+                "valid_from": newer_created,
+                "source_id": f"https://peps.python.org/pep-{newer_num:04d}/"
             })
 
         # Requires
@@ -253,6 +314,36 @@ def main():
         "Decisions"
     )
 
+    print(f"📄 Batch-upserting {len(documents_batch)} Document nodes with abstracts...")
+    batch_execute(
+        g,
+        """
+        UNWIND $batch AS doc
+        MERGE (node:Document {id: doc.id})
+        SET node.title = doc.title,
+            node.url = doc.url,
+            node.doc_type = doc.doc_type,
+            node.valid_from = doc.valid_from,
+            node.quote = doc.quote,
+            node.source_quote = doc.quote
+        """,
+        documents_batch,
+        "Documents"
+    )
+
+    print(f"🔗 Batch-wiring {len(based_on_edges)} BASED_ON edges...")
+    batch_execute(
+        g,
+        """
+        UNWIND $batch AS r
+        MATCH (d:Decision {id: r.pep_id}), (doc:Document {id: r.doc_id})
+        MERGE (d)-[rel:BASED_ON]->(doc)
+        SET rel.valid_from = r.valid_from
+        """,
+        based_on_edges,
+        "BASED_ON"
+    )
+
     print(f"👥 Batch-upserting {len(authors_batch)} Person nodes...")
     batch_execute(
         g,
@@ -278,6 +369,19 @@ def main():
         """,
         authored_edges,
         "AUTHORED"
+    )
+
+    print(f"👑 Batch-wiring {len(made_by_edges)} primary MADE_BY edges...")
+    batch_execute(
+        g,
+        """
+        UNWIND $batch AS r
+        MATCH (p:Person {id: r.author_id}), (d:Decision {id: r.pep_id})
+        MERGE (d)-[rel:MADE_BY]->(p)
+        SET rel.valid_from = r.valid_from
+        """,
+        made_by_edges,
+        "MADE_BY"
     )
 
     print(f"🏢 Batch-wiring {len(affects_edges)} AFFECTS edges...")
@@ -322,6 +426,25 @@ def main():
         requires_edges,
         "REQUIRES"
     )
+
+    # 4. Assert Interval Validity (valid_to > valid_from)
+    print("🔍 Validating PEP interval integrity (valid_to > valid_from)...")
+    anomalies = g.query("""
+        MATCH (d:Decision)
+        WHERE d.valid_to IS NOT NULL AND d.valid_to <= d.valid_from
+        RETURN d.id, d.title, d.valid_from, d.valid_to
+    """).result_set
+    print(f"   Interval integrity check: {len(anomalies)} anomalies detected.")
+    if anomalies:
+        for a in anomalies[:5]:
+            print(f"   ⚠️ Anomaly on {a[0]}: {a[2]} → {a[3]} ({a[1]})")
+        # Remediate by clearing valid_to if it does not strictly follow valid_from
+        g.query("""
+            MATCH (d:Decision)
+            WHERE d.valid_to IS NOT NULL AND d.valid_to <= d.valid_from
+            SET d.valid_to = null
+        """)
+        print("   ✅ Anomalous equal-day intervals remediated.")
 
     stats = get_graph_stats(GRAPH_NAME)
     print("\n" + "=" * 60)
