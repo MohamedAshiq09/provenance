@@ -3,6 +3,7 @@ Provenance Agent — Agentic loop that selects graph tools and answers questions
 The LLM selects which tool to call; the tools are pure Cypher/graph algorithms.
 """
 import json
+from datetime import datetime, timezone
 from typing import Optional
 from app.core.llm import generate_answer
 from app.queries.graph_queries import (
@@ -669,7 +670,13 @@ def _deterministic_synthesize_answer(question: str, tool_name: str, result: dict
                 
                 if d.get("is_stale_on_date") or status in ["STALE", "SUPERSEDED"]:
                     succ = d.get("superseded_by")
-                    succ_title = succ.get("title") if succ else ("POL-006: Mobile API rate limiting policy v2 — 200 req/s per user" if d.get("id") == "decision_rate_limit_mobile" else "a newer standard")
+                    superseding_docs = d.get("superseding_docs") or []
+                    if succ and succ.get("title"):
+                        succ_title = succ.get("title")
+                    elif superseding_docs and superseding_docs[0].get("title"):
+                        succ_title = superseding_docs[0].get("title")
+                    else:
+                        succ_title = "a newer standard"
                     lines.append(f"Note: Superseded on {valid_to} by {succ_title}.")
                 lines.append("")
     elif tool_name == "changes_between":
@@ -855,20 +862,20 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None, workspace: st
     params = _normalize_params(tool_name, params)
 
     tool_map = {
-        "trace_decision": lambda p: trace_decision(p.get("decision_id", "decision_use_jwt"), resolved),
-        "who_knows": lambda p: who_knows(p.get("system_name", "AuthService"), resolved),
-        "detect_staleness": lambda p: detect_staleness(p.get("new_doc_id", "doc_rate_limit_200"), resolved),
-        "bus_factor": lambda p: bus_factor(p.get("person_id", "person_priya"), resolved),
-        "connection_path": lambda p: connection_path(p.get("node_a_id", "person_priya"), p.get("node_b_id", "sys_auth"), resolved),
-        "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), resolved),
-        "changes_between": lambda p: changes_between(p.get("start_date", "2025-01-01"), p.get("end_date", "2026-10-31"), p.get("topic"), resolved),
-        "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), resolved),
-        "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), resolved),
+        "trace_decision": lambda p: trace_decision(p.get("decision_id") or "", resolved),
+        "who_knows": lambda p: who_knows(p.get("system_name") or "", resolved),
+        "detect_staleness": lambda p: detect_staleness(p.get("new_doc_id") or "", resolved),
+        "bus_factor": lambda p: bus_factor(p.get("person_id") or "", resolved),
+        "connection_path": lambda p: connection_path(p.get("node_a_id") or "", p.get("node_b_id") or "", resolved),
+        "as_of": lambda p: as_of(p.get("date_str") or "", p.get("topic"), resolved),
+        "changes_between": lambda p: changes_between(p.get("start_date") or "", p.get("end_date") or "", p.get("topic"), resolved),
+        "impact_of": lambda p: impact_of(p.get("node_id") or "", resolved),
+        "decision_timeline": lambda p: decision_timeline(p.get("decision_id") or "", resolved),
         "knowledge_gaps": lambda p: knowledge_gaps(resolved),
         "contradiction_candidates": lambda p: get_contradiction_candidates(resolved),
-        "ramp_plan": lambda p: ramp_plan(p.get("system_name", "AuthService"), resolved),
+        "ramp_plan": lambda p: ramp_plan(p.get("system_name") or "", resolved),
         "team_risk": lambda p: team_risk(resolved),
-        "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), resolved),
+        "search_and_expand": lambda p: search_and_expand(p.get("keyword") or "", resolved),
         "get_stale_decisions": lambda p: get_stale_decisions(resolved),
     }
 
@@ -1079,7 +1086,7 @@ def _extract_sources(graph_result: dict, tool_name: str = "") -> list:
                 f"ledger_{sys_name}",
                 f"{sys_name} Component & Expertise Ledger",
                 "Ownership Ledger",
-                "2026-10-17",
+                datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 f"https://docs.novatech.io/systems/{sys_name}",
                 f"Maintainer graph centrality verified via WORKED_ON and REVIEWED edge topologies."
             )
@@ -1091,7 +1098,7 @@ def _extract_sources(graph_result: dict, tool_name: str = "") -> list:
                     a.get("pep_id"),
                     a.get("pep_title"),
                     "PEP Proposal",
-                    "1996-05-08",
+                    a.get("created_at") or a.get("valid_from") or "Historic Standard",
                     f"https://peps.python.org/{a.get('pep_id').replace('_', '-')}/",
                     a.get("description")
                 )
