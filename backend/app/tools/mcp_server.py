@@ -36,7 +36,7 @@ def who_knows(system_name: str, workspace: str = "") -> dict:
 
 @mcp.tool()
 def detect_staleness(new_doc_id: str, workspace: str = "") -> dict:
-    """Find decisions made stale by a new document. USE FOR: 'what is now outdated...', 'what changed...', 'stale decisions after...'. Graph capability: backward BFS over SUPERSEDES|CONTRADICTS → BASED_ON → DEPENDS_ON."""
+    """Find decisions made stale by a new document. USE FOR: 'what is now outdated...', 'what changed...', 'stale decisions after...'. Graph capability: backward BFS over SUPERSEDES|CONTRADICTS → BASED_ON → AFFECTS."""
     return run_tool("detect_staleness", {"new_doc_id": new_doc_id}, workspace=workspace)
 
 
@@ -76,7 +76,7 @@ def get_stale_decisions(workspace: str = "") -> list:
 
 @mcp.tool()
 def impact_of(node_id: str, workspace: str = "") -> dict:
-    """Simulate the blast radius of changing a node — downstream impacts plus what would need re-review. USE FOR: 'what breaks if', 'what if we change', 'impact of', 'blast radius'. Graph capability: direction-aware AFFECTS/USES/DEPENDS_ON traversal with depth and via-path."""
+    """Simulate the blast radius of changing a node — downstream impacts plus what would need re-review. USE FOR: 'what breaks if', 'what if we change', 'impact of', 'blast radius'. Graph capability: direction-aware AFFECTS/USES traversal with depth and via-path."""
     return run_tool("impact_of", {"node_id": node_id}, workspace=workspace)
 
 
