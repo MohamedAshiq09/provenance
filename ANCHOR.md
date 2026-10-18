@@ -69,7 +69,7 @@
 
 ## (c) In progress right now
 
-- (none). Stage 2 completed. Ready for Stage 3 / Final Rehearsal & Delivery.
+- (none). T9 (MCP workspace selection) closed 2026-10-18 — MCP surface now spans all 3 workspaces. Ready for Stage 3 / Final Rehearsal & Delivery.
 
 ## (d) Next task
 
@@ -89,6 +89,11 @@ ALL CLOSED 2026-10-17 (11 commits, every ticket gated: pytest green + Benchmark 
 - T6 CLOSED (P2) staleness effect dates — d63696d (graph+agent) + f4a9775 test. detect_staleness now sets stale_effect_at from superseding doc's valid_from (2026-09-15 for rate-limit v2) + notice_lag_days (32 — the exact friend-test number) AND removed a hardcoded demo string ("Rate limit updated to 200 req/s") from agent synthesis — §2 honesty violation caught during ticket. get_stale_decisions synthesis surfaces "stale for N days before noticed".
 - T7 CLOSED (P2) lineage-conflict sweep + demo doc — 3654ec3 graph + 5a15644 api hook (both ingest endpoints) + 7d1a374 test. find_lineage_conflicts(): content declares "supersedes <formal-id>" of a doc titled with that id while graph has NO SUPERSEDES edge between them → ContradictionCandidate (verdict lineage_conflict, idempotent MERGE, guarded human-confirm only). Probe truth: company_brain had 0 such defects pre-ticket (queue-empty was honest); after ingesting the real friend-test doc doc_adr_017 (REST /api/ingest/document, ADR-017 rescinding ADR-014), sweep caught the pair live — candidate cc_lg_doc_adr_jwt_reversal_doc_adr_017 IS NOW PENDING IN THE QUEUE (left pending deliberately: consuming it via Approvals Hub → radar is the owner's demo beat).
 - T8 CLOSED connection_path coverage — 6c06f70 MCP-level test person_sam→sys_ml over WORKED_ON (found: True live, 1 hop; doc→sys_ml correctly returns found:false — no directed path exists). Friend-test round should include one real user question for this tool.
+
+## (g2) Ticket filed 2026-10-18 (after pulling mate's Stage 2 push)
+
+- T9 OPEN (P1) MCP workspace selection — REST/UI now reach all 3 workspaces (company_brain, peps_brain, falkordb_repos : 226 PRs/13 systems/22 contributors) but ALL 14 MCP tools are pinned to the module constant GRAPH_NAME=company_brain; MCP callers (Claude, Inspector) cannot query the PEPs corpus or falkordb_repos at all — MCP is a first-class deliverable, so it must not lag the REST surface. Plan: optional `workspace: str = ""` param on all 14 MCP tools → run_tool resolver mirroring REST `_resolve_graph` semantics (peps/python → peps_brain; falkordb/repos/github → falkordb_repos; default company_brain); tests assert repos WHO WORKS ON results + company isolation via MCP wrapper; live Inspector verify with X-API-Key before commit (local-graph env overrides — .env drift lesson above).
+- T9 CLOSED — b16d7f5 agent (run_tool workspace resolver, matches REST `_resolve_graph` semantics incl. company_brain fallback) + ef9bba9 mcp (all 14 tool signatures) + c4b7a6e test (3 tests). Gate BEFORE commit (local overrides): 70/70 pytest (67 mate + 3 new); Benchmark v2 88.1% no regression; live /mcp auth'd session: tools/list = 14 tools ALL exposing `workspace`, tools/call who_knows("FalkorDB Core Engine (src/)", workspace="github") → primary_expert AviAvni; isolation test proves bare call returns zero repos experts (no leakage); peps as_of("2024-06-01", topic typing) → 7 real PEPs incl. PEP 729. SIDE WORK during ticket: peps_brain AND falkordb_repos graphs were EMPTY locally (mate ingested only on their machine/seed elsewhere) — ran scripts/load_peps_data.py (745 proposals, 73 supersession) and scripts/load_github.py (226 PRs, 31 SUPERSEDES/REVERTS) so the third workspace is real on this machine too; team_risk over repos honestly returns empty teams (contributors carry no MEMBER_OF edges — ingest has no team concept).
 
 ## (d) Next task
 
