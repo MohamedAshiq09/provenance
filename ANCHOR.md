@@ -78,13 +78,25 @@
   - UI: Updated `ui/src/components/BenchmarkPanel.jsx` with 70-question multi-workspace metrics, category tabs, and an interactive 4th tab for the 20-question paraphrase set with live router vs LLM comparisons and blind indicators.
   - Verification: 70/70 backend pytest green (`uv run --directory backend pytest -v` in 48s); Next.js `bun run build` compiled cleanly with 0 errors.
 
+- Final Push: Prompts A, B, and C Execution (2026-10-18):
+  - 2fb9d85 `scripts: fix PEP supersession dates, add Document nodes, and record primary authors`: PEP supersession end dates set to superseding PEP creation date (PEP 248: 1996-05-08 → 1999-04-12, superseded by PEP 249; 0 intervals with valid_to <= valid_from). PEP abstracts loaded as Document nodes with `peps.python.org` URLs. Primary authors recorded with `MADE_BY` and all authors with `AUTHORED`.
+  - 6e0f75d `scripts: classify substantive PRs vs dependency bumps, flag bots, and wire reviewer edges`: Classified 226 PRs into 148 substantive decisions and 78 dependency bumps. Flagged bots (`dependabot[bot]`, `Copilot`, `renovate`, `github-actions`) and added 270 `REVIEWED` edges for lead maintainers (`swilly22`, `AviAvni`, `roitberg`, `dvirdukhan`).
+  - ae77938 `graph: add curated topic aliases, reviewer scoring, and canonical PEP alerts`: Added `CURATED_TOPIC_ALIASES` with regex word boundary matching for typing/database/auth; `changes_between` returns 3 authentication milestones including 2026-08-17 reversal; added `PEOPLE_SCORE_REVIEWED_QUERY` weighted x5 and excluded bots from bus factor and expertise; canonicalized PEP alert count to 27.
+  - e420ae9 `api: include graph_result in AskResponse model`: Fixed FastAPI model filtering that stripped structured graph payloads.
+  - 5edc66a `agent: extract complete verified sources and lead as_of answers with current status`: Overhauled `_extract_sources()` across all 7 tools to extract verbatim quotes, dates, and URLs, removing filler sentences; prepended crisp lead sentence to `as_of` answers.
+  - ee36f99 `ui: render typed components for all tools, fix underscore stripping, and synchronize timeline cards`: Overhauled `ChatPanel.jsx` with dedicated typed components for all tools; fixed regex underscore stripping so `WORKED_ON` and `valid_from` display verbatim; synchronized timeline date cards.
+  - ebcda4c `data: synchronize ADR-001 JWT decision dates with benchmark and timeline`: Updated `doc_adr_jwt_original` and `decision_use_jwt` to `2024-06-01`, eliminating `para_06` benchmark/card discrepancy.
+  - e2cd50a `bench: compute explainability over answerable questions, label RAG latency, and disclose evaluation authors`: Defined explainability over answerable questions (56/56, 100.0%); labeled RAG latency as retrieval-only; disclosed AI evaluation agent authorship on blind holdout suite.
+  - c13faca `scripts: add seed_cloud and smoke_live scripts for deployment and verification`: Seed cloud graphs offline without GitHub API calls; 5-query live verification script (5/5 passed).
+  - Verification: 72/72 pytest green; full 70-question benchmark re-run (Graph+LLM 87.1%, Pure Router 85.7%, Vector RAG 28.6%, +58.5% net advantage; Paraphrase suite 90.0% accuracy, 100% precision, 87.5% recall, 14.5ms router latency, para_06 passing); Next.js 16 build green; browser subagent verified visual rendering and captured production screenshots in both light and dark themes.
+
 ## (c) In progress right now
 
-- (none). Stage 3 completed and verified.
+- (none). Final push code freeze complete.
 
 ## (d) Next task
 
-- Stage 4: Managed by teammate/friend (presentation, final submission artifacts, and rehearsal).
+- Stage 4 / Final Submission: Teammate completes MCP client recording clip, updates README submission checklist, and submits before 11:59 PM IST.
 
 ## (g) Tickets filed 2026-10-17 (from live test — do in this order, no silent skips)
 
