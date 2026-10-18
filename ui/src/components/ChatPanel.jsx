@@ -251,7 +251,7 @@ export default function ChatPanel({
 
       {/* Main Conversation Stream or Empty State */}
       {messagesToRender.length === 0 && !isLoading ? (
-        /* Empty State (Cairn-inspired Minimalist Layout) */
+        /* Empty State (Minimalist Focused Layout) */
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -546,7 +546,7 @@ export default function ChatPanel({
                 {resp.answer}
               </p>
               <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
-                Provenance indexes verified architecture records, systems, and people. Unrecorded technologies or false premises are declined directly without speculation.
+                Saturn indexes verified architecture records, systems, and people. Unrecorded technologies or false premises are declined directly without speculation.
               </div>
             </div>
           ) : isChangesBetween && resp.graph_result?.changes?.length > 0 ? (
@@ -962,7 +962,7 @@ export default function ChatPanel({
             </div>
           )}
 
-          {/* Plain Sources Cards (Matching Cairn Sources Card style) */}
+          {/* Plain Sources Cards (Clean Card style) */}
           {resp.sources && resp.sources.length > 0 && !isDeclined && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
               <div style={{

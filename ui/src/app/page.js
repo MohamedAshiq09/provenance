@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' is the primary front door matching Cairn
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' is the primary front door
   const [dbStatus, setDbStatus] = useState('connected');
   const [stats, setStats] = useState({ Person: 40, Decision: 50, Document: 146, System: 8 });
   const [staleDecisions, setStaleDecisions] = useState([]);
