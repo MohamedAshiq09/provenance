@@ -67,16 +67,24 @@
     - d754d48 `ui: integrate FalkorDB Repos workspace, scenario chips, and health metrics` (`ui/src/components/Sidebar.jsx`, `ui/src/app/page.js`, `ui/src/components/ChatPanel.jsx`, `ui/src/components/BrainHealthPanel.jsx`, `ui/src/components/TimeTravelSlider.jsx`). Added FalkorDB Repos workspace switcher option, 6 repository scenario chips, 31 superseded PR alerts, and 2026 repository milestone scrubber.
     - Verification: 67/67 pytest pass in 115s (100%); `bun run build` in 2.5s (0 errors); all 4 PEPs probes and FalkorDB repo queries verified live over REST; browser subagent verified visual rendering and captured UI screenshots.
 
+- Stage 3: Multi-Workspace Benchmark & Paraphrase Evaluation (2026-10-18):
+  - Extended Benchmark v2 to 70 questions across all 3 workspaces: `company_brain` (42 questions), `peps_brain` (15 questions with official header ground truth), and `falkordb_repos` (13 questions with cached merged PR/issue ground truth), with 14 false-premise questions across all 3 workspaces.
+  - Added 20-question human free-text paraphrase suite (`bench/paraphrase_questions.json`) featuring realistic human typing artifacts (typos, colloquial date phrases, false premises). Authorship declared: 12 by Engineering Lead (known benchmark paraphrases) and 8 by External Evaluator (blind holdout questions).
+  - Added `router_mode: bool` toggle to `answer()` in `backend/app/agent/agent.py` and `POST /api/agent/ask` in `backend/app/api/agent.py`. Evaluated both modes live through the real UI REST endpoint:
+    - Pure Graph Router (LLM Disabled): Accuracy 95.0% (19/20), Precision 100.0% (15/15), Recall 93.8% (15/16), False Premise Rejections 4/4 (100%), Blind Accuracy 100% (8/8), Avg Latency 9.6ms.
+    - Graph + LLM Mode (LLM Enabled): Accuracy 75.0% (15/20), Precision 100.0% (11/11), Recall 68.8% (11/16), False Premise Rejections 4/4 (100%), Blind Accuracy 75.0% (6/8), Avg Latency 3051.3ms.
+    - Documented honest failure diagnostics: `para_06` (temporal ground truth mismatch: summer 2024 precedes 2025-04-24 JWT adoption), `para_19`/`para_20` (LLM high-level summarization omitting specific PR numbers in blind set).
+  - 70-question overall results: Graph+LLM 84.3%, Pure Router 78.6%, Dense Vector RAG 28.6% (+55.7% net graph advantage). Staleness Precision 94.1% (16/17), Recall 88.9% (16/18), False Premise Rejection 100% (14/14).
+  - UI: Updated `ui/src/components/BenchmarkPanel.jsx` with 70-question multi-workspace metrics, category tabs, and an interactive 4th tab for the 20-question paraphrase set with live router vs LLM comparisons and blind indicators.
+  - Verification: 70/70 backend pytest green (`uv run --directory backend pytest -v` in 48s); Next.js `bun run build` compiled cleanly with 0 errors.
+
 ## (c) In progress right now
 
-- (none). T9 (MCP workspace selection) closed 2026-10-18 — MCP surface now spans all 3 workspaces. Ready for Stage 3 / Final Rehearsal & Delivery.
+- (none). Stage 3 completed and verified.
 
 ## (d) Next task
 
-- Stage 3: Full End-to-End Demo Rehearsal & Submission Polish
-  1. Final verification of all three workspaces (NovaTech Labs, Python PEPs, FalkorDB Repos).
-  2. Final check of MCP tool definitions and Inspector commands.
-  3. Prepare final submission report and video walkthrough notes.
+- Stage 4: Managed by teammate/friend (presentation, final submission artifacts, and rehearsal).
 
 ## (g) Tickets filed 2026-10-17 (from live test — do in this order, no silent skips)
 
