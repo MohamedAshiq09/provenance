@@ -30,4 +30,8 @@ In compliance with the FalkorDB Graph Hacks Hackathon rules (Rules 7, 12, 13), a
   - **Hardcode Cleanup**: Query `Person` node name dynamically in `bus_factor()` instead of hardcoding `"Priya Sharma"`. Removed fallback decision IDs and hardcoded citation dates from `agent.py`. Cleaned obsolete `DEPENDS_ON` references from `README.md`, `CLAUDE.md`, and docstrings in `graph_queries.py` and `mcp_server.py`, accurately documenting the co-affected `AFFECTS` / `USES` graph topology.
   - **Multi-Turn Chat History Stream**: In `ui/src/app/page.js` and `ui/src/components/ChatPanel.jsx`, implemented a continuous conversation stream (`chatMessages`) that preserves and displays all previous questions and responses sequentially until refresh, with smooth auto-scroll to the latest answer.
   - **Verification**: 73/73 pytest green in 154s; full 70-question benchmark re-run with Graph+LLM 85.7% / Router 84.3% vs Lexical RAG 28.6% (+57.1% advantage), 100% false-premise rejection, 20/20 (100%) router accuracy on 20-Q paraphrase suite (18.0ms latency). Browser subagent verified live multi-turn chat persistence and visual rendering.
+- **2026-10-18 (Saturn Rebrand & Comprehensive Documentation Overhaul)**:
+  - **Identity Rebrand**: Updated brand identity to Saturn with custom logo asset across UI layout, sidebar, header, and metadata.
+  - **Zero Competitor Mentions**: Scrubbed internal references across comments and documentation.
+  - **Judge-Ready README Overhaul**: Authored complete, structured `README.md` detailing the Saturn concentric ring metaphor, the failure modes of vector RAG, 3 production workspaces, 5 core Cypher algorithms, Streamable HTTP MCP integration, and the 70-question empirical benchmark.
 
