@@ -51,13 +51,18 @@ export default function Header({
             width: '42px',
             height: '42px',
             borderRadius: 'var(--radius-md)',
-            background: 'linear-gradient(135deg, #06b6d4, #6366f1)',
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: '0 0 20px rgba(6, 182, 212, 0.35)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
           }}>
-            <BrainCircuit size={24} color="#ffffff" />
+            <img 
+              src="/saturn-logo.png" 
+              alt="Saturn Logo" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -69,7 +74,7 @@ export default function Header({
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
-                PROVENANCE
+                SATURN
               </h1>
               <span style={{
                 fontSize: '0.7rem',

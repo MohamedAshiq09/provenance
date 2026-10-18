@@ -122,14 +122,19 @@ export default function Sidebar({
             width: '28px',
             height: '28px',
             borderRadius: 'var(--radius-sm)',
-            background: 'var(--accent)',
-            color: 'var(--accent-contrast)',
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 0 10px rgba(6, 182, 212, 0.25)',
           }}>
-            <BrainCircuit size={16} />
+            <img 
+              src="/saturn-logo.png" 
+              alt="Saturn Logo" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
           </div>
           <span className="sidebar-brand-text" style={{ 
             fontSize: '1rem', 
@@ -137,7 +142,7 @@ export default function Sidebar({
             letterSpacing: '-0.01em',
             color: 'var(--text)',
           }}>
-            Provenance
+            Saturn
           </span>
         </div>
 
