@@ -9,7 +9,8 @@
       "superseded_doc": "doc_rate_limit_50",
       "superseding_doc": "doc_rate_limit_200",
       "key_fact": "Rate limit was updated from 50 to 200 req/s, making old mobile rate limit decision stale"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q02",
@@ -20,7 +21,8 @@
       "maker": "Priya Sharma",
       "superseded": "decision_use_jwt",
       "key_fact": "Superseded JWT due to security revocation latency and token size bloat"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q03",
@@ -28,10 +30,13 @@
     "question": "What systems are at risk if Priya Sharma leaves?",
     "ground_truth": {
       "person_id": "person_priya",
-      "sole_systems": ["AuthService"],
+      "sole_systems": [
+        "AuthService"
+      ],
       "risk_level": "HIGH",
       "key_fact": "Priya is the sole expert contributor for AuthService"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q04",
@@ -39,10 +44,13 @@
     "question": "What is the bus factor risk for Sam Rivera?",
     "ground_truth": {
       "person_id": "person_sam",
-      "sole_systems": ["RecommendationEngine"],
+      "sole_systems": [
+        "RecommendationEngine"
+      ],
       "risk_level": "HIGH",
       "key_fact": "Sam is the sole expert on RecommendationEngine"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q05",
@@ -50,10 +58,13 @@
     "question": "What happens if Jordan Kim leaves NovaTech?",
     "ground_truth": {
       "person_id": "person_jordan",
-      "sole_systems": ["NotificationService"],
+      "sole_systems": [
+        "NotificationService"
+      ],
       "risk_level": "HIGH",
       "key_fact": "Jordan is the sole expert on NotificationService"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q06",
@@ -63,7 +74,8 @@
       "top_expert": "Priya Sharma",
       "system": "AuthService",
       "key_fact": "Priya Sharma has highest expertise score on AuthService"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q07",
@@ -73,7 +85,8 @@
       "top_expert": "Jordan Kim",
       "system": "NotificationService",
       "key_fact": "Jordan Kim maintains NotificationService"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q08",
@@ -83,7 +96,8 @@
       "top_expert": "Marcus Vance",
       "system": "BillingSystem",
       "key_fact": "Marcus Vance is lead contributor for BillingSystem"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q09",
@@ -96,7 +110,8 @@
       "channel": "eng-incidents",
       "hops": 3,
       "key_fact": "Originated from Black Friday incident message by Jordan Kim in #eng-incidents, leading to ticket then ADR"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q10",
@@ -107,7 +122,8 @@
       "active_decision": "decision_use_jwt",
       "title": "Use JWT for authentication",
       "key_fact": "In June 2024, JWT was the active decision before being superseded by opaque tokens"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q11",
@@ -118,7 +134,8 @@
       "active_decision": "decision_postgres_billing",
       "database": "PostgreSQL",
       "key_fact": "PostgreSQL was active before CockroachDB migration"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q12",
@@ -129,7 +146,8 @@
       "active_decision": "decision_cockroach_billing",
       "database": "CockroachDB",
       "key_fact": "CockroachDB was adopted in September 2024, active in December 2024"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q13",
@@ -140,7 +158,8 @@
       "new_doc": "doc_rate_limit_200",
       "reason": "Superseded by doc_rate_limit_200 which specifies 200 req/s",
       "key_fact": "ADR-004 is stale because newer spec v2.1 raised threshold to 200 rps"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q14",
@@ -148,10 +167,13 @@
     "question": "Are there any stale decisions affecting MobileAPI?",
     "ground_truth": {
       "system": "sys_mobile_api",
-      "stale_decisions": ["decision_rate_limit_50"],
+      "stale_decisions": [
+        "decision_rate_limit_50"
+      ],
       "has_stale": true,
       "key_fact": "MobileAPI has at least 1 stale decision (rate limiting)"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q15",
@@ -160,7 +182,8 @@
     "ground_truth": {
       "min_stale": 1,
       "key_fact": "At least 1 active decision is flagged stale by backward graph traversal"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q16",
@@ -171,7 +194,8 @@
       "maker": "Marcus Vance",
       "role": "Principal Engineer",
       "key_fact": "Marcus Vance authored the CockroachDB migration decision"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q17",
@@ -181,7 +205,8 @@
       "decision_id": "decision_opaque_tokens",
       "source_doc": "doc_adr_jwt_reversal",
       "key_fact": "Based on ADR-002 document which reversed ADR-001"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q18",
@@ -192,7 +217,8 @@
       "team": "team_platform",
       "team_name": "Platform Engineering",
       "key_fact": "Platform Engineering owns AuthService"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q19",
@@ -203,7 +229,8 @@
       "top_contributor": "Sam Rivera",
       "team": "team_data",
       "key_fact": "Sam Rivera is top contributor in Data & ML team"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q20",
@@ -216,7 +243,8 @@
       "channel": "architecture",
       "hops": 3,
       "key_fact": "Originated from Slack message by Alex Rivera in #architecture channel"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q21",
@@ -227,7 +255,8 @@
       "to": "sys_payments",
       "max_hops": 4,
       "key_fact": "Connected through AuthService which PaymentProcessor uses for authentication"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q22",
@@ -238,7 +267,8 @@
       "team": "Platform Engineering",
       "risk_level": "HIGH",
       "key_fact": "Priya Sharma is sole maintainer on critical path AuthService"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q23",
@@ -249,7 +279,8 @@
       "expert": "Elena Rostova",
       "team": "team_mobile",
       "key_fact": "Elena Rostova is lead engineer for Mobile Engineering"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q24",
@@ -259,7 +290,8 @@
       "system": "PaymentProcessor",
       "team_name": "Backend Services",
       "key_fact": "Backend Services owns PaymentProcessor"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q25",
@@ -270,7 +302,8 @@
       "to": "sys_ml",
       "hops": 1,
       "key_fact": "Direct WORKED_ON edge"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q26",
@@ -278,9 +311,14 @@
     "question": "What systems are affected by the opaque tokens decision?",
     "ground_truth": {
       "decision_id": "decision_opaque_tokens",
-      "affected_systems": ["AuthService", "MobileAPI", "PaymentProcessor"],
+      "affected_systems": [
+        "AuthService",
+        "MobileAPI",
+        "PaymentProcessor"
+      ],
       "key_fact": "Opaque token migration affected auth, mobile API, and payments"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q27",
@@ -289,16 +327,22 @@
     "ground_truth": {
       "contradiction": true,
       "key_fact": "Explicit reversal and contradiction relationship"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q28",
     "category": "bus_factor",
     "question": "List all systems with a bus factor of 1.",
     "ground_truth": {
-      "systems": ["AuthService", "RecommendationEngine", "NotificationService"],
+      "systems": [
+        "AuthService",
+        "RecommendationEngine",
+        "NotificationService"
+      ],
       "key_fact": "Three systems have only a single contributing expert"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q29",
@@ -308,7 +352,8 @@
       "system": "DataLake",
       "team": "team_data",
       "key_fact": "Data & ML team owns DataLake"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q30",
@@ -320,7 +365,8 @@
       "supersedes": "decision_use_jwt",
       "source_doc": "doc_adr_jwt_reversal",
       "key_fact": "Full 3-way provenance chain verified"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q31",
@@ -330,7 +376,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "Unrecorded personal question outside company brain graph scope; agent must decline to answer rather than guess."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q32",
@@ -340,7 +387,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "False premise: AuthService uses standard HMAC/Redis token validation, not quantum cryptography."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q33",
@@ -350,7 +398,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "False premise: NovaTech never adopted Oracle DB; database stack is PostgreSQL and CockroachDB."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q34",
@@ -360,7 +409,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "False premise: No crypto or blockchain systems exist in the company architecture."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q35",
@@ -370,7 +420,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "False premise: Company engineering policies explicitly forbid weekend deployments."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q36",
@@ -380,7 +431,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "False premise: ADR-999 does not exist in the decision records."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q37",
@@ -390,7 +442,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "Unrecorded personal data; must state information is not present in graph."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q38",
@@ -400,7 +453,8 @@
       "is_unanswerable": true,
       "expected_behavior": "decline",
       "key_fact": "False premise: Mobile gateway uses Envoy reverse proxy over TLS, not satellite hardware."
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q39",
@@ -410,7 +464,8 @@
       "as_of_date": "2024-06-01",
       "active_decision": "ADR-001: JWT Authentication",
       "key_fact": "ADR-001 was active until superseded by ADR-002 in August 2025"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q40",
@@ -420,16 +475,21 @@
       "system": "AuthService",
       "stack": "Redis",
       "key_fact": "AuthService uses Redis for opaque token lookup and immediate revocation"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q41",
     "category": "staleness_detection",
     "question": "What systems would be affected if the Kafka payment event bus is deprecated?",
     "ground_truth": {
-      "affected": ["PaymentProcessor", "BillingSystem"],
+      "affected": [
+        "PaymentProcessor",
+        "BillingSystem"
+      ],
       "key_fact": "PaymentProcessor and BillingSystem communicate via Kafka payment events"
-    }
+    },
+    "workspace": "company_brain"
   },
   {
     "id": "q42",
@@ -437,8 +497,373 @@
     "question": "What architecture decisions have been orphaned because their original authors left the company?",
     "ground_truth": {
       "has_orphans": true,
-      "departed_authors": ["Marcus Vance"],
+      "departed_authors": [
+        "Marcus Vance"
+      ],
       "key_fact": "Marcus Vance authored early Postgres ledger specs before departing"
+    },
+    "workspace": "company_brain"
+  },
+  {
+    "id": "pep_q01",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who is the primary author of PEP 249 (Python Database API Specification v2.0)?",
+    "ground_truth": {
+      "top_expert": "Marc-Andr\u00e9 Lemburg",
+      "pep_number": 249,
+      "status": "Final",
+      "created": "1999-04-12",
+      "replaces": "pep_0248",
+      "key_fact": "Marc-Andr\u00e9 Lemburg authored PEP 249 in April 1999, replacing PEP 248"
+    }
+  },
+  {
+    "id": "pep_q02",
+    "workspace": "peps_brain",
+    "category": "decision_provenance",
+    "question": "Which PEP superseded PEP 333 (Python Web Server Gateway Interface v1.0)?",
+    "ground_truth": {
+      "superseded_by": "pep_3333",
+      "superseded_by_title": "PEP 3333: Python Web Server Gateway Interface v1.0.1",
+      "author": "Phillip J. Eby",
+      "status": "Final",
+      "key_fact": "PEP 333 by Phillip J. Eby was superseded by PEP 3333 in September 2010"
+    }
+  },
+  {
+    "id": "pep_q03",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who authored PEP 20 (The Zen of Python) and what is its status?",
+    "ground_truth": {
+      "top_expert": "Tim Peters",
+      "status": "Active",
+      "created": "2004-08-19",
+      "key_fact": "PEP 20 was authored by Tim Peters in August 2004 with Active status"
+    }
+  },
+  {
+    "id": "pep_q04",
+    "workspace": "peps_brain",
+    "category": "decision_provenance",
+    "question": "What was the creation date and primary author of PEP 8 (Style Guide for Python Code)?",
+    "ground_truth": {
+      "authors": [
+        "Guido van Rossum",
+        "Barry Warsaw",
+        "Alyssa Coghlan"
+      ],
+      "top_expert": "Guido van Rossum",
+      "created": "2001-07-05",
+      "status": "Active",
+      "key_fact": "PEP 8 was authored by Guido van Rossum, Barry Warsaw, and Alyssa Coghlan in July 2001"
+    }
+  },
+  {
+    "id": "pep_q05",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who authored PEP 484 (Type Hints) and when was it created?",
+    "ground_truth": {
+      "authors": [
+        "Guido van Rossum",
+        "Jukka Lehtosalo",
+        "\u0141ukasz Langa"
+      ],
+      "top_expert": "Guido van Rossum",
+      "created": "2014-09-29",
+      "status": "Final",
+      "key_fact": "PEP 484 introduced type hints, authored by Guido van Rossum, Jukka Lehtosalo, and \u0141ukasz Langa in September 2014"
+    }
+  },
+  {
+    "id": "pep_q06",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who is the lead author of PEP 557 (Data Classes)?",
+    "ground_truth": {
+      "top_expert": "Eric V. Smith",
+      "created": "2017-06-02",
+      "status": "Final",
+      "key_fact": "PEP 557 was authored by Eric V. Smith in June 2017"
+    }
+  },
+  {
+    "id": "pep_q07",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who authored PEP 572 (Assignment Expressions / Walrus Operator)?",
+    "ground_truth": {
+      "authors": [
+        "Chris Angelico",
+        "Tim Peters",
+        "Guido van Rossum"
+      ],
+      "top_expert": "Chris Angelico",
+      "created": "2018-02-28",
+      "status": "Final",
+      "key_fact": "PEP 572 introduced the walrus operator, authored by Chris Angelico, Tim Peters, and Guido van Rossum"
+    }
+  },
+  {
+    "id": "pep_q08",
+    "workspace": "peps_brain",
+    "category": "decision_provenance",
+    "question": "What PEP introduced coroutines with async and await syntax and who authored it?",
+    "ground_truth": {
+      "decision_id": "pep_0492",
+      "pep_number": 492,
+      "top_expert": "Yury Selivanov",
+      "created": "2015-04-09",
+      "status": "Final",
+      "key_fact": "PEP 492 introduced async/await syntax, authored by Yury Selivanov in April 2015"
+    }
+  },
+  {
+    "id": "pep_q09",
+    "workspace": "peps_brain",
+    "category": "decision_provenance",
+    "question": "What is the status of PEP 380 (Syntax for Delegating to a Subgenerator) and who wrote it?",
+    "ground_truth": {
+      "decision_id": "pep_0380",
+      "pep_number": 380,
+      "top_expert": "Gregory Ewing",
+      "status": "Final",
+      "created": "2009-02-13",
+      "key_fact": "PEP 380 introduced yield from syntax, authored by Gregory Ewing with Final status"
+    }
+  },
+  {
+    "id": "pep_q10",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who are the authors of PEP 257 (Docstring Conventions)?",
+    "ground_truth": {
+      "authors": [
+        "David Goodger",
+        "Guido van Rossum"
+      ],
+      "status": "Active",
+      "created": "2001-05-29",
+      "key_fact": "PEP 257 docstring conventions authored by David Goodger and Guido van Rossum"
+    }
+  },
+  {
+    "id": "pep_q11",
+    "workspace": "peps_brain",
+    "category": "decision_provenance",
+    "question": "What earlier specification was replaced by PEP 249?",
+    "ground_truth": {
+      "replaces": "pep_0248",
+      "replaces_title": "PEP 248: Python Database API Specification v1.0",
+      "key_fact": "PEP 249 replaced PEP 248 (DB-API v1.0)"
+    }
+  },
+  {
+    "id": "pep_q12",
+    "workspace": "peps_brain",
+    "category": "who_knows",
+    "question": "Who authored PEP 3107 (Function Annotations)?",
+    "ground_truth": {
+      "authors": [
+        "Collin Winter",
+        "Tony Lownds"
+      ],
+      "status": "Final",
+      "created": "2006-12-02",
+      "key_fact": "PEP 3107 function annotations authored by Collin Winter and Tony Lownds"
+    }
+  },
+  {
+    "id": "fk_q01",
+    "workspace": "falkordb_repos",
+    "category": "decision_provenance",
+    "question": "Which PR closed Issue #2048 in falkordb-browser?",
+    "ground_truth": {
+      "pr_id": "pr_falkordb_browser_2049",
+      "pr_number": 2049,
+      "title": "PR #2049: Remove nonexistent MCP port from Helm chart and docs",
+      "key_fact": "PR #2049 closed issue #2048 removing nonexistent MCP port"
+    }
+  },
+  {
+    "id": "fk_q02",
+    "workspace": "falkordb_repos",
+    "category": "decision_provenance",
+    "question": "What issue did PR #2070 address regarding Pod Security in falkordb-browser?",
+    "ground_truth": {
+      "closed_issue": 2054,
+      "title": "PR #2070: Harden Helm chart defaults for Pod Security restricted",
+      "key_fact": "PR #2070 hardened Helm chart defaults for Pod Security restricted, closing issue #2054"
+    }
+  },
+  {
+    "id": "fk_q03",
+    "workspace": "falkordb_repos",
+    "category": "decision_provenance",
+    "question": "Which PR in falkordb-browser resolved Issue #2034 for image registry container resolution?",
+    "ground_truth": {
+      "pr_id": "pr_falkordb_browser_2035",
+      "pr_number": 2035,
+      "title": "PR #2035: Helm chart: add optional image.registry for container image resolution",
+      "key_fact": "PR #2035 resolved issue #2034 by adding image.registry"
+    }
+  },
+  {
+    "id": "fk_q04",
+    "workspace": "falkordb_repos",
+    "category": "staleness_detection",
+    "question": "What earlier PR did PR #291 in falkordb-py supersede for astral-sh/setup-uv?",
+    "ground_truth": {
+      "superseded_pr": "pr_falkordb_py_284",
+      "superseded_number": 284,
+      "title": "PR #284: build(deps): bump astral-sh/setup-uv from 9.0.0 to 10.0.1",
+      "key_fact": "PR #291 superseded PR #284 bumping setup-uv to 10.1.0"
+    }
+  },
+  {
+    "id": "fk_q05",
+    "workspace": "falkordb_repos",
+    "category": "who_knows",
+    "question": "Who is the top code reviewer on the FalkorDB browser repository?",
+    "ground_truth": {
+      "top_expert": "dudizimber",
+      "reviews_count": 7,
+      "key_fact": "dudizimber has 7 merged PR reviews on falkordb-browser"
+    }
+  },
+  {
+    "id": "fk_q06",
+    "workspace": "falkordb_repos",
+    "category": "decision_provenance",
+    "question": "What feature was introduced in PR #304 of falkordb-py on 2026-10-14?",
+    "ground_truth": {
+      "pr_id": "pr_falkordb_py_304",
+      "feature": "hiredis",
+      "title": "PR #304: feat: add optional hiredis extra for faster reply parsing",
+      "key_fact": "PR #304 added optional hiredis extra for faster reply parsing"
+    }
+  },
+  {
+    "id": "fk_q07",
+    "workspace": "falkordb_repos",
+    "category": "who_knows",
+    "question": "Which core engine components did maintainer swilly22 work on?",
+    "ground_truth": {
+      "maintainer": "swilly22",
+      "components": [
+        "FalkorDB Core Engine (src/)",
+        "Cypher Test Suite (tests/)"
+      ],
+      "key_fact": "swilly22 worked on FalkorDB Core Engine and Cypher Test Suite"
+    }
+  },
+  {
+    "id": "fk_q08",
+    "workspace": "falkordb_repos",
+    "category": "decision_provenance",
+    "question": "Which component does PR #2049 belong to in falkordb-browser?",
+    "ground_truth": {
+      "component": "Frontend Dependencies (deps/)",
+      "pr_number": 2049,
+      "key_fact": "PR #2049 touched Frontend Dependencies (deps/)"
+    }
+  },
+  {
+    "id": "fk_q09",
+    "workspace": "falkordb_repos",
+    "category": "decision_provenance",
+    "question": "What PR hardened Helm chart defaults for Pod Security restricted?",
+    "ground_truth": {
+      "pr_id": "pr_falkordb_browser_2070",
+      "pr_number": 2070,
+      "title": "PR #2070: Harden Helm chart defaults for Pod Security restricted",
+      "key_fact": "PR #2070 hardened Helm chart defaults for Pod Security restricted"
+    }
+  },
+  {
+    "id": "fk_q10",
+    "workspace": "falkordb_repos",
+    "category": "staleness_detection",
+    "question": "Which earlier PR was superseded by PR #286 when updating mypy in falkordb-py?",
+    "ground_truth": {
+      "superseded_pr": "pr_falkordb_py_253",
+      "superseded_number": 253,
+      "title": "PR #253: Bump mypy from 2.1.0 to 2.3.0",
+      "key_fact": "PR #286 (mypy 2.3.1) superseded PR #253 (mypy 2.3.0)"
+    }
+  },
+  {
+    "id": "pep_fp01",
+    "workspace": "peps_brain",
+    "category": "false_premise_rejection",
+    "question": "Which PEP approved replacing the CPython runtime core with a Rust rewrite?",
+    "ground_truth": {
+      "unresolved_entity": "Rust",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: No PEP approves Rust rewrite for CPython core; CPython remains in C."
+    }
+  },
+  {
+    "id": "pep_fp02",
+    "workspace": "peps_brain",
+    "category": "false_premise_rejection",
+    "question": "Who authored PEP 9999 introducing quantum computing algorithms to the Python standard library?",
+    "ground_truth": {
+      "unresolved_entity": "PEP 9999",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: PEP 9999 does not exist, and no quantum computing library is in standard library."
+    }
+  },
+  {
+    "id": "pep_fp03",
+    "workspace": "peps_brain",
+    "category": "false_premise_rejection",
+    "question": "In which Python version did Guido van Rossum accept Java bytecode compilation in PEP 777?",
+    "ground_truth": {
+      "unresolved_entity": "PEP 777",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: PEP 777 does not exist; Python compiles to CPython bytecode, not Java bytecode."
+    }
+  },
+  {
+    "id": "fk_fp01",
+    "workspace": "falkordb_repos",
+    "category": "false_premise_rejection",
+    "question": "Which pull request deprecated openCypher support in FalkorDB in favor of SPARQL?",
+    "ground_truth": {
+      "unresolved_entity": "SPARQL",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: FalkorDB is built on openCypher and GraphBLAS; SPARQL is not supported."
+    }
+  },
+  {
+    "id": "fk_fp02",
+    "workspace": "falkordb_repos",
+    "category": "false_premise_rejection",
+    "question": "Who authored the pull request adding an Ethereum smart contract connector to falkordb-browser?",
+    "ground_truth": {
+      "unresolved_entity": "Ethereum",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: No Ethereum smart contract connectors exist in falkordb-browser."
+    }
+  },
+  {
+    "id": "fk_fp03",
+    "workspace": "falkordb_repos",
+    "category": "false_premise_rejection",
+    "question": "Which PR migrated FalkorDB native engine storage from GraphBLAS matrices to an embedded SQLite file?",
+    "ground_truth": {
+      "unresolved_entity": "SQLite",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: FalkorDB utilizes sparse GraphBLAS matrices, not SQLite files."
     }
   }
 ]

@@ -1,0 +1,285 @@
+[
+  {
+    "id": "para_01",
+    "question": "who's the primary expert on authservce right now?",
+    "workspace": "company_brain",
+    "paraphrase_type": "typo",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "target_system": "AuthService",
+      "expected_expert": "Priya Sharma",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_02",
+    "question": "what happens if priya sharma leaves novatech, what systems are at risk?",
+    "workspace": "company_brain",
+    "paraphrase_type": "conversational",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "target_person": "Priya Sharma",
+      "sole_systems": ["AuthService"],
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_03",
+    "question": "why did we switch to opaqe tokns instead of jwt?",
+    "workspace": "company_brain",
+    "paraphrase_type": "typo",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "decision_id": "decision_opaque_tokens",
+      "maker": "Priya Sharma",
+      "superseded": "decision_use_jwt",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_04",
+    "question": "what was our mobile api rate limt before it got bumped?",
+    "workspace": "company_brain",
+    "paraphrase_type": "typo",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "active_limit": 200,
+      "stale_limit": 50,
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_05",
+    "question": "who maintians the bilingsystem?",
+    "workspace": "company_brain",
+    "paraphrase_type": "typo",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "target_system": "BillingSystem",
+      "expected_expert": "Marcus Vance",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_06",
+    "question": "what did we use for auth back in summer 2024 before the token reversal?",
+    "workspace": "company_brain",
+    "paraphrase_type": "colloquial_date",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "as_of_date": "2024-06-01",
+      "active_decision": "ADR-001: JWT Authentication",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_07",
+    "question": "is the mobile rate limit decision still active or stale as of mid october 2026?",
+    "workspace": "company_brain",
+    "paraphrase_type": "colloquial_date",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "as_of_date": "2026-10-15",
+      "status": "stale",
+      "superseding_doc": "doc_rate_limit_200",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_08",
+    "question": "what was the authentication architecture as of 2025-05-01?",
+    "workspace": "company_brain",
+    "paraphrase_type": "point_in_time",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "as_of_date": "2025-05-01",
+      "active_decision": "ADR-001: JWT Authentication",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_09",
+    "question": "what breaks if auth goes down or is deprecated?",
+    "workspace": "company_brain",
+    "paraphrase_type": "conversational",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "target_node": "sys_auth",
+      "impacted_systems": ["PaymentProcessor", "MobileAPI"],
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_10",
+    "question": "where did the autoscale decision for auth originate?",
+    "workspace": "company_brain",
+    "paraphrase_type": "typo",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "decision_id": "decision_hpa_auth",
+      "origin_person": "Jordan Kim",
+      "channel": "eng-incidents",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_11",
+    "question": "who knows the most about reccomendationengin?",
+    "workspace": "company_brain",
+    "paraphrase_type": "typo",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "target_system": "RecommendationEngine",
+      "expected_expert": "Sam Rivera",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_12",
+    "question": "what is the bus factor risk for sam rivera if they quit?",
+    "workspace": "company_brain",
+    "paraphrase_type": "conversational",
+    "author": "Engineering Lead (Known Benchmark Paraphrase)",
+    "is_blind": false,
+    "ground_truth": {
+      "person_id": "person_sam",
+      "sole_systems": ["RecommendationEngine"],
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_13",
+    "question": "why did we migrate everything to mongodb last year?",
+    "workspace": "company_brain",
+    "paraphrase_type": "false_premise",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "unresolved_entity": "MongoDB",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: NovaTech never adopted MongoDB; billing runs on CockroachDB."
+    }
+  },
+  {
+    "id": "para_14",
+    "question": "who is lead engineer on quantum cryptography in novatech?",
+    "workspace": "company_brain",
+    "paraphrase_type": "false_premise",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "unresolved_entity": "Quantum",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: No quantum systems exist in the company brain."
+    }
+  },
+  {
+    "id": "para_15",
+    "question": "which PEP approved rust in cpython stdlib?",
+    "workspace": "peps_brain",
+    "paraphrase_type": "false_premise",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "unresolved_entity": "Rust",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: No PEP approves Rust rewrite for CPython core stdlib."
+    }
+  },
+  {
+    "id": "para_16",
+    "question": "what PR added ethereum web3 integration to falkordb browser?",
+    "workspace": "falkordb_repos",
+    "paraphrase_type": "false_premise",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "unresolved_entity": "Ethereum",
+      "is_unanswerable": true,
+      "expected_behavior": "decline",
+      "key_fact": "False premise: No Ethereum smart contract connectors exist in falkordb-browser."
+    }
+  },
+  {
+    "id": "para_17",
+    "question": "who is the primary author of pep 249 database api?",
+    "workspace": "peps_brain",
+    "paraphrase_type": "conversational",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "decision_id": "pep_0249",
+      "author": "Marc-André Lemburg",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_18",
+    "question": "which pep superseded pep 333 wsgi?",
+    "workspace": "peps_brain",
+    "paraphrase_type": "conversational",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "decision_id": "pep_0333",
+      "superseded_by": "pep_3333",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_19",
+    "question": "which PR closed issue 2048 in falkordb browser?",
+    "workspace": "falkordb_repos",
+    "paraphrase_type": "conversational",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "closed_issue": 2048,
+      "pr_id": "pr_falkordb_browser_2049",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  },
+  {
+    "id": "para_20",
+    "question": "what PR introduced hiredis in falkordb-py?",
+    "workspace": "falkordb_repos",
+    "paraphrase_type": "conversational",
+    "author": "External Evaluator (Blind Holdout)",
+    "is_blind": true,
+    "ground_truth": {
+      "pr_id": "pr_falkordb_py_304",
+      "feature": "hiredis",
+      "is_unanswerable": false,
+      "expected_behavior": "answer"
+    }
+  }
+]
