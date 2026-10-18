@@ -527,23 +527,33 @@ def run_benchmark():
         ]
     }
 
+    answerable_results = [r for r in results if r["category"] != "false_premise_rejection"]
+    g_explainable = sum(1 for r in answerable_results if r.get("graph_explainable_path", False))
+    g_explainable_pct = round(g_explainable / len(answerable_results) * 100, 1) if answerable_results else 100.0
+
     output = {
         "summary": {
             "total_questions": len(results),
+            "answerable_questions": len(answerable_results),
+            "false_premise_questions": len(results) - len(answerable_results),
             "graph_llm_accuracy_pct": overall_g_llm,
             "graph_router_accuracy_pct": overall_router,
             "vector_rag_accuracy_pct": overall_rag,
             "accuracy_delta_pct": round(overall_g_llm - overall_rag, 1),
             "graph_llm_avg_latency_ms": avg_g_lat,
             "graph_router_avg_latency_ms": avg_router_lat,
-            "vector_rag_avg_latency_ms": avg_rag_lat,
+            "vector_rag_retrieval_only_avg_latency_ms": avg_rag_lat,
+            "vector_rag_latency_note": "Dense lexical chunk retrieval only (does not include ~2.2s LLM generation call)",
+            "vector_rag_simulated_e2e_latency_ms": round(avg_rag_lat + 2200.0, 1),
             "false_premise_rejection_rate_pct": 100.0,
             "staleness_detection_precision_pct": 94.1,
             "staleness_detection_precision_denominator": "16/17",
             "staleness_detection_recall_pct": 88.9,
             "staleness_detection_recall_denominator": "16/18",
-            "graph_path_explainability_pct": 100.0,
+            "graph_path_explainability_pct": g_explainable_pct,
+            "graph_path_explainability_denominator": f"{g_explainable}/{len(answerable_results)} (defined over answerable questions; declines return [] by design)",
             "rag_path_explainability_pct": 0.0,
+            "rag_path_explainability_denominator": f"0/{len(answerable_results)} (flat chunks have no graph topology)",
         },
         "by_category": cat_summary,
         "by_workspace": ws_summary,

@@ -175,7 +175,7 @@
     "question": "why did we migrate everything to mongodb last year?",
     "workspace": "company_brain",
     "paraphrase_type": "false_premise",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "unresolved_entity": "MongoDB",
@@ -189,7 +189,7 @@
     "question": "who is lead engineer on quantum cryptography in novatech?",
     "workspace": "company_brain",
     "paraphrase_type": "false_premise",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "unresolved_entity": "Quantum",
@@ -203,7 +203,7 @@
     "question": "which PEP approved rust in cpython stdlib?",
     "workspace": "peps_brain",
     "paraphrase_type": "false_premise",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "unresolved_entity": "Rust",
@@ -217,7 +217,7 @@
     "question": "what PR added ethereum web3 integration to falkordb browser?",
     "workspace": "falkordb_repos",
     "paraphrase_type": "false_premise",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "unresolved_entity": "Ethereum",
@@ -231,7 +231,7 @@
     "question": "who is the primary author of pep 249 database api?",
     "workspace": "peps_brain",
     "paraphrase_type": "conversational",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "decision_id": "pep_0249",
@@ -245,7 +245,7 @@
     "question": "which pep superseded pep 333 wsgi?",
     "workspace": "peps_brain",
     "paraphrase_type": "conversational",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "decision_id": "pep_0333",
@@ -259,7 +259,7 @@
     "question": "which PR closed issue 2048 in falkordb browser?",
     "workspace": "falkordb_repos",
     "paraphrase_type": "conversational",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "closed_issue": 2048,
@@ -273,7 +273,7 @@
     "question": "what PR introduced hiredis in falkordb-py?",
     "workspace": "falkordb_repos",
     "paraphrase_type": "conversational",
-    "author": "External Evaluator (Blind Holdout)",
+    "author": "AI Evaluation Agent (Held-out blind suite; independent from router implementation)",
     "is_blind": true,
     "ground_truth": {
       "pr_id": "pr_falkordb_py_304",
