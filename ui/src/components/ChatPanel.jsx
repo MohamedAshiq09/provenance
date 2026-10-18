@@ -100,6 +100,9 @@ export default function ChatPanel({
   const isAsOf = lastResponse?.tool_used === 'as_of' || lastResponse?.graph_result?.as_of_date;
   const isChangesBetween = lastResponse?.tool_used === 'changes_between' || lastResponse?.graph_result?.changes;
   const isBusFactor = lastResponse?.tool_used === 'bus_factor' || Boolean(lastResponse?.graph_result?.sole_expert_systems);
+  const isWhoKnows = lastResponse?.tool_used === 'who_knows' || Boolean(lastResponse?.graph_result?.experts && lastResponse?.graph_result?.system);
+  const isTraceDecision = lastResponse?.tool_used === 'trace_decision' || Boolean(lastResponse?.graph_result?.decision && lastResponse?.graph_result?.based_on);
+  const isImpactOf = lastResponse?.tool_used === 'impact_of' || Boolean(lastResponse?.graph_result?.person && lastResponse?.graph_result?.direct_systems);
 
   const hasSoleExpert = !isDeclined && 
     (lastResponse?.tool_used === 'bus_factor' || lastResponse?.tool_used?.includes('bus_factor')) && 
@@ -166,8 +169,9 @@ export default function ChatPanel({
 
   const formatInline = (text) => {
     if (!text) return '';
-    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`|\[\d+\])/g);
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`|\[\d+\]|\b[A-Z_]{3,}\b|\b(?:valid_from|valid_to|as_of|made_at|created_at)\b)/g);
     return parts.map((part, i) => {
+      if (!part) return null;
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.slice(2, -2);
         return <strong key={i} style={{ fontWeight: '600', color: 'var(--text)' }}>{content}</strong>;
@@ -207,8 +211,23 @@ export default function ChatPanel({
           </span>
         );
       }
-      // Strip any lingering stray markdown symbols (like unmatched asterisks or backticks)
-      return part.replace(/[*`_]/g, '');
+      if (/^[A-Z_]{3,}$/.test(part) || /^(valid_from|valid_to|as_of|made_at|created_at)$/.test(part)) {
+        return (
+          <code key={i} className="font-mono" style={{
+            fontSize: '0.8rem',
+            padding: '1px 5px',
+            borderRadius: '4px',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
+            color: 'var(--accent)',
+            fontWeight: '600',
+          }}>
+            {part}
+          </code>
+        );
+      }
+      // Never eat underscores in ordinary text! Only strip stray unclosed asterisks or backticks
+      return part.replace(/[*`]/g, '');
     });
   };
 
@@ -605,6 +624,160 @@ export default function ChatPanel({
                 )}
               </div>
             </div>
+          ) : isWhoKnows && lastResponse.graph_result?.experts ? (
+            /* Structured System Expertise & Maintainers Card */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="clean-card" style={{ padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
+                      {lastResponse.graph_result.title || `System Ownership: ${lastResponse.graph_result.system}`}
+                    </h4>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
+                      Primary Lead: <strong style={{ color: 'var(--text)' }}>{lastResponse.graph_result.primary_expert}</strong> ({lastResponse.graph_result.primary_expert_role || 'Core Maintainer'})
+                    </div>
+                  </div>
+                  <span className="chip-ok" style={{
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                  }}>
+                    Bus Factor: {lastResponse.graph_result.bus_factor || 1}
+                  </span>
+                </div>
+
+                <div style={{ marginTop: '0.9rem' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.45rem' }}>
+                    Ranked Maintainers & Expertise Centrality
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    {lastResponse.graph_result.experts.map((exp, idx) => (
+                      <div key={idx} style={{
+                        padding: '0.55rem 0.75rem',
+                        background: 'var(--surface-2)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span className="chip-accent" style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: '3px' }}>
+                            #{idx + 1}
+                          </span>
+                          <span style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--text)' }}>{exp.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>({exp.role || 'Maintainer'})</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.72rem', color: 'var(--muted)' }}>
+                          <span>Commits: <strong style={{ color: 'var(--text)' }}>{exp.work_score}</strong></span>
+                          <span>•</span>
+                          <span>Reviews: <strong style={{ color: 'var(--accent)' }}>{exp.reviewed_score || 0}</strong></span>
+                          <span>•</span>
+                          <span>Decisions: <strong style={{ color: 'var(--text)' }}>{exp.maker_score || 0}</strong></span>
+                          <span>•</span>
+                          <span>Score: <strong style={{ color: 'var(--text)' }}>{exp.expertise_score}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : isTraceDecision && lastResponse.graph_result?.decision ? (
+            /* Structured Decision Provenance Card */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="clean-card" style={{ padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
+                      {lastResponse.graph_result.decision.title}
+                    </h4>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '3px' }}>
+                      Validity: <code className="font-mono">{lastResponse.graph_result.decision.valid_from || '2025-01-01'} → {lastResponse.graph_result.decision.valid_to || 'present'}</code>
+                      {lastResponse.graph_result.made_by && <> • Author: <strong style={{ color: 'var(--text)' }}>{lastResponse.graph_result.made_by.name}</strong></>}
+                    </div>
+                  </div>
+                  <span className={lastResponse.graph_result.decision.status?.toLowerCase() === 'active' ? 'chip-ok' : 'chip-off'} style={{
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                  }}>
+                    {lastResponse.graph_result.decision.status || 'Active'}
+                  </span>
+                </div>
+
+                {lastResponse.graph_result.decision.rationale && (
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', marginTop: '0.6rem' }}>
+                    {lastResponse.graph_result.decision.rationale}
+                  </p>
+                )}
+
+                {lastResponse.graph_result.supersedes && (
+                  <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Replaced Decision (<code className="font-mono" style={{ color: 'var(--accent)' }}>SUPERSEDES</code>)
+                    </div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'var(--text)', marginTop: '2px' }}>
+                      {lastResponse.graph_result.supersedes.title}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : isImpactOf && lastResponse.graph_result?.direct_systems ? (
+            /* Structured Person Impact Card */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="clean-card" style={{ padding: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
+                      Departure Impact Analysis: {lastResponse.graph_result.person?.name || 'Engineer'}
+                    </h4>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '3px' }}>
+                      {lastResponse.graph_result.summary}
+                    </div>
+                  </div>
+                  <span className={lastResponse.graph_result.status === 'CRITICAL' || lastResponse.graph_result.status === 'HIGH' ? 'chip-warn' : 'chip-ok'} style={{
+                    fontSize: '0.65rem',
+                    fontWeight: '600',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase',
+                  }}>
+                    Severity: {lastResponse.graph_result.status || 'HIGH'}
+                  </span>
+                </div>
+
+                {lastResponse.graph_result.direct_systems?.length > 0 && (
+                  <div style={{ marginTop: '0.9rem' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.35rem' }}>
+                      Direct Maintained Systems
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                      {lastResponse.graph_result.direct_systems.map((s, idx) => (
+                        <span key={idx} style={{
+                          fontSize: '0.75rem',
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          background: 'var(--surface-2)',
+                          border: '1px solid var(--border)',
+                          fontWeight: '500',
+                          color: 'var(--text)',
+                        }}>
+                          {s.name || s.id}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             /* General Clean Prose Answer */
             <div className="clean-card" style={{ padding: '1.25rem' }}>
@@ -685,9 +858,9 @@ export default function ChatPanel({
                       onClick={() => setSelectedCitation({
                         id: sourceObj.id || `doc_${idx}`,
                         title: cleanTitle,
-                        quote: sourceObj.quote || `Verified architectural constraint documented in ${cleanTitle}.`,
+                        quote: sourceObj.quote || sourceObj.content || sourceObj.rationale || `Architectural specification for ${cleanTitle}.`,
                         doc_type: sourceObj.type || sourceObj.doc_type || 'Architecture Document',
-                        valid_from: sourceObj.valid_from || '2025-08-01',
+                        valid_from: sourceObj.valid_from || sourceObj.date || '2025-08-01',
                         url: url,
                         isRealUrl: isRealUrl,
                         isSynthetic: isSynthetic,

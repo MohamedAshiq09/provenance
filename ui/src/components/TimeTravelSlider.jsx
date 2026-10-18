@@ -8,17 +8,17 @@ export default function TimeTravelSlider({ onDateChange, workspace = 'novatech',
     { 
       label: 'Jun 2024', 
       date: '2024-06-01', 
-      desc: 'ADR-001: JWT era' 
+      desc: 'ADR-001: JWT adopted' 
     },
     { 
-      label: 'Jan 2025', 
-      date: '2025-01-01', 
-      desc: 'SEC-202: Incident drift' 
+      label: 'Jul 2025', 
+      date: '2025-07-22', 
+      desc: 'Auth Go standard' 
     },
     { 
-      label: 'Aug 2025', 
-      date: '2025-08-01', 
-      desc: 'ADR-002: Opaque tokens' 
+      label: 'Aug 2026', 
+      date: '2026-08-17', 
+      desc: 'ADR-002: Opaque tokens reversal' 
     },
     { 
       label: 'Oct 01, 2026', 

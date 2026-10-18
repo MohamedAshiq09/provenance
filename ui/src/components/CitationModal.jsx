@@ -99,7 +99,7 @@ export default function CitationModal({ citation, onClose }) {
             paddingLeft: '0.75rem',
             margin: '0.25rem 0',
           }}>
-            "{citation.quote || citation.content || 'Verified architectural constraint indexed in FalkorDB graph.'}"
+            "{citation.quote || citation.content || citation.rationale || 'Verified architectural record.'}"
           </p>
         </div>
 
