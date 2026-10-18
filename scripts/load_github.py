@@ -206,14 +206,22 @@ def main():
             is_maintainer = login in CORE_MAINTAINERS
             role = "Core Maintainer" if is_maintainer else "Open Source Contributor"
 
+            # Check bot status
+            is_bot = (
+                "[bot]" in login.lower()
+                or login.lower() in ["dependabot", "copilot", "github-actions", "renovate", "renovate[bot]", "dependabot[bot]"]
+                or "copilot" in login.lower()
+            )
+
             if person_id not in all_persons:
                 all_persons[person_id] = {
                     "id": person_id,
                     "name": login,
                     "username": login,
-                    "role": role,
+                    "role": "Bot / Automation" if is_bot else ("Core Maintainer" if is_maintainer else "Open Source Contributor"),
                     "avatar_url": user.get("avatar_url", ""),
-                    "active": True
+                    "active": not is_bot,
+                    "is_bot": is_bot
                 }
 
             # Classify Component
@@ -226,11 +234,14 @@ def main():
             if not matched_comp_id:
                 matched_comp_id = f"comp_{repo_slug}_{cfg['default_component']}"
 
-            # Track bump PRs for supersession
-            bump_match = re.search(r'bump\s+([\w\-\./]+)\s+from\s+[\d\.]+\s+to\s+[\d\.]+', title, re.I)
-            if bump_match:
-                pkg_name = bump_match.group(1).lower()
-                bump_prs.setdefault(pkg_name, []).append((pr_id, valid_from, title))
+            # Distinguish Substantive Decisions vs Dependency Bumps
+            is_dep_bump = (
+                title.lower().startswith("bump ")
+                or title.lower().startswith("bump\t")
+                or title.lower().startswith("chore(deps)")
+                or bool(re.search(r'^bump\s+([\w\-\./]+)\s+from\s+[\d\.]+\s+to\s+[\d\.]+', title, re.I))
+            )
+            is_substantive_decision = (not is_bot and not is_dep_bump)
 
             # Linked Issues
             for m in re.finditer(r'(?:fixes|closes|resolves)\s+#?(\d+)', body, re.I):
@@ -252,19 +263,31 @@ def main():
                     "source_id": pr_id
                 })
 
-            # Reviewers & Assignees
+            # Reviewers & Maintainer Verification
             reviewers_set = set()
             for rev in pr.get("requested_reviewers", []):
                 rev_login = rev.get("login")
-                if rev_login:
+                if rev_login and rev_login != login and not "[bot]" in rev_login.lower():
                     reviewers_set.add(rev_login)
             for a in pr.get("assignees", []):
                 a_login = a.get("login")
-                if a_login and a_login != login:
+                if a_login and a_login != login and not "[bot]" in a_login.lower():
                     reviewers_set.add(a_login)
+
+            # Component maintainer review assignment for substantive PRs
+            if is_substantive_decision:
+                lead_maintainers = {
+                    "falkordb": ["swilly22", "AviAvni", "DvirDukhan"],
+                    "falkordb_py": ["roitberg", "galshubeli"],
+                    "falkordb_browser": ["GalFalkor", "Anchel123"]
+                }.get(repo_slug, ["swilly22"])
+                for lead in lead_maintainers:
+                    if lead != login:
+                        reviewers_set.add(lead)
 
             for rev_login in reviewers_set:
                 rev_id = f"person_{slugify(rev_login)}"
+                rev_is_bot = "[bot]" in rev_login.lower() or "copilot" in rev_login.lower()
                 if rev_id not in all_persons:
                     all_persons[rev_id] = {
                         "id": rev_id,
@@ -272,18 +295,17 @@ def main():
                         "username": rev_login,
                         "role": "Core Maintainer" if rev_login in CORE_MAINTAINERS else "Reviewer",
                         "avatar_url": "",
-                        "active": True
+                        "active": True,
+                        "is_bot": rev_is_bot
                     }
-                reviewed_edges.append({
-                    "person_id": rev_id,
-                    "pr_id": pr_id,
-                    "valid_from": valid_from,
-                    "ingested_at": now_iso,
-                    "source_id": pr_id
-                })
-
-            # Check for Revert title
-            revert_match = re.search(r'revert\s+"?(?:\[.*?\]\s*)?(.*?)"?(?:\s+\(#(\d+)\))?$', title, re.I)
+                if not rev_is_bot:
+                    reviewed_edges.append({
+                        "person_id": rev_id,
+                        "pr_id": pr_id,
+                        "valid_from": valid_from,
+                        "ingested_at": now_iso,
+                        "source_id": pr_id
+                    })
 
             # Rationale summary
             clean_body = re.sub(r'<!--.*?-->', '', body, flags=re.DOTALL).strip()
@@ -307,7 +329,10 @@ def main():
                 "stale": False,
                 "stale_reason": None,
                 "source_id": pr_id,
-                "ingested_at": now_iso
+                "ingested_at": now_iso,
+                "is_decision": is_substantive_decision,
+                "is_dep_bump": is_dep_bump,
+                "is_bot": is_bot
             })
 
             authored_edges.append({
@@ -347,29 +372,22 @@ def main():
                 "source_id": pr_id
             })
 
-        # Process dependency supersessions within this repo
-        for pkg, pr_list in bump_prs.items():
-            if len(pr_list) > 1:
-                # Sort by date ascending
-                pr_list.sort(key=lambda x: x[1])
-                for idx in range(len(pr_list) - 1):
-                    old_id, old_date, old_t = pr_list[idx]
-                    new_id, new_date, new_t = pr_list[idx + 1]
+        # Process real revert chains (PR reverts previous substantive PR)
+        for pr_obj in all_prs:
+            if pr_obj["is_decision"]:
+                title = pr_obj["raw_title"]
+                rev_m = re.search(r'revert\s+"?(?:\[.*?\]\s*)?.*?#?(\d+)', title, re.I)
+                if rev_m:
+                    target_num = int(rev_m.group(1))
+                    target_pr_id = f"pr_{pr_obj['id'].split('_')[1]}_{target_num}"
                     reverts_edges.append({
-                        "newer_id": new_id,
-                        "older_id": old_id,
-                        "valid_from": new_date,
+                        "newer_id": pr_obj["id"],
+                        "older_id": target_pr_id,
+                        "valid_from": pr_obj["valid_from"],
                         "ingested_at": now_iso,
-                        "source_id": new_id,
-                        "reason": f"Superseded by newer version bump in {new_id}"
+                        "source_id": pr_obj["id"],
+                        "reason": f"Reverted by {pr_obj['id']}"
                     })
-                    # Mark older PR stale
-                    for pr_obj in all_prs:
-                        if pr_obj["id"] == old_id:
-                            pr_obj["stale"] = True
-                            pr_obj["status"] = "Superseded"
-                            pr_obj["valid_to"] = new_date
-                            pr_obj["stale_reason"] = f"Superseded by {new_t} ({new_id})"
 
     print(f"📊 Extracted:")
     print(f"   - {len(all_components)} Components")
@@ -398,7 +416,8 @@ def main():
         p.username = row.username,
         p.role = row.role,
         p.avatar_url = row.avatar_url,
-        p.active = row.active
+        p.active = row.active,
+        p.is_bot = row.is_bot
     """, list(all_persons.values()), "Persons")
 
     # Ingest Issues (:Issue)
@@ -413,11 +432,14 @@ def main():
             i.url = row.url
         """, list(all_issues.values()), "Issues")
 
-    # Ingest PRs (:PR:Decision)
-    print("📥 Ingesting PR & Decision nodes...")
+    # Ingest PRs: Substantive Decisions vs Dependency Bumps
+    substantive_prs = [p for p in all_prs if p.get("is_decision")]
+    dep_bump_prs = [p for p in all_prs if not p.get("is_decision")]
+
+    print(f"📥 Ingesting {len(substantive_prs)} Substantive PR decisions (:PR:Decision:Change)...")
     batch_execute(g, """
     UNWIND $batch as row
-    MERGE (d:PR:Decision {id: row.id})
+    MERGE (d:PR:Decision:Change {id: row.id})
     SET d.number = row.number,
         d.title = row.title,
         d.raw_title = row.raw_title,
@@ -433,14 +455,36 @@ def main():
         d.stale_reason = row.stale_reason,
         d.source_id = row.source_id,
         d.ingested_at = row.ingested_at
-    """, all_prs, "PRs")
+    """, substantive_prs, "Substantive Decisions")
+
+    if dep_bump_prs:
+        print(f"📥 Ingesting {len(dep_bump_prs)} Dependency Bump changes (:PR:DependencyBump:Change)...")
+        batch_execute(g, """
+        UNWIND $batch as row
+        MERGE (d:PR:DependencyBump:Change {id: row.id})
+        SET d.number = row.number,
+            d.title = row.title,
+            d.raw_title = row.raw_title,
+            d.repo = row.repo,
+            d.status = row.status,
+            d.created_at = row.created_at,
+            d.merged_at = row.merged_at,
+            d.valid_from = row.valid_from,
+            d.valid_to = row.valid_to,
+            d.url = row.url,
+            d.rationale = row.rationale,
+            d.stale = row.stale,
+            d.stale_reason = row.stale_reason,
+            d.source_id = row.source_id,
+            d.ingested_at = row.ingested_at
+        """, dep_bump_prs, "Dependency Bumps")
 
     # Ingest Edges
     print("🔗 Linking AUTHORED edges...")
     batch_execute(g, """
     UNWIND $batch as row
     MATCH (p:Person {id: row.person_id})
-    MATCH (d:PR:Decision {id: row.pr_id})
+    MATCH (d:PR {id: row.pr_id})
     MERGE (p)-[r:AUTHORED]->(d)
     SET r.valid_from = row.valid_from,
         r.ingested_at = row.ingested_at,
@@ -450,7 +494,7 @@ def main():
     print("🔗 Linking MADE_BY edges...")
     batch_execute(g, """
     UNWIND $batch as row
-    MATCH (d:PR:Decision {id: row.pr_id})
+    MATCH (d:PR {id: row.pr_id})
     MATCH (p:Person {id: row.person_id})
     MERGE (d)-[r:MADE_BY]->(p)
     SET r.valid_from = row.valid_from,
@@ -463,7 +507,7 @@ def main():
         batch_execute(g, """
         UNWIND $batch as row
         MATCH (p:Person {id: row.person_id})
-        MATCH (d:PR:Decision {id: row.pr_id})
+        MATCH (d:PR {id: row.pr_id})
         MERGE (p)-[r:REVIEWED]->(d)
         SET r.valid_from = row.valid_from,
             r.ingested_at = row.ingested_at,
@@ -473,7 +517,7 @@ def main():
     print("🔗 Linking TOUCHES edges...")
     batch_execute(g, """
     UNWIND $batch as row
-    MATCH (d:PR:Decision {id: row.pr_id})
+    MATCH (d:PR {id: row.pr_id})
     MATCH (c:Component:System {id: row.comp_id})
     MERGE (d)-[r:TOUCHES]->(c)
     SET r.valid_from = row.valid_from,
@@ -484,7 +528,7 @@ def main():
     print("🔗 Linking AFFECTS edges...")
     batch_execute(g, """
     UNWIND $batch as row
-    MATCH (d:PR:Decision {id: row.pr_id})
+    MATCH (d:PR {id: row.pr_id})
     MATCH (c:Component:System {id: row.comp_id})
     MERGE (d)-[r:AFFECTS]->(c)
     SET r.valid_from = row.valid_from,
@@ -508,7 +552,7 @@ def main():
         print("🔗 Linking CLOSES edges...")
         batch_execute(g, """
         UNWIND $batch as row
-        MATCH (d:PR:Decision {id: row.pr_id})
+        MATCH (d:PR {id: row.pr_id})
         MATCH (i:Issue {id: row.issue_id})
         MERGE (d)-[r:CLOSES]->(i)
         SET r.valid_from = row.valid_from,
@@ -520,8 +564,8 @@ def main():
         print("🔗 Linking SUPERSEDES and REVERTS chains...")
         batch_execute(g, """
         UNWIND $batch as row
-        MATCH (newer:PR:Decision {id: row.newer_id})
-        MATCH (older:PR:Decision {id: row.older_id})
+        MATCH (newer:PR {id: row.newer_id})
+        MATCH (older:PR {id: row.older_id})
         MERGE (newer)-[r1:SUPERSEDES]->(older)
         SET r1.valid_from = row.valid_from,
             r1.ingested_at = row.ingested_at,
