@@ -804,26 +804,42 @@ def _normalize_params(tool_name: str, params: dict) -> dict:
     return p
 
 
-def run_tool(tool_name: str, params: dict, graph_name: str = None) -> dict:
-    """Execute the selected tool with parameters."""
+def run_tool(tool_name: str, params: dict, graph_name: str = None, workspace: str = None) -> dict:
+    """Execute the selected tool with parameters.
+
+    `workspace` resolves to a graph the same way the REST layer's
+    _resolve_graph does (app/api/agent.py, app/api/graph.py); an explicit
+    graph_name wins only when workspace is empty. Mirrors REST semantics so
+    MCP callers get the same workspace routing as the UI.
+    """
+    resolved = graph_name
+    if workspace:
+        val = str(workspace).lower().strip()
+        if val in ("peps", "peps_brain", "python"):
+            resolved = "peps_brain"
+        elif val in ("falkordb", "falkordb_repos", "repos", "github"):
+            resolved = "falkordb_repos"
+        else:
+            resolved = "company_brain"
+
     params = _normalize_params(tool_name, params)
 
     tool_map = {
-        "trace_decision": lambda p: trace_decision(p.get("decision_id", "decision_use_jwt"), graph_name),
-        "who_knows": lambda p: who_knows(p.get("system_name", "AuthService"), graph_name),
-        "detect_staleness": lambda p: detect_staleness(p.get("new_doc_id", "doc_rate_limit_200"), graph_name),
-        "bus_factor": lambda p: bus_factor(p.get("person_id", "person_priya"), graph_name),
-        "connection_path": lambda p: connection_path(p.get("node_a_id", "person_priya"), p.get("node_b_id", "sys_auth"), graph_name),
-        "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), graph_name),
-        "changes_between": lambda p: changes_between(p.get("start_date", "2025-01-01"), p.get("end_date", "2026-10-31"), p.get("topic"), graph_name),
-        "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), graph_name),
-        "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), graph_name),
-        "knowledge_gaps": lambda p: knowledge_gaps(graph_name),
-        "contradiction_candidates": lambda p: get_contradiction_candidates(graph_name),
-        "ramp_plan": lambda p: ramp_plan(p.get("system_name", "AuthService"), graph_name),
-        "team_risk": lambda p: team_risk(graph_name),
-        "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), graph_name),
-        "get_stale_decisions": lambda p: get_stale_decisions(graph_name),
+        "trace_decision": lambda p: trace_decision(p.get("decision_id", "decision_use_jwt"), resolved),
+        "who_knows": lambda p: who_knows(p.get("system_name", "AuthService"), resolved),
+        "detect_staleness": lambda p: detect_staleness(p.get("new_doc_id", "doc_rate_limit_200"), resolved),
+        "bus_factor": lambda p: bus_factor(p.get("person_id", "person_priya"), resolved),
+        "connection_path": lambda p: connection_path(p.get("node_a_id", "person_priya"), p.get("node_b_id", "sys_auth"), resolved),
+        "as_of": lambda p: as_of(p.get("date_str", "2025-06-01"), p.get("topic"), resolved),
+        "changes_between": lambda p: changes_between(p.get("start_date", "2025-01-01"), p.get("end_date", "2026-10-31"), p.get("topic"), resolved),
+        "impact_of": lambda p: impact_of(p.get("node_id", "sys_auth"), resolved),
+        "decision_timeline": lambda p: decision_timeline(p.get("decision_id", "decision_opaque_tokens"), resolved),
+        "knowledge_gaps": lambda p: knowledge_gaps(resolved),
+        "contradiction_candidates": lambda p: get_contradiction_candidates(resolved),
+        "ramp_plan": lambda p: ramp_plan(p.get("system_name", "AuthService"), resolved),
+        "team_risk": lambda p: team_risk(resolved),
+        "search_and_expand": lambda p: search_and_expand(p.get("keyword", "auth"), resolved),
+        "get_stale_decisions": lambda p: get_stale_decisions(resolved),
     }
 
     fn = tool_map.get(tool_name)
