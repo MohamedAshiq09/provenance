@@ -228,7 +228,7 @@ export default function BenchmarkPanel({ workspace = 'novatech' }) {
           marginTop: '0.35rem',
           lineHeight: '1.5',
         }}>
-          70 verified questions across 3 workspaces (NovaTech, Python PEPs, FalkorDB GitHub Repos) evaluating FalkorDB Graph traversal against Dense Vector RAG and Deterministic Cypher Router.
+          70 verified questions across 3 workspaces (NovaTech, Python PEPs, FalkorDB GitHub Repos) evaluating FalkorDB Graph traversal against Lexical Retrieval and Deterministic Cypher Router.
         </p>
       </div>
 
@@ -240,7 +240,7 @@ export default function BenchmarkPanel({ workspace = 'novatech' }) {
       }}>
         <div className="clean-card" style={{ padding: '1.1rem' }}>
           <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Graph + LLM
+            Answer Pipeline (no LLM in this run)
           </div>
           <div style={{ fontSize: '2rem', fontWeight: '600', color: 'var(--ok)', marginTop: '0.2rem', lineHeight: 1 }}>
             {summary.graph_llm_accuracy}%
@@ -252,7 +252,7 @@ export default function BenchmarkPanel({ workspace = 'novatech' }) {
 
         <div className="clean-card" style={{ padding: '1.1rem' }}>
           <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Pure Graph Router
+            Raw Router
           </div>
           <div style={{ fontSize: '2rem', fontWeight: '600', color: 'var(--accent)', marginTop: '0.2rem', lineHeight: 1 }}>
             {summary.graph_router_accuracy}%
@@ -264,13 +264,13 @@ export default function BenchmarkPanel({ workspace = 'novatech' }) {
 
         <div className="clean-card" style={{ padding: '1.1rem' }}>
           <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Dense Vector RAG
+            Lexical Retrieval
           </div>
           <div style={{ fontSize: '2rem', fontWeight: '600', color: 'var(--risk)', marginTop: '0.2rem', lineHeight: 1 }}>
             {summary.rag_accuracy}%
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.4rem' }}>
-            20 / 70 Flat Text Embedding Baseline
+            20 / 70 Text Match Baseline (partly hand-judged)
           </div>
         </div>
 
@@ -327,45 +327,50 @@ export default function BenchmarkPanel({ workspace = 'novatech' }) {
               <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--muted)' }}>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Evaluation Category</th>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Questions</th>
-                <th style={{ padding: '0.6rem 0.5rem' }}>Graph + LLM</th>
-                <th style={{ padding: '0.6rem 0.5rem' }}>Router Only</th>
-                <th style={{ padding: '0.6rem 0.5rem' }}>Dense RAG</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Answer Pipeline (no LLM in this run)</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Raw Router</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Lexical Retrieval</th>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Delta</th>
-                <th style={{ padding: '0.6rem 0.5rem' }}>Why Vector RAG Fails</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Why Lexical Fails</th>
               </tr>
             </thead>
             <tbody>
-              {categories.map((c, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '0.6rem 0.5rem', fontWeight: '500', color: 'var(--text)' }}>
-                    {c.label}
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem', color: 'var(--muted)' }}>
-                    {c.qCount}
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem' }}>
-                    <span className={c.graph_llm >= 80 ? 'chip-ok' : 'chip-warn'} style={{ fontSize: '0.7rem' }}>
-                      {c.graph_llm.toFixed(0)}%
-                    </span>
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem' }}>
-                    <span className="chip-accent" style={{ fontSize: '0.7rem' }}>
-                      {c.router.toFixed(0)}%
-                    </span>
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem' }}>
-                    <span className={c.rag > 0 ? 'chip-off' : 'chip-risk'} style={{ fontSize: '0.7rem' }}>
-                      {c.rag.toFixed(0)}%
-                    </span>
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text)', fontWeight: '600' }}>
-                    {c.delta >= 0 ? `+${c.delta.toFixed(0)}%` : `${c.delta.toFixed(0)}%`}
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem', color: 'var(--muted)', fontSize: '0.75rem', maxWidth: '300px', lineHeight: '1.4' }}>
-                    {c.reason}
-                  </td>
-                </tr>
-              ))}
+              {categories.map((c, idx) => {
+                const pipeCount = Math.round((c.graph_llm * c.qCount) / 100);
+                const routerCount = Math.round((c.router * c.qCount) / 100);
+                const ragCount = Math.round((c.rag * c.qCount) / 100);
+                return (
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '0.6rem 0.5rem', fontWeight: '500', color: 'var(--text)' }}>
+                      {c.label}
+                    </td>
+                    <td style={{ padding: '0.6rem 0.5rem', color: 'var(--muted)' }}>
+                      {c.qCount}
+                    </td>
+                    <td style={{ padding: '0.6rem 0.5rem' }}>
+                      <span className={c.graph_llm >= 80 ? 'chip-ok' : 'chip-warn'} style={{ fontSize: '0.7rem' }}>
+                        {pipeCount}/{c.qCount} ({c.graph_llm.toFixed(0)}%)
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.6rem 0.5rem' }}>
+                      <span className="chip-accent" style={{ fontSize: '0.7rem' }}>
+                        {routerCount}/{c.qCount} ({c.router.toFixed(0)}%)
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.6rem 0.5rem' }}>
+                      <span className={c.rag > 0 ? 'chip-off' : 'chip-risk'} style={{ fontSize: '0.7rem' }}>
+                        {ragCount}/{c.qCount} ({c.rag.toFixed(0)}%)
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text)', fontWeight: '600' }}>
+                      {c.delta >= 0 ? `+${c.delta.toFixed(0)}%` : `${c.delta.toFixed(0)}%`}
+                    </td>
+                    <td style={{ padding: '0.6rem 0.5rem', color: 'var(--muted)', fontSize: '0.75rem', maxWidth: '300px', lineHeight: '1.4' }}>
+                      {c.reason}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
