@@ -24,6 +24,7 @@ export default function Home() {
   const [staleDecisions, setStaleDecisions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastResponse, setLastResponse] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
   const [highlightPath, setHighlightPath] = useState([]);
   const [highlightNodeId, setHighlightNodeId] = useState(null);
   const [isGraphVisible, setIsGraphVisible] = useState(false);
@@ -103,6 +104,16 @@ export default function Home() {
   const handleAskQuestion = async (question) => {
     setActiveTab('chat');
     setIsLoading(true);
+    const msgId = Date.now().toString();
+    const newMsg = {
+      id: msgId,
+      question,
+      response: null,
+      isLoading: true,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setChatMessages(prev => [...prev, newMsg]);
+
     try {
       const res = await fetch('/api/agent/ask', {
         method: 'POST',
@@ -112,8 +123,10 @@ export default function Home() {
       const data = await res.json();
       setLastResponse(data);
       setHighlightPath(data.graph_path || []);
+      setChatMessages(prev => prev.map(m => m.id === msgId ? { ...m, response: data, isLoading: false } : m));
     } catch (err) {
       console.error(err);
+      setChatMessages(prev => prev.map(m => m.id === msgId ? { ...m, response: { answer: "Error querying knowledge graph. Please retry.", error: String(err) }, isLoading: false } : m));
     } finally {
       setIsLoading(false);
     }
@@ -169,6 +182,7 @@ export default function Home() {
                 <ChatPanel
                   onAskQuestion={handleAskQuestion}
                   lastResponse={lastResponse}
+                  chatMessages={chatMessages}
                   isLoading={isLoading}
                   onSelectPathNode={(nodeId) => setHighlightNodeId(nodeId)}
                   onOpenHandoff={(eng, sys) => setHandoffModalData({ engineer: eng, system: sys })}

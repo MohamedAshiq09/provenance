@@ -23,6 +23,7 @@ import CitationModal from './CitationModal';
 export default function ChatPanel({ 
   onAskQuestion, 
   lastResponse, 
+  chatMessages = [],
   isLoading, 
   onSelectPathNode,
   onOpenHandoff,
@@ -32,8 +33,23 @@ export default function ChatPanel({
   isGraphVisible = false
 }) {
   const [inputQuestion, setInputQuestion] = useState('');
-  const [showCypher, setShowCypher] = useState(false);
+  const [openCypherIds, setOpenCypherIds] = useState({});
   const [selectedCitation, setSelectedCitation] = useState(null);
+  const messagesEndRef = React.useRef(null);
+
+  const toggleCypher = (msgId) => {
+    setOpenCypherIds(p => ({ ...p, [msgId]: !p[msgId] }));
+  };
+
+  const messagesToRender = (chatMessages && chatMessages.length > 0)
+    ? chatMessages
+    : (lastResponse ? [{ id: 'last_resp', question: lastResponse.question, response: lastResponse, isLoading: false }] : []);
+
+  React.useEffect(() => {
+    if (messagesToRender.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messagesToRender.length, isLoading]);
 
   const novatechPresets = [
     { label: 'What if Priya leaves?', q: 'What happens if Priya leaves the company?', tag: 'Bus Factor' },
@@ -67,11 +83,13 @@ export default function ChatPanel({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!inputQuestion.trim() || isLoading) return;
-    onAskQuestion(inputQuestion);
+    const q = inputQuestion;
+    setInputQuestion('');
+    onAskQuestion(q);
   };
 
   const handlePresetClick = (q) => {
-    setInputQuestion(q);
+    setInputQuestion('');
     onAskQuestion(q);
   };
 
@@ -87,7 +105,6 @@ export default function ChatPanel({
     if (id === 'sys_auth') return 'AuthService';
     if (id === 'decision_opaque_tokens') return 'ADR-002: Opaque Tokens';
     if (id === 'decision_use_jwt') return 'ADR-001: JWT Auth';
-    if (id === 'decision_rate_limit_mobile') return 'ADR-004: Rate Limit 50 rps';
     if (id === 'sys_mobile_api') return 'MobileAPI';
     if (id === 'sys_billing') return 'BillingSystem';
 
@@ -96,24 +113,7 @@ export default function ChatPanel({
              .replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const isDeclined = Boolean(lastResponse?.is_declined);
-  const isAsOf = lastResponse?.tool_used === 'as_of' || lastResponse?.graph_result?.as_of_date;
-  const isChangesBetween = lastResponse?.tool_used === 'changes_between' || lastResponse?.graph_result?.changes;
-  const isBusFactor = lastResponse?.tool_used === 'bus_factor' || Boolean(lastResponse?.graph_result?.sole_expert_systems);
-  const isWhoKnows = lastResponse?.tool_used === 'who_knows' || Boolean(lastResponse?.graph_result?.experts && lastResponse?.graph_result?.system);
-  const isTraceDecision = lastResponse?.tool_used === 'trace_decision' || Boolean(lastResponse?.graph_result?.decision && lastResponse?.graph_result?.based_on);
-  const isImpactOf = lastResponse?.tool_used === 'impact_of' || Boolean(lastResponse?.graph_result?.person && lastResponse?.graph_result?.direct_systems);
-
-  const hasSoleExpert = !isDeclined && 
-    (lastResponse?.tool_used === 'bus_factor' || lastResponse?.tool_used?.includes('bus_factor')) && 
-    (lastResponse?.graph_result?.sole_expert_systems?.length > 0);
-
-  const hasStaleResult = !isDeclined && (
-    (lastResponse?.graph_result?.stale_items && lastResponse.graph_result.stale_items.length > 0) ||
-    lastResponse?.graph_result?.is_stale === true ||
-    (lastResponse?.graph_result?.stale_decisions && lastResponse.graph_result.stale_decisions.length > 0) ||
-    (lastResponse?.graph_result?.decisions && lastResponse.graph_result.decisions.some(d => d.is_stale_on_date))
-  );
+// Dynamic per-message status helpers computed inside message map
 
   // Clean Markdown & prose renderer (Inter font, 15-16px, line-height 1.6, no stray marks)
   const renderCleanProse = (rawText) => {
@@ -249,48 +249,180 @@ export default function ChatPanel({
         />
       )}
 
-      {/* Main Answer View or Empty State */}
-      {isLoading ? (
+      {/* Main Conversation Stream or Empty State */}
+      {messagesToRender.length === 0 && !isLoading ? (
+        /* Empty State (Cairn-inspired Minimalist Layout) */
         <div style={{
-          padding: '3rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: '1rem',
-          color: 'var(--muted)',
+          textAlign: 'center',
+          padding: '2.5rem 1rem 1rem 1rem',
+          gap: '1.5rem',
         }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            border: '2px solid var(--border)',
-            borderTopColor: 'var(--accent)',
-            animation: 'spin 0.8s linear infinite',
-          }} />
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '0.95rem', fontWeight: '500', color: 'var(--text)' }}>
-              Querying FalkorDB Graph & Tracing Provenance
-            </div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
-              Executing Cypher traversal • Checking temporal validity intervals
-            </div>
-          </div>
-        </div>
-      ) : lastResponse ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {/* Question Title (22px heading) */}
           <div>
             <h1 style={{
-              fontSize: '1.4rem',
+              fontSize: '1.6rem',
               fontWeight: '600',
               color: 'var(--text)',
               letterSpacing: '-0.02em',
-              lineHeight: '1.3',
             }}>
-              {lastResponse.question}
+              What would you like to know?
             </h1>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.4rem' }}>
+              {workspace === 'peps' 
+                ? '745 proposals · 356 people · 73 supersession chains'
+                : '146 documents · 50 decisions · 40 people · 8 systems'}
+            </p>
+          </div>
 
+          {/* Three Clean Scenario Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.75rem',
+            width: '100%',
+          }}>
+            {presets.slice(0, 3).map((p, idx) => (
+              <div
+                key={idx}
+                onClick={() => handlePresetClick(p.q)}
+                className="clean-card"
+                style={{
+                  padding: '1rem',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.4rem',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text)' }}>
+                    {p.label}
+                  </span>
+                  <span className="chip-off" style={{
+                    fontSize: '0.65rem',
+                    padding: '1px 5px',
+                    borderRadius: '4px',
+                  }}>
+                    {p.tag}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: '1.4' }}>
+                  {p.q}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Plain chips row */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
+              Try asking:
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.4rem' }}>
+              {presets.slice(3).map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handlePresetClick(p.q)}
+                  className="btn-ghost"
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '4px 10px',
+                    borderRadius: 'var(--radius-full)',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {messagesToRender.map((msg, idx) => {
+            const resp = msg.response;
+            const msgId = msg.id || ('msg_' + idx);
+            const isDeclined = Boolean(resp?.is_declined);
+            const isAsOf = resp?.tool_used === 'as_of' || resp?.graph_result?.as_of_date;
+            const isChangesBetween = resp?.tool_used === 'changes_between' || resp?.graph_result?.changes;
+            const isBusFactor = resp?.tool_used === 'bus_factor' || Boolean(resp?.graph_result?.sole_expert_systems);
+            const isWhoKnows = resp?.tool_used === 'who_knows' || Boolean(resp?.graph_result?.experts && resp?.graph_result?.system);
+            const isTraceDecision = resp?.tool_used === 'trace_decision' || Boolean(resp?.graph_result?.decision && resp?.graph_result?.based_on);
+            const isImpactOf = resp?.tool_used === 'impact_of' || Boolean(resp?.graph_result?.person && resp?.graph_result?.direct_systems);
+
+            const hasSoleExpert = !isDeclined && 
+              (resp?.tool_used === 'bus_factor' || resp?.tool_used?.includes('bus_factor')) && 
+              (resp?.graph_result?.sole_expert_systems?.length > 0);
+
+            const hasStaleResult = !isDeclined && (
+              (resp?.graph_result?.stale_items && resp.graph_result.stale_items.length > 0) ||
+              resp?.graph_result?.is_stale === true ||
+              (resp?.graph_result?.stale_decisions && resp.graph_result.stale_decisions.length > 0) ||
+              (resp?.graph_result?.decisions && resp.graph_result.decisions.some(d => d.is_stale_on_date))
+            );
+
+            return (
+              <div 
+                key={msgId} 
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '1.25rem',
+                  paddingBottom: idx < messagesToRender.length - 1 ? '2.5rem' : '1rem',
+                  borderBottom: idx < messagesToRender.length - 1 ? '1px solid var(--border)' : 'none',
+                }}
+              >
+                {/* Question Header */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+                  <h1 style={{
+                    fontSize: '1.35rem',
+                    fontWeight: '600',
+                    color: 'var(--text)',
+                    letterSpacing: '-0.02em',
+                    lineHeight: '1.3',
+                    margin: 0,
+                  }}>
+                    {msg.question}
+                  </h1>
+                  {msg.timestamp && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--muted)', flexShrink: 0, marginTop: '4px' }}>
+                      {msg.timestamp}
+                    </span>
+                  )}
+                </div>
+
+                {msg.isLoading ? (
+                  <div style={{
+                    padding: '2.5rem 1.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.75rem',
+                    color: 'var(--muted)',
+                    background: 'var(--surface-2)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border)',
+                  }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      border: '2px solid var(--border)',
+                      borderTopColor: 'var(--accent)',
+                      animation: 'spin 0.8s linear infinite',
+                    }} />
+                    <div style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text)' }}>
+                      Querying FalkorDB Graph & Tracing Provenance
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+                      Executing Cypher traversal • Checking temporal validity intervals
+                    </div>
+                  </div>
+                ) : resp ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Muted Meta Row & Graph Toggle */}
             <div style={{
               display: 'flex',
@@ -308,7 +440,7 @@ export default function ChatPanel({
                 <span>Answered by agent</span>
                 <span>•</span>
                 <span className="font-mono" style={{ fontSize: '0.75rem' }}>
-                  {lastResponse.tool_used || 'graph_query'}
+                  {resp.tool_used || 'graph_query'}
                 </span>
                 <span>•</span>
                 <span>1.1s</span>
@@ -329,10 +461,9 @@ export default function ChatPanel({
                 </button>
               )}
             </div>
-          </div>
 
           {/* Reasoning Path Breadcrumb (Renamed from "Proved Answer Path") */}
-          {lastResponse.graph_path && lastResponse.graph_path.length > 0 && !isDeclined && (
+          {resp.graph_path && resp.graph_path.length > 0 && !isDeclined && (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -358,7 +489,7 @@ export default function ChatPanel({
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border)',
               }}>
-                {lastResponse.graph_path.map((item, i) => {
+                {resp.graph_path.map((item, i) => {
                   const node = item.node || item;
                   const humanName = formatHumanName(item);
                   return (
@@ -412,13 +543,13 @@ export default function ChatPanel({
           {isDeclined ? (
             <div className="clean-card" style={{ padding: '1.25rem', background: 'var(--surface)' }}>
               <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: '1.65', margin: 0 }}>
-                {lastResponse.answer}
+                {resp.answer}
               </p>
               <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
                 Provenance indexes verified architecture records, systems, and people. Unrecorded technologies or false premises are declined directly without speculation.
               </div>
             </div>
-          ) : isChangesBetween && lastResponse.graph_result?.changes?.length > 0 ? (
+          ) : isChangesBetween && resp.graph_result?.changes?.length > 0 ? (
             /* Vertical Timeline for changes_between queries */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{
@@ -441,7 +572,7 @@ export default function ChatPanel({
                 borderLeft: '2px solid var(--border)',
                 marginLeft: '0.5rem',
               }}>
-                {lastResponse.graph_result.changes.map((c, i) => (
+                {resp.graph_result.changes.map((c, i) => (
                   <div key={i} style={{ position: 'relative' }}>
                     {/* Timeline Dot */}
                     <div style={{
@@ -493,7 +624,7 @@ export default function ChatPanel({
                 ))}
               </div>
             </div>
-          ) : isAsOf && lastResponse.graph_result?.decisions?.length > 0 ? (
+          ) : isAsOf && resp.graph_result?.decisions?.length > 0 ? (
             /* Clean Decision Cards for as_of queries */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{
@@ -503,10 +634,10 @@ export default function ChatPanel({
                 letterSpacing: '0.08em',
                 color: 'var(--muted)',
               }}>
-                Decisions in force (As of {lastResponse.graph_result.as_of_date})
+                Decisions in force (As of {resp.graph_result.as_of_date})
               </div>
 
-              {lastResponse.graph_result.decisions.map((d, i) => (
+              {resp.graph_result.decisions.map((d, i) => (
                 <div key={i} className="clean-card" style={{ padding: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <h4 style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text)' }}>
@@ -544,36 +675,36 @@ export default function ChatPanel({
                 </div>
               ))}
             </div>
-          ) : isBusFactor && lastResponse.graph_result?.sole_expert_systems ? (
+          ) : isBusFactor && resp.graph_result?.sole_expert_systems ? (
             /* Structured Bus Factor Card */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div className="clean-card" style={{ padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <div>
                     <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
-                      {lastResponse.graph_result.title || `Bus Factor Risk Analysis: ${lastResponse.graph_result.person_name}`}
+                      {resp.graph_result.title || `Bus Factor Risk Analysis: ${resp.graph_result.person_name}`}
                     </h4>
                     <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
-                      {lastResponse.graph_result.impact_summary}
+                      {resp.graph_result.impact_summary}
                     </div>
                   </div>
-                  <span className={lastResponse.graph_result.status === 'CRITICAL' || lastResponse.graph_result.status === 'HIGH' ? 'chip-warn' : 'chip-ok'} style={{
+                  <span className={resp.graph_result.status === 'CRITICAL' || resp.graph_result.status === 'HIGH' ? 'chip-warn' : 'chip-ok'} style={{
                     fontSize: '0.65rem',
                     fontWeight: '600',
                     padding: '2px 8px',
                     borderRadius: '4px',
                     textTransform: 'uppercase',
                   }}>
-                    Risk: {lastResponse.graph_result.status || 'HIGH'}
+                    Risk: {resp.graph_result.status || 'HIGH'}
                   </span>
                 </div>
 
-                {lastResponse.graph_result.sole_expert_systems?.length > 0 && (
+                {resp.graph_result.sole_expert_systems?.length > 0 && (
                   <div style={{ marginTop: '0.9rem' }}>
                     <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.35rem' }}>
                       Sole-Expert Systems (Bus Factor = 1)
                     </div>
-                    {lastResponse.graph_result.sole_expert_systems.map((s, idx) => (
+                    {resp.graph_result.sole_expert_systems.map((s, idx) => (
                       <div key={idx} style={{
                         padding: '0.5rem 0.75rem',
                         background: 'var(--surface-2)',
@@ -606,13 +737,13 @@ export default function ChatPanel({
                   </div>
                 )}
 
-                {lastResponse.graph_result.unique_active_decisions?.length > 0 && (
+                {resp.graph_result.unique_active_decisions?.length > 0 && (
                   <div style={{ marginTop: '0.9rem' }}>
                     <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.35rem' }}>
-                      Sole Architectural Decisions Authored ({lastResponse.graph_result.unique_active_decisions.length})
+                      Sole Architectural Decisions Authored ({resp.graph_result.unique_active_decisions.length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                      {lastResponse.graph_result.unique_active_decisions.slice(0, 5).map((d, idx) => (
+                      {resp.graph_result.unique_active_decisions.slice(0, 5).map((d, idx) => (
                         <div key={idx} style={{ fontSize: '0.82rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ color: 'var(--accent)' }}>•</span>
                           <span>{d.title}</span>
@@ -624,17 +755,17 @@ export default function ChatPanel({
                 )}
               </div>
             </div>
-          ) : isWhoKnows && lastResponse.graph_result?.experts ? (
+          ) : isWhoKnows && resp.graph_result?.experts ? (
             /* Structured System Expertise & Maintainers Card */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div className="clean-card" style={{ padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <div>
                     <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
-                      {lastResponse.graph_result.title || `System Ownership: ${lastResponse.graph_result.system}`}
+                      {resp.graph_result.title || `System Ownership: ${resp.graph_result.system}`}
                     </h4>
                     <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '4px' }}>
-                      Primary Lead: <strong style={{ color: 'var(--text)' }}>{lastResponse.graph_result.primary_expert}</strong> ({lastResponse.graph_result.primary_expert_role || 'Core Maintainer'})
+                      Primary Lead: <strong style={{ color: 'var(--text)' }}>{resp.graph_result.primary_expert}</strong> ({resp.graph_result.primary_expert_role || 'Core Maintainer'})
                     </div>
                   </div>
                   <span className="chip-ok" style={{
@@ -644,7 +775,7 @@ export default function ChatPanel({
                     borderRadius: '4px',
                     textTransform: 'uppercase',
                   }}>
-                    Bus Factor: {lastResponse.graph_result.bus_factor || 1}
+                    Bus Factor: {resp.graph_result.bus_factor || 1}
                   </span>
                 </div>
 
@@ -653,7 +784,7 @@ export default function ChatPanel({
                     Ranked Maintainers & Expertise Centrality
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    {lastResponse.graph_result.experts.map((exp, idx) => (
+                    {resp.graph_result.experts.map((exp, idx) => (
                       <div key={idx} style={{
                         padding: '0.55rem 0.75rem',
                         background: 'var(--surface-2)',
@@ -687,80 +818,80 @@ export default function ChatPanel({
                 </div>
               </div>
             </div>
-          ) : isTraceDecision && lastResponse.graph_result?.decision ? (
+          ) : isTraceDecision && resp.graph_result?.decision ? (
             /* Structured Decision Provenance Card */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div className="clean-card" style={{ padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <div>
                     <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
-                      {lastResponse.graph_result.decision.title}
+                      {resp.graph_result.decision.title}
                     </h4>
                     <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '3px' }}>
-                      Validity: <code className="font-mono">{lastResponse.graph_result.decision.valid_from || '2025-01-01'} → {lastResponse.graph_result.decision.valid_to || 'present'}</code>
-                      {lastResponse.graph_result.made_by && <> • Author: <strong style={{ color: 'var(--text)' }}>{lastResponse.graph_result.made_by.name}</strong></>}
+                      Validity: <code className="font-mono">{resp.graph_result.decision.valid_from || '2025-01-01'} → {resp.graph_result.decision.valid_to || 'present'}</code>
+                      {resp.graph_result.made_by && <> • Author: <strong style={{ color: 'var(--text)' }}>{resp.graph_result.made_by.name}</strong></>}
                     </div>
                   </div>
-                  <span className={lastResponse.graph_result.decision.status?.toLowerCase() === 'active' ? 'chip-ok' : 'chip-off'} style={{
+                  <span className={resp.graph_result.decision.status?.toLowerCase() === 'active' ? 'chip-ok' : 'chip-off'} style={{
                     fontSize: '0.65rem',
                     fontWeight: '600',
                     padding: '2px 8px',
                     borderRadius: '4px',
                     textTransform: 'uppercase',
                   }}>
-                    {lastResponse.graph_result.decision.status || 'Active'}
+                    {resp.graph_result.decision.status || 'Active'}
                   </span>
                 </div>
 
-                {lastResponse.graph_result.decision.rationale && (
+                {resp.graph_result.decision.rationale && (
                   <p style={{ fontSize: '0.85rem', color: 'var(--text)', lineHeight: '1.5', marginTop: '0.6rem' }}>
-                    {lastResponse.graph_result.decision.rationale}
+                    {resp.graph_result.decision.rationale}
                   </p>
                 )}
 
-                {lastResponse.graph_result.supersedes && (
+                {resp.graph_result.supersedes && (
                   <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
                     <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       Replaced Decision (<code className="font-mono" style={{ color: 'var(--accent)' }}>SUPERSEDES</code>)
                     </div>
                     <div style={{ fontSize: '0.82rem', fontWeight: '500', color: 'var(--text)', marginTop: '2px' }}>
-                      {lastResponse.graph_result.supersedes.title}
+                      {resp.graph_result.supersedes.title}
                     </div>
                   </div>
                 )}
               </div>
             </div>
-          ) : isImpactOf && lastResponse.graph_result?.direct_systems ? (
+          ) : isImpactOf && resp.graph_result?.direct_systems ? (
             /* Structured Person Impact Card */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div className="clean-card" style={{ padding: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <div>
                     <h4 style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text)' }}>
-                      Departure Impact Analysis: {lastResponse.graph_result.person?.name || 'Engineer'}
+                      Departure Impact Analysis: {resp.graph_result.person?.name || 'Engineer'}
                     </h4>
                     <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '3px' }}>
-                      {lastResponse.graph_result.summary}
+                      {resp.graph_result.summary}
                     </div>
                   </div>
-                  <span className={lastResponse.graph_result.status === 'CRITICAL' || lastResponse.graph_result.status === 'HIGH' ? 'chip-warn' : 'chip-ok'} style={{
+                  <span className={resp.graph_result.status === 'CRITICAL' || resp.graph_result.status === 'HIGH' ? 'chip-warn' : 'chip-ok'} style={{
                     fontSize: '0.65rem',
                     fontWeight: '600',
                     padding: '2px 8px',
                     borderRadius: '4px',
                     textTransform: 'uppercase',
                   }}>
-                    Severity: {lastResponse.graph_result.status || 'HIGH'}
+                    Severity: {resp.graph_result.status || 'HIGH'}
                   </span>
                 </div>
 
-                {lastResponse.graph_result.direct_systems?.length > 0 && (
+                {resp.graph_result.direct_systems?.length > 0 && (
                   <div style={{ marginTop: '0.9rem' }}>
                     <div style={{ fontSize: '0.7rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.35rem' }}>
                       Direct Maintained Systems
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                      {lastResponse.graph_result.direct_systems.map((s, idx) => (
+                      {resp.graph_result.direct_systems.map((s, idx) => (
                         <span key={idx} style={{
                           fontSize: '0.75rem',
                           padding: '3px 8px',
@@ -781,7 +912,7 @@ export default function ChatPanel({
           ) : (
             /* General Clean Prose Answer */
             <div className="clean-card" style={{ padding: '1.25rem' }}>
-              {renderCleanProse(lastResponse.answer)}
+              {renderCleanProse(resp.answer)}
             </div>
           )}
 
@@ -832,7 +963,7 @@ export default function ChatPanel({
           )}
 
           {/* Plain Sources Cards (Matching Cairn Sources Card style) */}
-          {lastResponse.sources && lastResponse.sources.length > 0 && !isDeclined && (
+          {resp.sources && resp.sources.length > 0 && !isDeclined && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
               <div style={{
                 fontSize: '0.68rem',
@@ -845,7 +976,7 @@ export default function ChatPanel({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {lastResponse.sources.map((s, idx) => {
+                {resp.sources.map((s, idx) => {
                   const sourceObj = typeof s === 'string' ? { id: s, title: s } : s;
                   const cleanTitle = sourceObj.title || sourceObj.id;
                   const url = sourceObj.url || '';
@@ -946,7 +1077,7 @@ export default function ChatPanel({
           {/* Collapsible Cypher Query */}
           <div style={{ marginTop: '0.5rem' }}>
             <button
-              onClick={() => setShowCypher(!showCypher)}
+              onClick={() => toggleCypher(msgId)}
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -959,11 +1090,11 @@ export default function ChatPanel({
                 padding: '4px 0',
               }}
             >
-              {showCypher ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-              <span>{showCypher ? 'Hide query' : 'Show query'}</span>
+              {openCypherIds[msgId] ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+              <span>{openCypherIds[msgId] ? 'Hide query' : 'Show query'}</span>
             </button>
 
-            {showCypher && (
+            {openCypherIds[msgId] && (
               <pre className="font-mono" style={{
                 marginTop: '0.4rem',
                 padding: '0.75rem 1rem',
@@ -975,101 +1106,20 @@ export default function ChatPanel({
                 lineHeight: '1.5',
                 overflowX: 'auto',
               }}>
-                {lastResponse.cypher_query || '// Parameterized Cypher query executed on FalkorDB\nMATCH (d:Decision) RETURN d LIMIT 10;'}
+                {resp.cypher_query || '// Parameterized Cypher query executed on FalkorDB\nMATCH (d:Decision) RETURN d LIMIT 10;'}
               </pre>
             )}
           </div>
-        </div>
-      ) : (
-        /* Empty State (Cairn-inspired Minimalist Layout) */
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          padding: '2.5rem 1rem 1rem 1rem',
-          gap: '1.5rem',
-        }}>
-          <div>
-            <h1 style={{
-              fontSize: '1.6rem',
-              fontWeight: '600',
-              color: 'var(--text)',
-              letterSpacing: '-0.02em',
-            }}>
-              What would you like to know?
-            </h1>
-            <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.4rem' }}>
-              {workspace === 'peps' 
-                ? '745 proposals · 356 people · 73 supersession chains'
-                : '146 documents · 50 decisions · 40 people · 8 systems'}
-            </p>
-          </div>
 
-          {/* Three Clean Scenario Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '0.75rem',
-            width: '100%',
-          }}>
-            {presets.slice(0, 3).map((p, idx) => (
-              <div
-                key={idx}
-                onClick={() => handlePresetClick(p.q)}
-                className="clean-card"
-                style={{
-                  padding: '1rem',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.4rem',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text)' }}>
-                    {p.label}
-                  </span>
-                  <span className="chip-off" style={{
-                    fontSize: '0.65rem',
-                    padding: '1px 5px',
-                    borderRadius: '4px',
-                  }}>
-                    {p.tag}
-                  </span>
-                </div>
-                <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: '1.4' }}>
-                  {p.q}
-                </p>
+                  </div>
+                ) : null}
               </div>
-            ))}
-          </div>
-
-          {/* Plain chips row */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-            <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
-              Try asking:
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.4rem' }}>
-              {presets.slice(3).map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handlePresetClick(p.q)}
-                  className="btn-ghost"
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '4px 10px',
-                    borderRadius: 'var(--radius-full)',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
         </div>
       )}
+
 
       {/* Floating Sticky Input Bar at Bottom (Centered Reading Column) */}
       <div className="floating-input-bar" style={{
