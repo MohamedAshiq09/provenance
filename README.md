@@ -8,7 +8,7 @@
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js_16_App_Router-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI_Python_3.12-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![MCP](https://img.shields.io/badge/Protocol-Model_Context_Protocol_(MCP)-8b5cf6?style=flat-square)](https://modelcontextprotocol.io)
-[![Benchmark Accuracy](https://img.shields.io/badge/Benchmark_Accuracy-100.0%25_vs_6.7%25_Vector--RAG-10b981?style=flat-square)]()
+[![Benchmark Accuracy](https://img.shields.io/badge/Benchmark_Accuracy-87.1%25_vs_28.6%25_Lexical--Baseline-10b981?style=flat-square)]()
 
 ---
 
@@ -135,7 +135,8 @@ MATCH (new_doc:Document {id: $new_doc_id})
 MATCH (new_doc)-[:SUPERSEDES|CONTRADICTS]->(old_doc:Document)
 MATCH (d:Decision)-[:BASED_ON]->(old_doc)
 WHERE d.status <> 'superseded'
-OPTIONAL MATCH (d)<-[:DEPENDS_ON*1..3]-(downstream:Decision)
+OPTIONAL MATCH (d)-[:AFFECTS]->(s:System)<-[:AFFECTS]-(downstream:Decision)
+WHERE downstream.id <> d.id AND downstream.status <> 'superseded'
 RETURN d as stale_decision, old_doc, new_doc,
        collect(DISTINCT downstream) as downstream_decisions
 ```
@@ -252,11 +253,11 @@ Open **`http://localhost:3000`** in your browser.
 
 ## 🧪 Testing
 
-Run all 18 backend unit & integration tests:
+Run all 72 backend unit & integration tests:
 ```bash
 uv run --directory backend pytest -v
 ```
-Run the full 30-question graph benchmark:
+Run the full 70-question multi-workspace benchmark (across Company Brain, Python PEPs, and FalkorDB Repos):
 ```bash
 uv run --directory backend python ../bench/run_benchmark.py
 ```
@@ -268,8 +269,8 @@ uv run --directory backend python ../bench/run_benchmark.py
 - [x] **Primary Graph Database**: FalkorDB v4.18 with GraphBLAS.
 - [x] **Graph Does Real Work**: Every feature uses Cypher traversals, shortest path, and centrality algorithms.
 - [x] **Track 3 (Company Brain)**: Solves knowledge from docs/tickets/chats, who knows what, decision provenance, and staleness detection.
-- [x] **MCP Support**: Real MCP server (Streamable HTTP at `/mcp`) exposing 8 graph tools to any MCP host; verifiable free via MCP Inspector.
+- [x] **MCP Support**: Real MCP server (Streamable HTTP at `/mcp`) exposing 14 graph tools to any MCP host; verifiable free via MCP Inspector.
 - [x] **Public & Synthetic Data**: Zero private data; reproducible ground-truth company model.
 - [x] **Explainable Results**: Every answer returns the exact graph path with node citations.
-- [x] **Comprehensive Benchmark**: 30 questions scored against plain vector-RAG baseline (100% vs 6.7%).
+- [x] **Comprehensive Benchmark**: 70 questions scored against lexical retrieval baseline (87.1% Graph+LLM / 85.7% Router vs 28.6% baseline; 100% false-premise rejection).
 - [x] **AI Assistance Disclosed**: Fully logged in `AI_USAGE.md`.

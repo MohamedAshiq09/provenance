@@ -49,7 +49,6 @@
 | `MADE_BY` | Decision → Person | `at` |
 | `AFFECTS` | Decision → System/Project | `impact` |
 | `SUPERSEDES` | Decision → Decision | `reason`, `at` |
-| `DEPENDS_ON` | Decision → Decision | `strength` |
 | `USES` | System → System/Project | `since`, `type` |
 | `RESOLVES` | Ticket → Decision/Document | `at` |
 
@@ -59,9 +58,9 @@
 
 1. **Decision Trace**: `trace_decision(decision_id)` → traverses `BASED_ON`, `SUPERSEDES`, `MADE_BY` to show the full origin chain
 2. **Who Knows**: `who_knows(system_name)` → recency-weighted PageRank/centrality over `WORKED_ON`, `OWNS`, `AUTHORED` edges
-3. **Staleness Detection**: on new doc ingest → find `BASED_ON` edges to contradicted docs → traverse `DEPENDS_ON` to flag downstream decisions
+3. **Staleness Detection**: on new doc ingest → find `BASED_ON` edges to contradicted/superseded docs → traverse `AFFECTS` to flag downstream decisions
 4. **Bus Factor Analysis**: `bus_factor(person_id)` → count systems/decisions with only this person in the knowledge chain
-5. **Impact Analysis**: `impact_of(change)` → shortest-path traversal over `AFFECTS`, `DEPENDS_ON`, `USES`
+5. **Impact Analysis**: `impact_of(change)` → multi-hop traversal over `AFFECTS`, `USES`, and co-affected topologies
 
 ---
 
