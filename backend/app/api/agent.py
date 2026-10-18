@@ -20,6 +20,7 @@ class AskResponse(BaseModel):
     tool_used: str
     tool_params: dict
     tool_reasoning: str
+    graph_result: Optional[dict] = None
     graph_path: list
     sources: list
     cypher_query: str
