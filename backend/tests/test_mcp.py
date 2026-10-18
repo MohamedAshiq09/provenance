@@ -142,3 +142,34 @@ def test_mcp_unknown_tool_errors():
 
     res = _run(go())
     assert res.is_error
+
+
+def test_mcp_workspace_falkordb_repos():
+    """workspace param routes MCP calls to the falkordb_repos graph (226 real PRs)."""
+    blob = _run(_call(
+        "who_knows",
+        {"system_name": "FalkorDB Core Engine (src/)", "workspace": "falkordb_repos"},
+    ))
+    assert "FalkorDB Core Engine (src/)" in blob
+    assert "person_aviavni" in blob or "AviAvni" in blob
+
+
+def test_mcp_workspace_isolation():
+    """A bare (company-brain) who_knows call must NOT leak repos-graph experts."""
+    repos = _run(_call(
+        "who_knows",
+        {"system_name": "FalkorDB Core Engine (src/)", "workspace": "repos"},
+    ))
+    company = _run(_call("who_knows", {"system_name": "FalkorDB Core Engine (src/)"}))
+    assert "AviAvni" in repos
+    assert "AviAvni" not in company
+    assert "experts" in company
+
+
+def test_mcp_workspace_peps():
+    """workspace='peps' addresses the Python PEPs corpus."""
+    blob = _run(_call(
+        "as_of",
+        {"date_str": "2024-06-01", "topic": "typing", "workspace": "peps"},
+    ))
+    assert "PEP" in blob
