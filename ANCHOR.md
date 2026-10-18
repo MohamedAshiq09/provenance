@@ -89,10 +89,16 @@
   - e2cd50a `bench: compute explainability over answerable questions, label RAG latency, and disclose evaluation authors`: Defined explainability over answerable questions (56/56, 100.0%); labeled RAG latency as retrieval-only; disclosed AI evaluation agent authorship on blind holdout suite.
   - c13faca `scripts: add seed_cloud and smoke_live scripts for deployment and verification`: Seed cloud graphs offline without GitHub API calls; 5-query live verification script (5/5 passed).
   - Verification: 72/72 pytest green; full 70-question benchmark re-run (Graph+LLM 87.1%, Pure Router 85.7%, Vector RAG 28.6%, +58.5% net advantage; Paraphrase suite 90.0% accuracy, 100% precision, 87.5% recall, 14.5ms router latency, para_06 passing); Next.js 16 build green; browser subagent verified visual rendering and captured production screenshots in both light and dark themes.
+- Rebrand, Logo Watermark, and Benchmark Honesty Alignment (2026-10-18):
+  - e5b8470 `ui: rebrand application identity to Saturn with custom logo asset` (`ui/public/saturn-logo.png`, `ui/src/app/icon.png`, `ui/src/app/layout.js`, `ui/src/components/Sidebar.jsx`, `ui/src/components/Header.jsx`).
+  - 3e13daa `ui: scrub internal competitor mentions and align system description to Saturn` (`ui/src/app/page.js`, `ui/src/components/ChatPanel.jsx`, `ANCHOR.md`).
+  - 393adba `ui: add subtle ambient Saturn watermark to chat empty state` (`ui/src/components/ChatPanel.jsx`).
+  - 84cfe06 `ui: relabel benchmark columns to raw router and lexical retrieval with explicit fraction counts` (`ui/src/components/BenchmarkPanel.jsx`).
+  - Verification: `bun run build` compiled cleanly in 2.2s; browser subagent verified watermark logo in chat and updated benchmark table columns.
 
 ## (c) In progress right now
 
-- (none). Final push code freeze complete.
+- (none). Project ready for submission.
 
 ## (d) Next task
 
