@@ -47,6 +47,16 @@ def test_agent_ask_endpoint():
     assert len(data["answer"]) > 0
 
 
+def test_agent_ask_list_graph_result():
+    """Verify queries where graph_result is a list (like search_and_expand) serialize cleanly without 500 error."""
+    res = client.post("/api/agent/ask", json={"question": "What is the current mobile API rate limit?"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["tool_used"] in ["search_and_expand", "detect_staleness", "as_of"]
+    assert isinstance(data["graph_result"], (list, dict))
+    assert "200" in data["answer"]
+
+
 def test_mcp_tools_endpoint():
     res = client.get("/api/mcp/tools")
     assert res.status_code == 200
