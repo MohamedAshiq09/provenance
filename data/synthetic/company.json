@@ -412,7 +412,7 @@
       "content": "After evaluating session-based auth and JWT, we decided to use JWT tokens for stateless authentication. JWTs allow horizontal scaling without shared session store. Decision made by Priya after benchmarking at 10k RPS.",
       "doc_type": "adr",
       "url": "https://docs.novatech.io/adr/001",
-      "valid_from": "2025-04-24",
+      "valid_from": "2024-06-01",
       "valid_to": "2026-08-17",
       "source_id": "doc_adr_jwt_original"
     },
@@ -1873,8 +1873,8 @@
       "title": "Use JWT for AuthService authentication",
       "rationale": "Stateless, scalable, well-understood. JWT allows horizontal scaling without shared session store. Benchmarked at 10k RPS.",
       "status": "superseded",
-      "made_at": "2025-04-24",
-      "valid_from": "2025-04-24",
+      "made_at": "2024-06-01",
+      "valid_from": "2024-06-01",
       "valid_to": "2026-08-17",
       "source_id": "doc_adr_jwt_original",
       "made_by": "person_priya",
@@ -5937,9 +5937,9 @@
       "to_label": "Person",
       "rel_type": "MADE_BY",
       "props": {
-        "at": "2025-04-24"
+        "at": "2024-06-01"
       },
-      "valid_from": "2025-04-24",
+      "valid_from": "2024-06-01",
       "source_id": "doc_adr_jwt_original"
     },
     {
@@ -5951,7 +5951,7 @@
       "props": {
         "impact": "primary"
       },
-      "valid_from": "2025-04-24",
+      "valid_from": "2024-06-01",
       "source_id": "doc_adr_jwt_original"
     },
     {
@@ -7715,9 +7715,9 @@
       "to_label": "Document",
       "rel_type": "AUTHORED",
       "props": {
-        "at": "2025-04-24"
+        "at": "2024-06-01"
       },
-      "valid_from": "2025-04-24",
+      "valid_from": "2024-06-01",
       "source_id": "doc_adr_jwt_original"
     },
     {
@@ -8074,7 +8074,7 @@
       "to_id": "doc_adr_jwt_original",
       "to_label": "Document",
       "rel_type": "BASED_ON",
-      "valid_from": "2025-04-24",
+      "valid_from": "2024-06-01",
       "valid_to": "2026-08-17",
       "source_id": "doc_adr_jwt_original"
     },
