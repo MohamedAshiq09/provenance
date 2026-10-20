@@ -239,7 +239,7 @@ def _deterministic_select_tool(question: str) -> dict:
     # 3. Staleness / Documentation Drift (when no specific as-of date is asked)
     # ─────────────────────────────────────────────────────────────────────────
     if any(k in q for k in ["doc_rate_limit", "contradict", "trigger staleness"]) or (
-        ("rate limit" in q or "rate limt" in q or "ratelimit" in q) and not any(k in q for k in ["as of", "as-of", "between", "how much", "what is the", "status mid october"])
+        ("rate limit" in q or "rate limt" in q or "ratelimit" in q) and not any(k in q for k in ["as of", "as-of", "between", "status mid october"])
     ):
         return {
             "tool": "detect_staleness",
@@ -885,7 +885,7 @@ def run_tool(tool_name: str, params: dict, graph_name: str = None, workspace: st
     return fn(params)
 
 
-def answer(question: str, graph_name: str = None, router_mode: bool = False) -> dict:
+def answer(question: str, graph_name: str = None, router_mode: bool = True) -> dict:
     """
     Main agent loop:
     0. Check entity grounding gate (P0: decline unrecorded entities without hallucination)

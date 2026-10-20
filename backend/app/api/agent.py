@@ -11,7 +11,7 @@ class AskRequest(BaseModel):
     question: str
     graph_name: Optional[str] = "company_brain"
     workspace: Optional[str] = None
-    router_mode: Optional[bool] = False
+    router_mode: Optional[bool] = True
 
 
 class AskResponse(BaseModel):
