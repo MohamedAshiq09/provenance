@@ -118,8 +118,17 @@ export default function Home() {
       const res = await fetch('/api/agent/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, graph_name: currentGraphName }),
+        body: JSON.stringify({ 
+          question, 
+          graph_name: currentGraphName, 
+          workspace, 
+          router_mode: true 
+        }),
       });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Server responded with HTTP ${res.status}`);
+      }
       const data = await res.json();
       setLastResponse(data);
       setHighlightPath(data.graph_path || []);
