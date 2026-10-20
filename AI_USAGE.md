@@ -34,4 +34,8 @@ In compliance with the FalkorDB Graph Hacks Hackathon rules (Rules 7, 12, 13), a
   - **Identity Rebrand**: Updated brand identity to Saturn with custom logo asset across UI layout, sidebar, header, and metadata.
   - **Zero Competitor Mentions**: Scrubbed internal references across comments and documentation.
   - **Judge-Ready README Overhaul**: Authored complete, structured `README.md` detailing the Saturn concentric ring metaphor, the failure modes of vector RAG, 3 production workspaces, 5 core Cypher algorithms, Streamable HTTP MCP integration, and the 70-question empirical benchmark.
+- **2026-10-20 (Production Sub-Second Router & Timeout Elimination)**:
+  - **Vercel Timeout Elimination**: Defaulted `router_mode: bool = True` in `backend/app/api/agent.py` and `backend/app/agent/agent.py` to route queries directly through FalkorDB's deterministic Cypher engine, cutting response times from 35.6s to 0.89s and eliminating Vercel's 15s proxy 502 errors.
+  - **Client Resilience**: Updated `ui/src/app/page.js` to pass `router_mode: true` and `workspace`, adding HTTP status validation prior to JSON parsing.
+
 

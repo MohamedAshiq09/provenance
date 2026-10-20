@@ -95,10 +95,14 @@
   - 393adba `ui: add subtle ambient Saturn watermark to chat empty state` (`ui/src/components/ChatPanel.jsx`).
   - 84cfe06 `ui: relabel benchmark columns to raw router and lexical retrieval with explicit fraction counts` (`ui/src/components/BenchmarkPanel.jsx`).
   - Verification: `bun run build` compiled cleanly in 2.2s; browser subagent verified watermark logo in chat and updated benchmark table columns.
+- Sub-Second Production Router & Vercel Timeout Elimination (2026-10-20):
+  - Fixed Vercel 15s gateway timeout 502 error by defaulting `router_mode: bool = True` in `AskRequest` (`backend/app/api/agent.py`) and `answer()` (`backend/app/agent/agent.py`).
+  - Bound `router_mode: true` and `workspace` parameter in UI fetch payload (`ui/src/app/page.js`), adding `res.ok` check to prevent JSON parse errors. Response times cut from 35.6s to 0.89s.
+  - Verification: `tests/test_api.py` 7/7 passed in 8.9s; `tests/test_agent.py` 10/10 passed in 12.4s; `bun run build` compiled in 2.4s.
 
 ## (c) In progress right now
 
-- (none). Project ready for submission.
+- (none). Live deployment operational.
 
 ## (d) Next task
 
